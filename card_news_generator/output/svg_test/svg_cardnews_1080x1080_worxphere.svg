@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1080" height="1080" viewBox="0 0 1080 1080">
+  <title>CardNews_1080x1080</title>
+  <rect id="CardNews_1080x1080_BG" data-figma-name="Background" x="0" y="0" width="1080" height="1080" fill="#E3F2FD" />
+  <ellipse id="Decoration/Top-Right" data-figma-name="Decoration/Top-Right" cx="1135.0" cy="55.0" rx="175.0" ry="175.0" fill="#1565C0" opacity="0.15" />
+  <ellipse id="Decoration/Bottom-Left" data-figma-name="Decoration/Bottom-Left" cx="45.0" cy="1125.0" rx="125.0" ry="125.0" fill="#1565C0" opacity="0.1" />
+  <rect id="Badge/Background" data-figma-name="Badge/Background" x="440.0" y="383.6" width="200" height="60.0" rx="30.0" ry="30.0" fill="#1565C0" />
+  <text id="Badge/Text" data-figma-name="Badge/Text" x="540.0" y="424.8" text-anchor="middle" style="font-family:&quot;Noto Sans KR&quot;, &quot;Noto Sans KR&quot;, sans-serif;font-size:28px;font-weight:700;fill:#FFFFFF;letter-spacing:2.0px;"><tspan x="540.0" dy="0">안내</tspan></text>
+  <text id="Title" data-figma-name="Title" x="540.0" y="555.6" text-anchor="middle" style="font-family:&quot;Noto Sans KR&quot;, &quot;Noto Sans KR&quot;, sans-serif;font-size:72px;font-weight:900;fill:#212121;"><tspan x="540.0" dy="0">AI로 운영 자동화</tspan></text>
+  <rect id="Divider" data-figma-name="Divider" x="500.0" y="609.2" width="80" height="4" fill="#1565C0" />
+  <text id="Description" data-figma-name="Description" x="540.0" y="677.2" text-anchor="middle" style="font-family:&quot;Noto Sans KR&quot;, &quot;Noto Sans KR&quot;, sans-serif;font-size:32px;font-weight:400;fill:#555555;"><tspan x="540.0" dy="0">반복 업무를 하루 안에 자동화하세요</tspan></text>
+</svg>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1200" height="628" viewBox="0 0 1200 628">
+  <title>Banner_1200x628</title>
+  <defs><style type="text/css"><![CDATA[@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=Black+Han+Sans&family=Gowun+Dodum&display=swap');text{font-family:'Noto Sans KR','Apple SD Gothic Neo','Malgun Gothic',sans-serif;}]]></style></defs>
+  <rect id="Banner_1200x628_BG" data-figma-name="Background" x="0" y="0" width="1200" height="628" fill="#FFF8E1" />
+  <text id="Decoration/Tagline" data-figma-name="Decoration/Tagline" x="600.0" y="564.4" text-anchor="middle" style="font-family:&quot;Noto Sans KR&quot;, &quot;Noto Sans KR&quot;, sans-serif;font-size:533px;font-weight:900;fill:#FF6D00;" opacity="0.08"><tspan x="600.0" dy="0">PR</tspan><tspan x="600.0" dy="746.1999999999999">OM</tspan><tspan x="600.0" dy="746.1999999999999">OT</tspan><tspan x="600.0" dy="746.1999999999999">IO</tspan><tspan x="600.0" dy="746.1999999999999">N</tspan></text>
+  <text id="Title" data-figma-name="Title" x="60" y="276.15999999999997" text-anchor="start" style="font-family:&quot;Noto Sans KR&quot;, &quot;Noto Sans KR&quot;, sans-serif;font-size:138px;font-weight:900;fill:#212121;"><tspan x="60" dy="0">”웍스피어</tspan><tspan x="60" dy="165.6">”</tspan></text>
+  <rect id="CTA/Background" data-figma-name="CTA/Background" x="724" y="245.0" width="416" height="138" rx="69.0" ry="69.0" fill="#FF6D00" />
+  <text id="CTA/Text" data-figma-name="CTA/Text" x="932.0" y="336.4" text-anchor="middle" style="font-family:&quot;Noto Sans KR&quot;, &quot;Noto Sans KR&quot;, sans-serif;font-size:56px;font-weight:700;fill:#FFFFFF;"><tspan x="932.0" dy="0">자세히 보기</tspan></text>
+</svg>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="595" height="842" viewBox="0 0 595 842">
+  <title>Poster_595x842</title>
+  <defs><style type="text/css"><![CDATA[@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=Black+Han+Sans&family=Gowun+Dodum&display=swap');text{font-family:'Noto Sans KR','Apple SD Gothic Neo','Malgun Gothic',sans-serif;}]]></style></defs>
+  <rect id="Poster_595x842_BG" data-figma-name="Background" x="0" y="0" width="595" height="842" fill="#FFF8E1" />
+  <ellipse id="Decoration/Top-Right-Circle" data-figma-name="Decoration/Top-Right-Circle" cx="565.25" cy="-42.1" rx="249.89999999999998" ry="249.89999999999998" fill="#FF6D00" opacity="0.18" />
+  <text id="Header/Label" data-figma-name="Header/Label" x="47" y="67" text-anchor="start" style="font-family:&quot;Noto Sans KR&quot;, &quot;Noto Sans KR&quot;, sans-serif;font-size:20px;font-weight:700;fill:#FF6D00;letter-spacing:6.0px;"><tspan x="47" dy="0">POSTER</tspan></text>
+  <text id="Title" data-figma-name="Title" x="47" y="312.76" text-anchor="start" style="font-family:&quot;Noto Sans KR&quot;, &quot;Noto Sans KR&quot;, sans-serif;font-size:77px;font-weight:900;fill:#212121;"><tspan x="47" dy="0">알바</tspan><tspan x="47" dy="88.55">페스티벌</tspan></text>
+  <text id="Subtitle" data-figma-name="Subtitle" x="47" y="459.56" text-anchor="start" style="font-family:&quot;Noto Sans KR&quot;, &quot;Noto Sans KR&quot;, sans-serif;font-size:26px;font-weight:400;fill:#555555;"><tspan x="47" dy="0">전국 대학생을 위한 알바 박람회</tspan></text>
+  <rect id="Info/Divider" data-figma-name="Info/Divider" x="47" y="606.24" width="501" height="3" fill="#FF6D00" />
+  <text id="Info/DateRange" data-figma-name="Info/DateRange" x="47" y="654.64" text-anchor="start" style="font-family:&quot;Noto Sans KR&quot;, &quot;Noto Sans KR&quot;, sans-serif;font-size:22px;font-weight:500;fill:#555555;"><tspan x="47" dy="0">일시 2026.05.10 (토) 10:00</tspan><tspan x="47" dy="30.799999999999997">~ 18:00</tspan></text>
+  <text id="Info/Place" data-figma-name="Info/Place" x="47" y="692.04" text-anchor="start" style="font-family:&quot;Noto Sans KR&quot;, &quot;Noto Sans KR&quot;, sans-serif;font-size:22px;font-weight:500;fill:#555555;"><tspan x="47" dy="0">장소   서울 코엑스 D홀</tspan></text>
+  <text id="Footer" data-figma-name="Footer" x="47" y="787.0" text-anchor="start" style="font-family:&quot;Noto Sans KR&quot;, &quot;Noto Sans KR&quot;, sans-serif;font-size:16px;font-weight:400;fill:#555555;" opacity="0.7"><tspan x="47" dy="0">주최: 알바몬 · 문의 02-0000-0000</tspan></text>
+</svg>

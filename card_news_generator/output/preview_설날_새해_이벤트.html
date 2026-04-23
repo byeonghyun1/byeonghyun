@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>카드뉴스 프리뷰 - 설날 새해 이벤트</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #f0f0f0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px;
+    font-family: 'Noto Sans KR', sans-serif;
+  }
+
+  h2 {
+    margin-bottom: 20px;
+    color: #333;
+    font-size: 18px;
+  }
+
+  .card-wrapper {
+    width: 540px;
+    height: 540px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .card {
+    width: 1080px;
+    height: 1080px;
+    background-color: #FFF0F5;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 80px;
+    position: relative;
+    overflow: hidden;
+    transform: scale(0.5);
+    transform-origin: top left;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: -120px;
+    right: -120px;
+    width: 350px;
+    height: 350px;
+    border-radius: 50%;
+    background-color: #FF6B9D;
+    opacity: 0.15;
+  }
+
+  .card::after {
+    content: '';
+    position: absolute;
+    bottom: -80px;
+    left: -80px;
+    width: 250px;
+    height: 250px;
+    border-radius: 50%;
+    background-color: #FF6B9D;
+    opacity: 0.1;
+  }
+
+  .badge {
+    display: inline-block;
+    background-color: #FF6B9D;
+    color: #FFFFFF;
+    font-size: 28px;
+    font-weight: 700;
+    padding: 12px 36px;
+    border-radius: 50px;
+    margin-bottom: 40px;
+    letter-spacing: 2px;
+    z-index: 1;
+  }
+
+  .title {
+    font-size: 72px;
+    font-weight: 900;
+    color: #2D2D2D;
+    line-height: 1.3;
+    margin-bottom: 32px;
+    z-index: 1;
+    word-break: keep-all;
+  }
+
+  .divider {
+    width: 80px;
+    height: 4px;
+    background-color: #FF6B9D;
+    margin-bottom: 32px;
+    z-index: 1;
+  }
+
+  .description {
+    font-size: 32px;
+    font-weight: 400;
+    color: #555555;
+    line-height: 1.6;
+    z-index: 1;
+    word-break: keep-all;
+    max-width: 800px;
+  }
+
+  .info {
+    margin-top: 24px;
+    color: #888;
+    font-size: 14px;
+  }
+</style>
+</head>
+<body>
+  <h2>카드뉴스 프리뷰 (1080 x 1080)</h2>
+  <div class="card-wrapper">
+    <div class="card">
+      <div class="badge">이벤트</div>
+      <h1 class="title">설날 새해 이벤트</h1>
+      <div class="divider"></div>
+      <p class="description">귀여운 느낌</p>
+    </div>
+  </div>
+  <p class="info">실제 출력: 1080×1080px PNG | 50% 축소 프리뷰</p>
+</body>
+</html>
