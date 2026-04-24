@@ -1,0 +1,98 @@
+{
+  "version": "1.0",
+  "last_updated": "2026-04-24",
+  "source": "잡코리아 알바몬 통합 배너가이드 PDF",
+  "description": "사용 가능한 폰트와 배너 사이즈별 폰트 매핑. 엔진이 이 파일을 읽어 폰트를 자동 적용합니다.",
+
+  "allowed_fonts": [
+    {
+      "family": "Gmarket Sans",
+      "category": "gothic",
+      "available_weights": ["Light", "Medium", "Bold"],
+      "usage": "PC 배너 메인/서브 카피, 모바일 서브 배너",
+      "description": "주력 폰트. 대부분의 PC 배너와 모바일 서브 배너에 사용"
+    },
+    {
+      "family": "Pretendard",
+      "category": "gothic",
+      "available_weights": ["Light", "Regular", "Medium", "SemiBold", "Bold"],
+      "usage": "모바일 스플래시 배너, PC 커튼 배너 리뷰 텍스트",
+      "description": "보조 폰트. 모바일 스플래시 대문구/소문구, 리뷰 텍스트에 사용"
+    }
+  ],
+
+  "global_rules": {
+    "category": "gothic_only",
+    "max_font_families_per_banner": 2,
+    "min_size_pc_px": 12,
+    "min_size_mobile_px": 22,
+    "contrast": "배경과 텍스트 간 충분한 명도 대비 필수"
+  },
+
+  "per_banner_fonts": {
+    "pc_main_curtain": {
+      "slots": {
+        "main": { "family": "Gmarket Sans", "weight": "Bold", "size_px": 72, "letter_spacing": "-4%" },
+        "sub": { "family": "Gmarket Sans", "weight": "Medium", "size_px": 40, "letter_spacing": "-2%" },
+        "review": { "family": "Pretendard", "weight": "Light", "size_px": 20, "letter_spacing": "-1.5%", "color": "#787878" }
+      },
+      "min_size_px": null
+    },
+    "pc_main_top": {
+      "slots": {
+        "main": { "family": "Gmarket Sans", "weight": "Bold", "size_px": 62, "letter_spacing": "-4%" },
+        "sub": { "family": "Gmarket Sans", "weight": "Medium", "size_px": 38, "letter_spacing": "-2%" }
+      },
+      "min_size_px": 26
+    },
+    "pc_job_sky": {
+      "slots": {},
+      "min_size_px": 12,
+      "note": "폰트 사이즈 최대 2가지 사용 준수. 구체적 폰트 미지정 → 디자이너 가이드 따름"
+    },
+    "pc_recruit_bottom": {
+      "slots": {},
+      "min_size_px": 12,
+      "note": "구체적 폰트 미지정 → 디자이너 가이드 따름"
+    },
+    "pc_recruit_bottom_text": {
+      "slots": {},
+      "min_size_px": null,
+      "note": "텍스트 전용 배너. 구체적 폰트 미지정"
+    },
+    "pc_login_right": {
+      "slots": {},
+      "min_size_px": 12,
+      "note": "구체적 폰트 미지정 → 디자이너 가이드 따름"
+    },
+    "pc_search_right": {
+      "slots": {},
+      "min_size_px": 12,
+      "note": "구체적 폰트 미지정 → 디자이너 가이드 따름"
+    },
+    "pc_company_left": {
+      "slots": {},
+      "min_size_px": 12,
+      "note": "구체적 폰트 미지정 → 디자이너 가이드 따름"
+    },
+    "m_app_splash": {
+      "slots": {
+        "main": { "family": "Pretendard", "weight": "Bold", "size_px": 88, "letter_spacing": "-0.5%", "color": "#171717" },
+        "sub": { "family": "Pretendard", "weight": "Regular", "size_px": 64, "letter_spacing": "0%", "color": "#171717" }
+      },
+      "min_size_px": null
+    },
+    "m_sub_banner": {
+      "slots": {
+        "main": { "family": "Gmarket Sans", "weight": "Bold", "size_px": 56, "letter_spacing": "-4%" }
+      },
+      "min_size_px": null,
+      "note": "최대 56px 권장"
+    },
+    "email_target": {
+      "slots": {},
+      "min_size_px": 12,
+      "note": "HTML 이메일. 구체적 폰트 미지정"
+    }
+  }
+}

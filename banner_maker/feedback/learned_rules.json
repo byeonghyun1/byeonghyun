@@ -1,0 +1,18 @@
+{
+  "version": "1.0",
+  "last_updated": "2026-04-24",
+  "description": "Banner Maker 학습 규칙 저장소. 사용자 피드백에서 추출한 규칙이 여기에 쌓입니다.",
+  "rules": [
+    {
+      "id": "rule_001",
+      "category": "text_size",
+      "condition": "캔버스 면적이 클수록",
+      "action": "텍스트를 비례 확대한다. 면적 비율의 제곱근 기준으로 스케일링. 축소하지 않는다.",
+      "example": "작은 배너(325x310)에서 큰 배너(1556x232)로 갈 때, 텍스트를 키워야 함.",
+      "source": "Design Variation Agent 프로토타입 테스트 #1에서 이관 (2026-04-23)",
+      "created": "2026-04-24",
+      "priority": "high",
+      "status": "active"
+    }
+  ]
+}
