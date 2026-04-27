@@ -6,6 +6,17 @@
 <title>Banner Maker - Prototype</title>
 <style>
 @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+@import url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/GmarketSansBold.css');
+@import url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/GmarketSansMedium.css');
+@import url('https://fastly.jsdelivr.net/gh/projectnoonnu/2408-3@1.0/Paperlogy-4Regular.css');
+@import url('https://fastly.jsdelivr.net/gh/projectnoonnu/2408-3@1.0/Paperlogy-7Bold.css');
+@font-face {
+  font-family: 'TAEBAEK';
+  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2310@1.0/TAEBAEKfont.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body { font-family: 'Pretendard', -apple-system, sans-serif; background: #F5F5F7; color: #1A1A1A; min-height: 100vh; }
@@ -56,6 +67,15 @@ body { font-family: 'Pretendard', -apple-system, sans-serif; background: #F5F5F7
 }
 .upload-reupload span { color: #FFF; font-size: 13px; font-weight: 600; }
 .upload-reupload .reupload-hint { color: rgba(255,255,255,0.7); font-size: 11px; margin-top: 4px; }
+.upload-remove {
+  position: absolute; top: 8px; right: 8px; z-index: 5;
+  width: 26px; height: 26px; border-radius: 50%;
+  background: rgba(0,0,0,0.6); border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  color: #FFF; font-size: 14px; font-weight: 600;
+  transition: background 0.2s; line-height: 1;
+}
+.upload-remove:hover { background: #E53E3E; }
 
 /* 텍스트 입력 */
 .input-group { margin-bottom: 12px; }
@@ -71,7 +91,7 @@ body { font-family: 'Pretendard', -apple-system, sans-serif; background: #F5F5F7
 .size-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .size-card {
   border: 2px solid #E5E7EB; border-radius: 10px; padding: 14px;
-  cursor: pointer; transition: all 0.2s; background: #FFF;
+  cursor: pointer; transition: all 0.2s; background: #FFF; position: relative;
 }
 .size-card:hover { border-color: #93B4F5; }
 .size-card.selected { border-color: #2563EB; background: #F0F4FF; }
@@ -82,6 +102,19 @@ body { font-family: 'Pretendard', -apple-system, sans-serif; background: #F5F5F7
   padding: 2px 6px; font-size: 10px; color: #666;
 }
 .size-card.selected .size-ratio { background: #DBEAFE; color: #1E40AF; }
+.size-card .check-icon {
+  position: absolute; top: 8px; right: 8px;
+  width: 20px; height: 20px; border-radius: 50%;
+  border: 2px solid #D1D5DB; background: #FFF;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; color: transparent; transition: all 0.2s;
+}
+.size-card.selected .check-icon {
+  border-color: #2563EB; background: #2563EB; color: #FFF;
+}
+.size-select-hint {
+  font-size: 11px; color: #AAA; margin-top: 8px;
+}
 
 /* 배경색 */
 .color-row { display: flex; align-items: center; gap: 12px; }
@@ -95,6 +128,63 @@ body { font-family: 'Pretendard', -apple-system, sans-serif; background: #F5F5F7
 }
 .color-help { font-size: 12px; color: #AAA; margin-top: 6px; }
 
+/* 폰트 선택 */
+.font-toggle-row {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 8px;
+}
+.font-toggle-label { font-size: 14px; font-weight: 500; color: #333; }
+.font-toggle-hint { font-size: 11px; color: #999; line-height: 1.4; }
+.font-options {
+  display: none; flex-direction: column; gap: 12px;
+  padding: 14px; background: #F9FAFB; border-radius: 10px; border: 1px solid #E5E7EB; margin-top: 8px;
+}
+.font-options.active { display: flex; }
+.font-select-row { display: flex; align-items: center; gap: 10px; }
+.font-select-row label { font-size: 13px; font-weight: 500; color: #555; white-space: nowrap; min-width: 64px; }
+.font-select-row select {
+  flex: 1; padding: 8px 12px; border: 1px solid #E0E0E0; border-radius: 8px;
+  font-size: 13px; font-family: inherit; outline: none; background: #FFF; cursor: pointer;
+  transition: border 0.2s;
+}
+.font-select-row select:focus { border-color: #2563EB; }
+.font-preview-text {
+  font-size: 18px; padding: 10px 14px; background: #FFF; border-radius: 8px;
+  border: 1px solid #E5E7EB; text-align: center; word-break: keep-all;
+}
+
+/* CTA 섹션 */
+.cta-toggle-row {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 12px;
+}
+.cta-toggle-label { font-size: 14px; font-weight: 500; color: #333; }
+.cta-options {
+  display: none; flex-direction: column; gap: 14px;
+  padding: 14px; background: #F9FAFB; border-radius: 10px; border: 1px solid #E5E7EB;
+}
+.cta-options.active { display: flex; }
+.cta-color-row { display: flex; align-items: center; gap: 10px; }
+.cta-color-row label { font-size: 13px; font-weight: 500; color: #555; white-space: nowrap; }
+.cta-style-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.cta-style-card {
+  border: 2px solid #E5E7EB; border-radius: 8px; padding: 12px 8px;
+  cursor: pointer; transition: all 0.2s; background: #FFF; text-align: center;
+}
+.cta-style-card:hover { border-color: #93B4F5; }
+.cta-style-card.selected { border-color: #2563EB; background: #F0F4FF; }
+.cta-style-card .cta-style-label { font-size: 11px; color: #888; margin-bottom: 6px; }
+.cta-style-card .cta-style-demo { display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; color: #FFF; background: #333; }
+.cta-style-card .cta-style-demo.cta1 { width: 100%; padding: 6px 0; border-radius: 4px; }
+.cta-style-card .cta-style-demo.cta2 { padding: 6px 18px; border-radius: 50px; }
+.cta-auto-badge {
+  display: inline-block; font-size: 10px; color: #2563EB; background: #EFF6FF;
+  padding: 2px 8px; border-radius: 4px; margin-left: 6px; font-weight: 500;
+}
+.cta-preview-chip {
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 600;
+  color: #FFF; margin-top: 6px;
+}
+
 /* 가이드 표시 */
 .guide-box {
   background: #FFFBEB; border: 1px solid #FDE68A; border-radius: 10px;
@@ -103,6 +193,9 @@ body { font-family: 'Pretendard', -apple-system, sans-serif; background: #F5F5F7
 .guide-box .guide-title { font-weight: 600; margin-bottom: 6px; font-size: 13px; }
 .guide-box ul { padding-left: 16px; }
 .guide-box li { margin: 2px 0; }
+.guide-section { margin-bottom: 10px; }
+.guide-section:last-child { margin-bottom: 0; }
+.guide-section-name { font-weight: 600; font-size: 12px; color: #B45309; margin-bottom: 4px; }
 
 /* ===== 오른쪽 패널: 미리보기 ===== */
 .panel-right {
@@ -115,44 +208,31 @@ body { font-family: 'Pretendard', -apple-system, sans-serif; background: #F5F5F7
   width: 100%; max-width: 900px; margin-bottom: 24px;
 }
 .preview-title { font-size: 18px; font-weight: 600; }
-.preview-info { font-size: 13px; color: #888; }
-.preview-scale { font-size: 12px; color: #AAA; background: #F3F4F6; padding: 4px 10px; border-radius: 6px; }
-
-.preview-container {
-  background: #FFFFFF; border-radius: 16px; padding: 40px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.06); width: 100%; max-width: 900px;
-  display: flex; justify-content: center; align-items: center; min-height: 300px;
+.preview-count {
+  font-size: 13px; color: #2563EB; background: #EFF6FF; padding: 4px 12px; border-radius: 6px; font-weight: 500;
 }
 
-.banner-frame {
-  position: relative; overflow: hidden;
-  display: flex; align-items: stretch;
+.preview-list {
+  width: 100%; max-width: 900px;
+  display: flex; flex-direction: column; gap: 24px;
 }
 
-.banner-text-zone {
-  display: flex; flex-direction: column; justify-content: center;
-  z-index: 2; position: relative; flex-shrink: 0;
+.preview-item {
+  background: #FFFFFF; border-radius: 16px; padding: 24px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
 }
 
-.banner-image-zone {
-  display: flex; align-items: center; justify-content: center;
-  z-index: 1; position: relative; overflow: hidden; flex-shrink: 0;
+.preview-item-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 16px;
 }
+.preview-item-name { font-size: 14px; font-weight: 600; color: #333; }
+.preview-item-info { font-size: 12px; color: #888; display: flex; align-items: center; gap: 8px; }
+.preview-item-scale { font-size: 11px; color: #AAA; background: #F3F4F6; padding: 2px 8px; border-radius: 4px; }
 
-.banner-image-zone img {
-  max-width: 100%; max-height: 100%; object-fit: contain;
-}
-
-.banner-bg-image {
-  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-  object-fit: cover; z-index: 0;
-}
-
-.banner-text-main {
-  font-weight: 700; word-break: keep-all; z-index: 2; position: relative;
-}
-.banner-text-sub {
-  font-weight: 500; word-break: keep-all; z-index: 2; position: relative;
+.preview-item-canvas {
+  display: flex; justify-content: center; align-items: center;
+  min-height: 100px;
 }
 
 /* 마진 가이드 오버레이 */
@@ -186,6 +266,9 @@ body { font-family: 'Pretendard', -apple-system, sans-serif; background: #F5F5F7
 /* 빈 상태 */
 .empty-state {
   text-align: center; color: #AAA; padding: 60px 20px;
+  background: #FFFFFF; border-radius: 16px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  width: 100%; max-width: 900px;
 }
 .empty-state .empty-icon { font-size: 48px; margin-bottom: 12px; color: #DDD; }
 .empty-state p { font-size: 15px; }
@@ -205,7 +288,7 @@ body { font-family: 'Pretendard', -apple-system, sans-serif; background: #F5F5F7
 <div class="app">
   <!-- 왼쪽: 입력 패널 -->
   <div class="panel-left">
-    <h1>Banner Maker <span>Prototype v0.1</span></h1>
+    <h1>Banner Maker <span>Prototype v0.3</span></h1>
 
     <!-- 1. 이미지 업로드 -->
     <div>
@@ -233,36 +316,77 @@ body { font-family: 'Pretendard', -apple-system, sans-serif; background: #F5F5F7
       </div>
     </div>
 
-    <!-- 3. 사이즈 선택 -->
+    <!-- 3. 폰트 선택 -->
     <div>
-      <div class="section-title">3. 배너 사이즈</div>
+      <div class="section-title">3. 폰트 변경</div>
+      <div class="font-toggle-row">
+        <div class="toggle-switch" id="fontToggle" onclick="toggleFont()"></div>
+        <div class="font-toggle-label">폰트 변경</div>
+      </div>
+      <div class="font-toggle-hint">특이사항이 없다면 기준 폰트 활용을 권장합니다</div>
+      <div class="font-options" id="fontOptions">
+        <div class="font-select-row">
+          <label>메인 카피</label>
+          <select id="mainFontSelect" onchange="changeFont()">
+            <option value="GmarketSansBold" data-weight="700" selected>Gmarket Sans Bold</option>
+            <option value="Paperlogy-7Bold" data-weight="700">Paperlogy 7Bold</option>
+            <option value="Pretendard" data-weight="800">Pretendard ExtraBold</option>
+            <option value="TAEBAEK" data-weight="400">TAEBAEK</option>
+          </select>
+        </div>
+        <div class="font-select-row">
+          <label>서브 카피</label>
+          <select id="subFontSelect" onchange="changeFont()">
+            <option value="GmarketSansMedium" data-weight="500" selected>Gmarket Sans Medium</option>
+            <option value="Paperlogy-4Regular" data-weight="400">Paperlogy 4 Regular</option>
+            <option value="Pretendard" data-weight="400">Pretendard Regular</option>
+          </select>
+        </div>
+        <div>
+          <div style="font-size:12px;color:#888;margin-bottom:4px;">미리보기</div>
+          <div class="font-preview-text" id="fontPreview">
+            <div id="fontPreviewMain" style="font-family:'GmarketSansBold',sans-serif;font-weight:700;font-size:20px;margin-bottom:4px;">메인 카피 미리보기</div>
+            <div id="fontPreviewSub" style="font-family:'GmarketSansMedium',sans-serif;font-weight:500;font-size:14px;color:#666;">서브 카피 미리보기</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. 사이즈 선택 (복수 선택) -->
+    <div>
+      <div class="section-title">4. 배너 사이즈</div>
       <div class="size-grid">
-        <div class="size-card selected" data-id="pc_main_top" onclick="selectSize(this)">
+        <div class="size-card selected" data-id="pc_main_top" onclick="toggleSize(this)">
+          <div class="check-icon">✓</div>
           <div class="size-name">메인 탑</div>
           <div class="size-dim">1556 x 232</div>
           <div class="size-ratio">가로형 · PC</div>
         </div>
-        <div class="size-card" data-id="pc_job_sky" onclick="selectSize(this)">
+        <div class="size-card" data-id="pc_job_sky" onclick="toggleSize(this)">
+          <div class="check-icon">✓</div>
           <div class="size-name">공고 스카이</div>
           <div class="size-dim">560 x 700</div>
           <div class="size-ratio">세로형 · PC</div>
         </div>
-        <div class="size-card" data-id="pc_login_right" onclick="selectSize(this)">
+        <div class="size-card" data-id="pc_login_right" onclick="toggleSize(this)">
+          <div class="check-icon">✓</div>
           <div class="size-name">로그인 우측</div>
           <div class="size-dim">325 x 310</div>
           <div class="size-ratio">정방형 · PC</div>
         </div>
-        <div class="size-card" data-id="m_sub_banner" onclick="selectSize(this)">
+        <div class="size-card" data-id="m_sub_banner" onclick="toggleSize(this)">
+          <div class="check-icon">✓</div>
           <div class="size-name">M 서브</div>
           <div class="size-dim">1029 x 258</div>
           <div class="size-ratio">가로형 · Mobile</div>
         </div>
       </div>
+      <div class="size-select-hint">여러 사이즈를 동시에 선택하여 비교할 수 있습니다</div>
     </div>
 
-    <!-- 4. 배경색 -->
+    <!-- 5. 배경색 -->
     <div>
-      <div class="section-title">4. 배경 컬러</div>
+      <div class="section-title">5. 배경 컬러</div>
       <div class="color-row">
         <div class="color-input-wrap">
           <input type="color" id="bgColorPicker" value="#4A90D9">
@@ -272,10 +396,60 @@ body { font-family: 'Pretendard', -apple-system, sans-serif; background: #F5F5F7
       <div class="color-help">HEX 컬러값을 직접 입력하거나 컬러 피커를 사용하세요</div>
     </div>
 
+    <!-- 6. CTA 버튼 -->
+    <div>
+      <div class="section-title">6. CTA 버튼</div>
+      <div class="cta-toggle-row">
+        <div class="toggle-switch" id="ctaToggle" onclick="toggleCta()"></div>
+        <div class="cta-toggle-label">CTA 버튼 사용</div>
+      </div>
+      <div class="cta-options" id="ctaOptions">
+        <div class="input-group" style="margin-bottom:0;">
+          <label>버튼 텍스트</label>
+          <input type="text" id="ctaText" placeholder="예: 지원하기" maxlength="15">
+          <div class="char-count"><span id="ctaCount">0</span>/15 · 화살표(›) 자동 추가</div>
+        </div>
+        <div>
+          <label style="font-size:13px;font-weight:500;color:#555;display:block;margin-bottom:6px;">버튼 스타일 <span class="cta-auto-badge" id="ctaAutoBadge">자동</span></label>
+          <div class="cta-style-grid">
+            <div class="cta-style-card" data-style="cta1" onclick="selectCtaStyle(this)">
+              <div class="cta-style-label">CTA_1 풀너비</div>
+              <div class="cta-style-demo cta1">텍스트 ›</div>
+            </div>
+            <div class="cta-style-card" data-style="cta2" onclick="selectCtaStyle(this)">
+              <div class="cta-style-label">CTA_2 pill형</div>
+              <div class="cta-style-demo cta2">텍스트 ›</div>
+            </div>
+          </div>
+          <div style="margin-top:4px;">
+            <span class="cta-auto-reset" id="ctaAutoReset" onclick="resetCtaAuto()" style="font-size:11px;color:#2563EB;cursor:pointer;display:none;">↺ 자동 매칭으로 되돌리기</span>
+          </div>
+        </div>
+        <div class="cta-color-row">
+          <label>버튼 컬러</label>
+          <div class="color-input-wrap">
+            <input type="color" id="ctaColorPicker" value="#1A1A1A">
+            <input type="text" id="ctaColorText" value="#1A1A1A">
+          </div>
+        </div>
+        <div class="cta-color-row">
+          <label>텍스트 컬러</label>
+          <div class="color-input-wrap">
+            <input type="color" id="ctaTextColorPicker" value="#FFFFFF">
+            <input type="text" id="ctaTextColorText" value="#FFFFFF">
+          </div>
+        </div>
+        <div>
+          <div style="font-size:12px;color:#888;margin-bottom:4px;">미리보기</div>
+          <div class="cta-preview-chip" id="ctaPreviewChip" style="background:#1A1A1A;color:#FFFFFF;padding:6px 0;width:100%;border-radius:4px;">지원하기 ›</div>
+        </div>
+      </div>
+    </div>
+
     <!-- 가이드 안내 -->
     <div class="guide-box" id="guideBox">
-      <div class="guide-title">현재 사이즈 가이드</div>
-      <ul id="guideList"></ul>
+      <div class="guide-title">선택된 사이즈 가이드</div>
+      <div id="guideContent"></div>
     </div>
   </div>
 
@@ -283,83 +457,131 @@ body { font-family: 'Pretendard', -apple-system, sans-serif; background: #F5F5F7
   <div class="panel-right">
     <div class="preview-header">
       <div class="preview-title">미리보기</div>
-      <div style="display:flex;align-items:center;gap:12px;">
-        <div class="preview-info" id="previewInfo">메인 탑 배너 · 1556 x 232</div>
-        <div class="preview-scale" id="previewScale">50%</div>
-      </div>
+      <div class="preview-count" id="previewCount">1개 선택</div>
     </div>
 
-    <div class="preview-container" id="previewContainer">
-      <div class="empty-state" id="emptyState">
-        <div class="empty-icon">&#9633;</div>
-        <p>왼쪽에서 이미지와 텍스트를 입력하면<br>여기에 미리보기가 표시됩니다</p>
-      </div>
-      <div class="banner-frame" id="bannerFrame" style="display:none;">
-        <img class="banner-bg-image" id="bannerBgImage" style="display:none;">
-        <div class="banner-text-zone" id="bannerTextZone">
-          <div class="banner-text-sub" id="previewSub"></div>
-          <div class="banner-text-main" id="previewMain"></div>
-        </div>
-        <div class="banner-image-zone" id="bannerImageZone" style="display:none;">
-          <img id="bannerObjImage">
-        </div>
-        <div class="margin-overlay" id="marginOverlay"></div>
-      </div>
+    <div class="empty-state" id="emptyState">
+      <div class="empty-icon">&#9633;</div>
+      <p>왼쪽에서 이미지와 텍스트를 입력하면<br>여기에 미리보기가 표시됩니다</p>
     </div>
+
+    <div class="preview-list" id="previewList"></div>
 
     <div class="toggle-row">
       <div class="toggle-switch" id="marginToggle" onclick="toggleMargins()"></div>
       <div class="toggle-label">여백 가이드 표시</div>
     </div>
 
-    <button class="btn-download" id="downloadBtn" disabled onclick="downloadBanner()">PNG 다운로드</button>
+    <button class="btn-download" id="downloadBtn" disabled onclick="downloadAllBanners()">PNG 다운로드</button>
   </div>
 </div>
 
 <script>
+// ===== roundRect 폴리필 (구형 브라우저 호환) =====
+if (!CanvasRenderingContext2D.prototype.roundRect) {
+  CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
+    if (typeof r === "number") r = [r, r, r, r];
+    const [tl, tr, br, bl] = r;
+    this.moveTo(x + tl, y);
+    this.lineTo(x + w - tr, y); this.quadraticCurveTo(x + w, y, x + w, y + tr);
+    this.lineTo(x + w, y + h - br); this.quadraticCurveTo(x + w, y + h, x + w - br, y + h);
+    this.lineTo(x + bl, y + h); this.quadraticCurveTo(x, y + h, x, y + h - bl);
+    this.lineTo(x, y + tl); this.quadraticCurveTo(x, y, x + tl, y);
+    this.closePath();
+    return this;
+  };
+}
+
 // ===== 배너 프리셋 데이터 =====
 const PRESETS = {
   pc_main_top: {
     name: "메인 탑 배너", w: 1556, h: 232,
     margins: { left: 96, right: 96, top: 54, bottom: 54 },
-    fonts: { main: { size: 62, weight: 700, spacing: -0.04 }, sub: { size: 38, weight: 500, spacing: -0.02 } },
+    fonts: { main: { size: 62, spacing: -0.02 }, sub: { size: 38, spacing: -0.02 } },
     minFont: 26, textRatio: 0.55, imgRatio: 0.45, layout: "horizontal",
     rules: ["붉은계열 배경 컬러 지양 (BI 인접)","배경과 구분되는 BG Color 사용","이미지 외곽 테두리 삽입 불가","서브카피 1줄 / 메인카피 1줄 권장","최종파일 라운딩 없이 전달","최소 폰트: 26px"]
   },
   pc_job_sky: {
     name: "공고 스카이 배너", w: 560, h: 700,
     margins: { left: 49, right: 49, top: 62, bottom: 62 },
-    fonts: { main: { size: 42, weight: 700, spacing: -0.03 }, sub: { size: 28, weight: 500, spacing: -0.02 } },
+    fonts: { main: { size: 42, spacing: -0.02 }, sub: { size: 28, spacing: -0.02 } },
     minFont: 12, textRatio: 0.45, imgRatio: 0.55, layout: "vertical",
     rules: ["흰 배경에서 가시성 있는 BG컬러 사용","폰트 사이즈 최대 2가지 사용","이미지 외곽 테두리 삽입 불가","최종파일 라운딩 없이 전달","최소 폰트: 12px"]
   },
   pc_login_right: {
     name: "로그인 우측 배너", w: 325, h: 310,
     margins: { left: 10, right: 10, top: 10, bottom: 10 },
-    fonts: { main: { size: 28, weight: 700, spacing: -0.03 }, sub: { size: 18, weight: 500, spacing: -0.02 } },
+    fonts: { main: { size: 28, spacing: -0.02 }, sub: { size: 18, spacing: -0.02 } },
     minFont: 12, textRatio: 0.5, imgRatio: 0.5, layout: "vertical",
     rules: ["흰색 배경에서 가시성 있는 BG컬러 사용","배너 여백 10px, 출처 표기 여백 8px 준수","배너 라운딩 가능","최소 폰트: 12px"]
   },
   m_sub_banner: {
     name: "M 서브 배너", w: 1029, h: 258,
     margins: { left: 10, right: 10, top: 0, bottom: 0 },
-    fonts: { main: { size: 56, weight: 700, spacing: -0.04 }, sub: { size: 34, weight: 500, spacing: -0.02 } },
+    fonts: { main: { size: 56, spacing: -0.02 }, sub: { size: 34, spacing: -0.02 } },
     minFont: 22, textRatio: 0.55, imgRatio: 0.45, layout: "horizontal",
     rules: ["흰 배경에서 가시성 있는 BG컬러 사용","파일명 뒤에 컬러값 표기 (bn_cceeff.png)","좌우 10px내 패턴/이미지 노출 금지","배너 라운딩 불가","폰트: Gmarket Sans Bold 최대 56px","최소 폰트: 22px (모바일)"]
   }
 };
 
-// 컬러 프리셋 제거 — HEX 직접 입력 방식
+// ===== 폰트 시스템 정의 =====
+const FONT_SYSTEM = {
+  main: {
+    default: { family: "GmarketSansBold", label: "Gmarket Sans Bold", weight: 700, css: "'GmarketSansBold', sans-serif" },
+    options: [
+      { family: "GmarketSansBold", label: "Gmarket Sans Bold", weight: 700, css: "'GmarketSansBold', sans-serif" },
+      { family: "Paperlogy-7Bold", label: "Paperlogy 7Bold", weight: 700, css: "'Paperlogy-7Bold', sans-serif" },
+      { family: "Pretendard", label: "Pretendard ExtraBold", weight: 800, css: "'Pretendard', sans-serif" },
+      { family: "TAEBAEK", label: "TAEBAEK", weight: 400, css: "'TAEBAEK', sans-serif" }
+    ]
+  },
+  sub: {
+    default: { family: "GmarketSansMedium", label: "Gmarket Sans Medium", weight: 500, css: "'GmarketSansMedium', sans-serif" },
+    options: [
+      { family: "GmarketSansMedium", label: "Gmarket Sans Medium", weight: 500, css: "'GmarketSansMedium', sans-serif" },
+      { family: "Paperlogy-4Regular", label: "Paperlogy 4 Regular", weight: 400, css: "'Paperlogy-4Regular', sans-serif" },
+      { family: "Pretendard", label: "Pretendard Regular", weight: 400, css: "'Pretendard', sans-serif" }
+    ]
+  }
+};
 
-let state = { sizeId: "pc_main_top", bgColor: "#4A90D9", mainText: "", subText: "", imageUrl: null, imageIsTransparent: false, showMargins: false };
+let state = {
+  selectedSizes: ["pc_main_top"],
+  bgColor: "#4A90D9",
+  mainText: "",
+  subText: "",
+  imageUrl: null,
+  imageIsTransparent: false,
+  showMargins: false,
+  fontEnabled: false,
+  mainFont: { ...FONT_SYSTEM.main.default },
+  subFont: { ...FONT_SYSTEM.sub.default },
+  ctaEnabled: false,
+  ctaText: "",
+  ctaColor: "#1A1A1A",
+  ctaTextColor: "#FFFFFF",
+  ctaManualStyle: null
+};
 
 // ===== 초기화 =====
 function init() {
   document.getElementById("fileInput").addEventListener("change", handleFileUpload);
-  document.getElementById("mainText").addEventListener("input", e => { state.mainText = e.target.value; document.getElementById("mainCount").textContent = e.target.value.length; updatePreview(); });
-  document.getElementById("subText").addEventListener("input", e => { state.subText = e.target.value; document.getElementById("subCount").textContent = e.target.value.length; updatePreview(); });
+  document.getElementById("mainText").addEventListener("input", e => { state.mainText = e.target.value; document.getElementById("mainCount").textContent = e.target.value.length; updateFontPreview(); updatePreview(); });
+  document.getElementById("subText").addEventListener("input", e => { state.subText = e.target.value; document.getElementById("subCount").textContent = e.target.value.length; updateFontPreview(); updatePreview(); });
   document.getElementById("bgColorPicker").addEventListener("input", e => setBgColor(e.target.value));
   document.getElementById("bgColorText").addEventListener("change", e => { if (/^#[0-9A-Fa-f]{6}$/.test(e.target.value)) setBgColor(e.target.value); });
+
+  // CTA 이벤트
+  document.getElementById("ctaText").addEventListener("input", e => {
+    state.ctaText = e.target.value;
+    document.getElementById("ctaCount").textContent = e.target.value.length;
+    updateCtaChip();
+    updatePreview();
+  });
+  document.getElementById("ctaColorPicker").addEventListener("input", e => { state.ctaColor = e.target.value; document.getElementById("ctaColorText").value = e.target.value; updateCtaChip(); updatePreview(); });
+  document.getElementById("ctaColorText").addEventListener("change", e => { if (/^#[0-9A-Fa-f]{6}$/.test(e.target.value)) { state.ctaColor = e.target.value; document.getElementById("ctaColorPicker").value = e.target.value; updateCtaChip(); updatePreview(); }});
+  document.getElementById("ctaTextColorPicker").addEventListener("input", e => { state.ctaTextColor = e.target.value; document.getElementById("ctaTextColorText").value = e.target.value; updateCtaChip(); updatePreview(); });
+  document.getElementById("ctaTextColorText").addEventListener("change", e => { if (/^#[0-9A-Fa-f]{6}$/.test(e.target.value)) { state.ctaTextColor = e.target.value; document.getElementById("ctaTextColorPicker").value = e.target.value; updateCtaChip(); updatePreview(); }});
 
   // 드래그 앤 드롭
   const uploadArea = document.getElementById("uploadArea");
@@ -408,7 +630,18 @@ function loadImageFile(file) {
 function showUploadedImage(src) {
   const area = document.getElementById("uploadArea");
   area.classList.add("has-image");
-  area.innerHTML = '<img src="' + src + '"><div class="upload-reupload"><span>이미지 변경</span><div class="reupload-hint">클릭 또는 드래그</div></div>';
+  area.innerHTML = '<img src="' + src + '"><button class="upload-remove" onclick="removeImage(event)" title="이미지 제거">✕</button><div class="upload-reupload"><span>이미지 변경</span><div class="reupload-hint">클릭 또는 드래그</div></div>';
+}
+
+function removeImage(e) {
+  e.stopPropagation();
+  state.imageUrl = null;
+  state.imageIsTransparent = false;
+  document.getElementById("fileInput").value = "";
+  const area = document.getElementById("uploadArea");
+  area.classList.remove("has-image");
+  area.innerHTML = '<div class="upload-icon">+</div><div class="upload-text"><strong>클릭 또는 드래그</strong>하여 이미지를 업로드하세요</div><div class="upload-hint">PNG, JPG 권장 · 투명 배경 PNG 자동 감지</div>';
+  updatePreview();
 }
 
 function checkTransparency(dataUrl) {
@@ -428,13 +661,123 @@ function checkTransparency(dataUrl) {
   img.src = dataUrl;
 }
 
-// ===== 사이즈/색상/가이드 =====
-function selectSize(el) {
-  document.querySelectorAll(".size-card").forEach(c => c.classList.remove("selected"));
-  el.classList.add("selected");
-  state.sizeId = el.dataset.id;
+// ===== 사이즈 토글 (복수 선택) =====
+function toggleSize(el) {
+  const id = el.dataset.id;
+  const idx = state.selectedSizes.indexOf(id);
+  if (idx > -1) {
+    // 최소 1개는 선택 유지
+    if (state.selectedSizes.length <= 1) return;
+    state.selectedSizes.splice(idx, 1);
+    el.classList.remove("selected");
+  } else {
+    state.selectedSizes.push(id);
+    el.classList.add("selected");
+  }
   updateGuide();
   updatePreview();
+}
+
+// ===== 폰트 선택 =====
+function toggleFont() {
+  state.fontEnabled = !state.fontEnabled;
+  document.getElementById("fontToggle").classList.toggle("on", state.fontEnabled);
+  document.getElementById("fontOptions").classList.toggle("active", state.fontEnabled);
+  if (!state.fontEnabled) {
+    // 비활성화 시 디폴트 폰트로 리셋
+    state.mainFont = { ...FONT_SYSTEM.main.default };
+    state.subFont = { ...FONT_SYSTEM.sub.default };
+    document.getElementById("mainFontSelect").selectedIndex = 0;
+    document.getElementById("subFontSelect").selectedIndex = 0;
+    updateFontPreview();
+  }
+  updatePreview();
+}
+
+function changeFont() {
+  const mainSel = document.getElementById("mainFontSelect");
+  const subSel = document.getElementById("subFontSelect");
+  const mainOpt = mainSel.options[mainSel.selectedIndex];
+  const subOpt = subSel.options[subSel.selectedIndex];
+
+  state.mainFont = FONT_SYSTEM.main.options.find(f => f.family === mainOpt.value) || FONT_SYSTEM.main.default;
+  state.subFont = FONT_SYSTEM.sub.options.find(f => f.family === subOpt.value) || FONT_SYSTEM.sub.default;
+
+  updateFontPreview();
+  updatePreview();
+}
+
+function updateFontPreview() {
+  const mainPrev = document.getElementById("fontPreviewMain");
+  const subPrev = document.getElementById("fontPreviewSub");
+  mainPrev.style.fontFamily = state.mainFont.css;
+  mainPrev.style.fontWeight = state.mainFont.weight;
+  mainPrev.textContent = state.mainText || "메인 카피 미리보기";
+  subPrev.style.fontFamily = state.subFont.css;
+  subPrev.style.fontWeight = state.subFont.weight;
+  subPrev.textContent = state.subText || "서브 카피 미리보기";
+}
+
+function toggleCta() {
+  state.ctaEnabled = !state.ctaEnabled;
+  document.getElementById("ctaToggle").classList.toggle("on", state.ctaEnabled);
+  document.getElementById("ctaOptions").classList.toggle("active", state.ctaEnabled);
+  updatePreview();
+}
+
+function selectCtaStyle(el) {
+  document.querySelectorAll(".cta-style-card").forEach(c => c.classList.remove("selected"));
+  el.classList.add("selected");
+  state.ctaManualStyle = el.dataset.style;
+  document.getElementById("ctaAutoBadge").textContent = "수동";
+  document.getElementById("ctaAutoBadge").style.color = "#888";
+  document.getElementById("ctaAutoBadge").style.background = "#F3F4F6";
+  document.getElementById("ctaAutoReset").style.display = "inline";
+  updateCtaChip();
+  updatePreview();
+}
+
+function resetCtaAuto() {
+  state.ctaManualStyle = null;
+  document.querySelectorAll(".cta-style-card").forEach(c => c.classList.remove("selected"));
+  document.getElementById("ctaAutoBadge").textContent = "자동";
+  document.getElementById("ctaAutoBadge").style.color = "#2563EB";
+  document.getElementById("ctaAutoBadge").style.background = "#EFF6FF";
+  document.getElementById("ctaAutoReset").style.display = "none";
+  updateCtaChip();
+  updatePreview();
+}
+
+// 레이아웃에 따라 최적 CTA 스타일 자동 결정
+function getAutoCtaStyle(preset) {
+  if (preset.layout === "horizontal") return "cta2"; // 가로형 → pill
+  return "cta1"; // 세로형/정방형 → 풀너비
+}
+
+function getCtaStyleForPreset(preset) {
+  if (state.ctaManualStyle) return state.ctaManualStyle;
+  return getAutoCtaStyle(preset);
+}
+
+function updateCtaChip() {
+  const chip = document.getElementById("ctaPreviewChip");
+  chip.style.background = state.ctaColor;
+  chip.style.color = state.ctaTextColor;
+  chip.textContent = (state.ctaText || "지원하기") + " ›";
+  // 자동 모드면 첫 번째 선택된 배너 기준으로 스타일 결정
+  let style;
+  if (state.ctaManualStyle) {
+    style = state.ctaManualStyle;
+  } else if (state.selectedSizes.length > 0) {
+    style = getAutoCtaStyle(PRESETS[state.selectedSizes[0]]);
+  } else {
+    style = "cta1";
+  }
+  if (style === "cta1") {
+    chip.style.width = "100%"; chip.style.padding = "6px 0"; chip.style.borderRadius = "4px";
+  } else {
+    chip.style.width = "auto"; chip.style.padding = "6px 20px"; chip.style.borderRadius = "50px";
+  }
 }
 
 function setBgColor(color) {
@@ -444,137 +787,224 @@ function setBgColor(color) {
   updatePreview();
 }
 
-function rgbToHex(rgb) {
-  if (rgb.startsWith("#")) return rgb.toLowerCase();
-  const m = rgb.match(/\d+/g);
-  return m ? "#" + m.slice(0,3).map(x => parseInt(x).toString(16).padStart(2,"0")).join("") : "";
-}
-
 function updateGuide() {
-  const p = PRESETS[state.sizeId];
-  document.getElementById("previewInfo").textContent = p.name + " · " + p.w + " x " + p.h;
-  document.getElementById("guideList").innerHTML = p.rules.map(r => "<li>" + r + "</li>").join("");
+  const countEl = document.getElementById("previewCount");
+  countEl.textContent = state.selectedSizes.length + "개 선택";
+
+  const content = document.getElementById("guideContent");
+  if (state.selectedSizes.length === 1) {
+    const p = PRESETS[state.selectedSizes[0]];
+    content.innerHTML = '<ul>' + p.rules.map(r => '<li>' + r + '</li>').join('') + '</ul>';
+  } else {
+    content.innerHTML = state.selectedSizes.map(id => {
+      const p = PRESETS[id];
+      return '<div class="guide-section"><div class="guide-section-name">' + p.name + '</div><ul>' + p.rules.map(r => '<li>' + r + '</li>').join('') + '</ul></div>';
+    }).join('');
+  }
 }
 
 function toggleMargins() {
   state.showMargins = !state.showMargins;
   document.getElementById("marginToggle").classList.toggle("on", state.showMargins);
-  document.getElementById("marginOverlay").classList.toggle("show", state.showMargins);
+  document.querySelectorAll(".margin-overlay").forEach(el => {
+    el.classList.toggle("show", state.showMargins);
+  });
 }
 
-// ===== 미리보기 업데이트 =====
+// ===== 미리보기 업데이트 (복수) =====
 function updatePreview() {
-  const preset = PRESETS[state.sizeId];
   const hasContent = state.mainText || state.subText || state.imageUrl;
+  const emptyState = document.getElementById("emptyState");
+  const previewList = document.getElementById("previewList");
+  const downloadBtn = document.getElementById("downloadBtn");
 
-  document.getElementById("emptyState").style.display = hasContent ? "none" : "block";
-  document.getElementById("bannerFrame").style.display = hasContent ? "flex" : "none";
-  document.getElementById("downloadBtn").disabled = !hasContent;
+  emptyState.style.display = hasContent ? "none" : "block";
+  previewList.style.display = hasContent ? "flex" : "none";
+  downloadBtn.disabled = !hasContent;
+  downloadBtn.textContent = state.selectedSizes.length > 1
+    ? "PNG 전체 다운로드 (" + state.selectedSizes.length + "개)"
+    : "PNG 다운로드";
+
   if (!hasContent) return;
 
-  const containerW = document.getElementById("previewContainer").clientWidth - 80;
-  const containerH = 500;
-  const scale = Math.min(containerW / preset.w, containerH / preset.h, 1);
-  document.getElementById("previewScale").textContent = Math.round(scale * 100) + "%";
+  // 미리보기 아이템 생성
+  previewList.innerHTML = "";
+  state.selectedSizes.forEach(sizeId => {
+    const preset = PRESETS[sizeId];
+    const item = document.createElement("div");
+    item.className = "preview-item";
+    item.dataset.sizeId = sizeId;
 
-  const frame = document.getElementById("bannerFrame");
-  frame.style.width = (preset.w * scale) + "px";
-  frame.style.height = (preset.h * scale) + "px";
-  frame.style.background = state.bgColor;
+    const containerMaxW = 820;
+    const containerMaxH = 500;
+    const scale = Math.min(containerMaxW / preset.w, containerMaxH / preset.h, 1);
+    const scalePercent = Math.round(scale * 100);
 
-  const textZone = document.getElementById("bannerTextZone");
-  const imgZone = document.getElementById("bannerImageZone");
-  const bgImg = document.getElementById("bannerBgImage");
-  const objImg = document.getElementById("bannerObjImage");
+    item.innerHTML =
+      '<div class="preview-item-header">' +
+        '<div class="preview-item-name">' + preset.name + '</div>' +
+        '<div class="preview-item-info">' +
+          '<span>' + preset.w + ' x ' + preset.h + '</span>' +
+          '<span class="preview-item-scale">' + scalePercent + '%</span>' +
+        '</div>' +
+      '</div>' +
+      '<div class="preview-item-canvas"></div>';
+
+    previewList.appendChild(item);
+
+    const canvasContainer = item.querySelector(".preview-item-canvas");
+    renderPreviewItem(canvasContainer, preset, scale);
+  });
+}
+
+// ===== 통합 Canvas 렌더링 (미리보기 = 출력 동일) =====
+// 원본 사이즈로 Canvas에 그린 후, 미리보기에서는 CSS 축소로 표시
+function renderToCanvas(preset, callback) {
+  const canvas = document.createElement("canvas");
+  canvas.width = preset.w;
+  canvas.height = preset.h;
+  const ctx = canvas.getContext("2d");
+
+  // 1. 배경색
+  ctx.fillStyle = state.bgColor;
+  ctx.fillRect(0, 0, preset.w, preset.h);
+
   const m = preset.margins;
-
+  const isObjLayout = state.imageIsTransparent && preset.layout === "horizontal";
+  const textX = isObjLayout ? m.left + (preset.w * preset.textRatio - m.left) / 2 : preset.w / 2;
+  const textAlign = isObjLayout ? "left" : "center";
+  const centerY = preset.h / 2;
   const textColor = getContrastColor(state.bgColor);
 
-  // 이미지 유형에 따른 레이아웃
-  if (state.imageUrl && !state.imageIsTransparent) {
-    // 배경 이미지: 전체 깔기, 텍스트 위에 올림
-    bgImg.src = state.imageUrl;
-    bgImg.style.display = "block";
-    imgZone.style.display = "none";
-    frame.style.flexDirection = "row";
-    textZone.style.width = "100%";
-    textZone.style.alignItems = "center";
-    textZone.style.paddingLeft = (m.left * scale) + "px";
-    textZone.style.paddingRight = (m.right * scale) + "px";
-    textZone.style.paddingTop = (m.top * scale) + "px";
-    textZone.style.paddingBottom = (m.bottom * scale) + "px";
-  } else if (state.imageUrl && state.imageIsTransparent) {
-    // 투명 PNG: 텍스트 영역과 이미지 영역 분리
-    bgImg.style.display = "none";
-    imgZone.style.display = "flex";
-    objImg.src = state.imageUrl;
+  const drawContent = () => {
+    // 3. 텍스트 (자간 반영)
+    ctx.textAlign = "center";
+    ctx.fillStyle = textColor;
 
-    if (preset.layout === "horizontal") {
-      frame.style.flexDirection = "row";
-      textZone.style.width = (preset.textRatio * 100) + "%";
-      imgZone.style.width = (preset.imgRatio * 100) + "%";
-      textZone.style.alignItems = "flex-start";
-      textZone.style.paddingLeft = (m.left * scale) + "px";
-      textZone.style.paddingRight = (12 * scale) + "px";
-      textZone.style.paddingTop = (m.top * scale) + "px";
-      textZone.style.paddingBottom = (m.bottom * scale) + "px";
-      imgZone.style.padding = (8 * scale) + "px";
-      imgZone.style.paddingRight = (m.right * scale) + "px";
-    } else {
-      frame.style.flexDirection = "column";
-      textZone.style.width = "100%";
-      textZone.style.height = (preset.textRatio * 100) + "%";
-      imgZone.style.width = "100%";
-      imgZone.style.height = (preset.imgRatio * 100) + "%";
-      textZone.style.alignItems = "center";
-      textZone.style.paddingLeft = (m.left * scale) + "px";
-      textZone.style.paddingRight = (m.right * scale) + "px";
-      textZone.style.paddingTop = (m.top * scale) + "px";
-      textZone.style.paddingBottom = (8 * scale) + "px";
-      imgZone.style.padding = (8 * scale) + "px";
-      imgZone.style.paddingBottom = (m.bottom * scale) + "px";
+    if (state.subText) {
+      ctx.save();
+      ctx.font = state.subFont.weight + " " + preset.fonts.sub.size + "px " + state.subFont.css;
+      const subSpacing = preset.fonts.sub.spacing * preset.fonts.sub.size;
+      drawTextWithSpacing(ctx, state.subText, textX, centerY - preset.fonts.main.size * 0.3, subSpacing, textAlign);
+      ctx.restore();
     }
+    if (state.mainText) {
+      ctx.save();
+      ctx.font = state.mainFont.weight + " " + preset.fonts.main.size + "px " + state.mainFont.css;
+      const mainSpacing = preset.fonts.main.spacing * preset.fonts.main.size;
+      drawTextWithSpacing(ctx, state.mainText, textX, centerY + preset.fonts.main.size * 0.5, mainSpacing, textAlign);
+      ctx.restore();
+    }
+
+    // 4. CTA 버튼
+    if (state.ctaEnabled && state.ctaText) {
+      const ctaStyle = getCtaStyleForPreset(preset);
+      const ctaFS = Math.min(preset.fonts.sub.size * 0.7, 24);
+      const ctaLabel = state.ctaText + " ›";
+      ctx.font = "700 " + ctaFS + "px " + state.mainFont.css;
+
+      if (ctaStyle === "cta1") {
+        const ctaBarH = Math.max(preset.h * 0.17, 30);
+        const ctaY = preset.h - ctaBarH;
+        ctx.fillStyle = state.ctaColor;
+        ctx.fillRect(0, ctaY, preset.w, ctaBarH);
+        ctx.fillStyle = state.ctaTextColor;
+        ctx.textAlign = "center";
+        ctx.fillText(ctaLabel, preset.w / 2, ctaY + ctaBarH / 2 + ctaFS * 0.35);
+      } else {
+        const ctaPadX = ctaFS * 2;
+        const ctaPadY = ctaFS * 0.7;
+        const ctaW = ctx.measureText(ctaLabel).width + ctaPadX * 2;
+        const ctaH = ctaFS + ctaPadY * 2;
+        const ctaX = textX - ctaW / 2;
+        const ctaY = centerY + preset.fonts.main.size * 0.5 + preset.fonts.main.size * 0.5;
+        const ctaR = ctaH / 2;
+        ctx.fillStyle = state.ctaColor;
+        ctx.beginPath();
+        ctx.roundRect(ctaX, ctaY, ctaW, ctaH, ctaR);
+        ctx.fill();
+        ctx.fillStyle = state.ctaTextColor;
+        ctx.textAlign = "center";
+        ctx.fillText(ctaLabel, ctaX + ctaW / 2, ctaY + ctaPadY + ctaFS * 0.35);
+      }
+    }
+
+    callback(canvas);
+  };
+
+  // 2. 이미지
+  if (state.imageUrl) {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => {
+      if (state.imageIsTransparent) {
+        const zoneW = preset.w * preset.imgRatio;
+        const zoneH = preset.h * 0.9;
+        const s = Math.min(zoneW / img.width, zoneH / img.height);
+        const dw = img.width * s, dh = img.height * s;
+        if (preset.layout === "horizontal") {
+          ctx.drawImage(img, preset.w * preset.textRatio + (zoneW - dw) / 2, (preset.h - dh) / 2, dw, dh);
+        } else {
+          ctx.drawImage(img, (preset.w - dw) / 2, preset.h * preset.textRatio + (preset.h * preset.imgRatio - dh) / 2, dw, dh);
+        }
+      } else {
+        ctx.drawImage(img, 0, 0, preset.w, preset.h);
+      }
+      drawContent();
+    };
+    img.src = state.imageUrl;
   } else {
-    // 이미지 없음: 텍스트만
-    bgImg.style.display = "none";
-    imgZone.style.display = "none";
-    frame.style.flexDirection = "row";
-    textZone.style.width = "100%";
-    textZone.style.alignItems = "center";
-    textZone.style.paddingLeft = (m.left * scale) + "px";
-    textZone.style.paddingRight = (m.right * scale) + "px";
-    textZone.style.paddingTop = (m.top * scale) + "px";
-    textZone.style.paddingBottom = (m.bottom * scale) + "px";
+    drawContent();
   }
+}
 
-  // 텍스트
-  const previewMain = document.getElementById("previewMain");
-  const previewSub = document.getElementById("previewSub");
-  const mainFS = Math.max(preset.fonts.main.size * scale, 10);
-  const subFS = Math.max(preset.fonts.sub.size * scale, 8);
+// 자간을 적용한 텍스트 렌더링
+function drawTextWithSpacing(ctx, text, x, y, spacing, align) {
+  if (!spacing || spacing === 0) {
+    ctx.textAlign = align;
+    ctx.fillText(text, x, y);
+    return;
+  }
+  // 전체 텍스트 폭 계산 (자간 포함)
+  let totalW = 0;
+  for (let i = 0; i < text.length; i++) {
+    totalW += ctx.measureText(text[i]).width;
+    if (i < text.length - 1) totalW += spacing;
+  }
+  // 정렬에 따른 시작 x 계산
+  let startX = x;
+  if (align === "center") startX = x - totalW / 2;
+  else if (align === "right") startX = x - totalW;
 
-  previewSub.style.fontSize = subFS + "px";
-  previewSub.style.fontWeight = preset.fonts.sub.weight;
-  previewSub.style.letterSpacing = (preset.fonts.sub.spacing * subFS) + "px";
-  previewSub.textContent = state.subText;
-  previewSub.style.display = state.subText ? "block" : "none";
-  previewSub.style.marginBottom = (4 * scale) + "px";
-  previewSub.style.color = textColor;
-  previewSub.style.textAlign = state.imageIsTransparent && preset.layout === "horizontal" ? "left" : "center";
+  ctx.textAlign = "left";
+  let curX = startX;
+  for (let i = 0; i < text.length; i++) {
+    ctx.fillText(text[i], curX, y);
+    curX += ctx.measureText(text[i]).width + spacing;
+  }
+}
 
-  previewMain.style.fontSize = mainFS + "px";
-  previewMain.style.fontWeight = preset.fonts.main.weight;
-  previewMain.style.letterSpacing = (preset.fonts.main.spacing * mainFS) + "px";
-  previewMain.textContent = state.mainText;
-  previewMain.style.display = state.mainText ? "block" : "none";
-  previewMain.style.color = textColor;
-  previewMain.style.textAlign = previewSub.style.textAlign;
+// 미리보기용: Canvas를 축소해서 표시 + 마진 오버레이
+function renderPreviewItem(container, preset, scale) {
+  const wrapper = document.createElement("div");
+  wrapper.style.cssText = "position:relative;display:inline-block;";
 
-  const hasBgImg = state.imageUrl && !state.imageIsTransparent;
-  previewMain.style.textShadow = hasBgImg ? "0 1px 6px rgba(0,0,0,0.4)" : "none";
-  previewSub.style.textShadow = previewMain.style.textShadow;
+  renderToCanvas(preset, (canvas) => {
+    // Canvas를 CSS로 축소 표시
+    canvas.style.width = (preset.w * scale) + "px";
+    canvas.style.height = (preset.h * scale) + "px";
+    canvas.style.display = "block";
+    wrapper.appendChild(canvas);
 
-  drawMarginOverlay(preset, scale);
+    // 마진 오버레이 (HTML로 위에 겹침)
+    const overlay = document.createElement("div");
+    overlay.className = "margin-overlay" + (state.showMargins ? " show" : "");
+    overlay.style.cssText = "width:" + (preset.w * scale) + "px;height:" + (preset.h * scale) + "px;";
+    drawMarginOverlayEl(overlay, preset, scale);
+    wrapper.appendChild(overlay);
+
+    container.appendChild(wrapper);
+  });
 }
 
 function getContrastColor(hex) {
@@ -582,11 +1012,9 @@ function getContrastColor(hex) {
   return (0.299*r + 0.587*g + 0.114*b) / 255 > 0.55 ? "#1A1A1A" : "#FFFFFF";
 }
 
-function drawMarginOverlay(preset, scale) {
-  const overlay = document.getElementById("marginOverlay");
+function drawMarginOverlayEl(overlay, preset, scale) {
   const m = preset.margins;
   const w = preset.w * scale, h = preset.h * scale;
-  overlay.innerHTML = "";
   addMR(overlay, 0, 0, m.left*scale, h, m.left+"px");
   addMR(overlay, w-m.right*scale, 0, m.right*scale, h, m.right+"px");
   addMR(overlay, m.left*scale, 0, w-(m.left+m.right)*scale, m.top*scale, m.top+"px");
@@ -603,51 +1031,21 @@ function addMR(p, x, y, w, h, l) {
   p.appendChild(lb);
 }
 
-// ===== PNG 다운로드 =====
-function downloadBanner() {
-  const preset = PRESETS[state.sizeId];
-  const canvas = document.createElement("canvas");
-  canvas.width = preset.w; canvas.height = preset.h;
-  const ctx = canvas.getContext("2d");
-  ctx.fillStyle = state.bgColor;
-  ctx.fillRect(0, 0, preset.w, preset.h);
+// ===== PNG 다운로드 (통합 렌더링 사용) =====
+function downloadAllBanners() {
+  state.selectedSizes.forEach((sizeId, i) => {
+    setTimeout(() => downloadBanner(sizeId), i * 300);
+  });
+}
 
-  const drawTextAndSave = () => {
-    const m = preset.margins;
-    const isObjLayout = state.imageIsTransparent && preset.layout === "horizontal";
-    const textX = isObjLayout ? m.left + (preset.w * preset.textRatio - m.left) / 2 : preset.w / 2;
-    const textAlign = isObjLayout ? "center" : "center";
-    const centerY = preset.h / 2;
-    const textColor = getContrastColor(state.bgColor);
-    ctx.textAlign = textAlign;
-    ctx.fillStyle = textColor;
-    if (state.subText) { ctx.font = preset.fonts.sub.weight+" "+preset.fonts.sub.size+"px Pretendard,sans-serif"; ctx.fillText(state.subText, textX, centerY - preset.fonts.main.size*0.3); }
-    if (state.mainText) { ctx.font = preset.fonts.main.weight+" "+preset.fonts.main.size+"px Pretendard,sans-serif"; ctx.fillText(state.mainText, textX, centerY + preset.fonts.main.size*0.5); }
+function downloadBanner(sizeId) {
+  const preset = PRESETS[sizeId];
+  renderToCanvas(preset, (canvas) => {
     const link = document.createElement("a");
-    link.download = "banner_"+preset.w+"x"+preset.h+"_"+state.bgColor.slice(1)+".png";
-    link.href = canvas.toDataURL("image/png"); link.click();
-  };
-
-  if (state.imageUrl) {
-    const img = new Image(); img.crossOrigin = "anonymous";
-    img.onload = () => {
-      if (state.imageIsTransparent) {
-        const zoneW = preset.w * preset.imgRatio;
-        const zoneH = preset.h * 0.9;
-        const s = Math.min(zoneW / img.width, zoneH / img.height);
-        const dw = img.width*s, dh = img.height*s;
-        if (preset.layout === "horizontal") {
-          ctx.drawImage(img, preset.w*preset.textRatio + (zoneW-dw)/2, (preset.h-dh)/2, dw, dh);
-        } else {
-          ctx.drawImage(img, (preset.w-dw)/2, preset.h*preset.textRatio + (preset.h*preset.imgRatio-dh)/2, dw, dh);
-        }
-      } else {
-        ctx.drawImage(img, 0, 0, preset.w, preset.h);
-      }
-      drawTextAndSave();
-    };
-    img.src = state.imageUrl;
-  } else { drawTextAndSave(); }
+    link.download = "banner_" + preset.w + "x" + preset.h + "_" + state.bgColor.slice(1) + ".png";
+    link.href = canvas.toDataURL("image/png");
+    link.click();
+  });
 }
 
 init();

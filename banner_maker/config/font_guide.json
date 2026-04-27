@@ -1,8 +1,32 @@
 {
-  "version": "1.0",
-  "last_updated": "2026-04-24",
+  "version": "1.1",
+  "last_updated": "2026-04-27",
   "source": "잡코리아 알바몬 통합 배너가이드 PDF",
   "description": "사용 가능한 폰트와 배너 사이즈별 폰트 매핑. 엔진이 이 파일을 읽어 폰트를 자동 적용합니다.",
+
+  "font_selection_system": {
+    "description": "배너 메이커 폰트 선택 시스템. 사용자는 폰트 종류만 변경 가능 (사이즈/자간/행간 변경 불가).",
+    "toggle": true,
+    "default_note": "특이사항이 없다면 기준 폰트 활용을 권장합니다",
+    "available_families": ["Gmarket Sans", "Paperlogy", "Pretendard", "TAEBAEK"],
+    "main_copy": {
+      "default": { "family": "Gmarket Sans", "weight": "Bold" },
+      "options": [
+        { "family": "Gmarket Sans", "weight": "Bold", "css_family": "GmarketSansBold", "css_weight": 700 },
+        { "family": "Paperlogy", "weight": "7Bold", "css_family": "Paperlogy-7Bold", "css_weight": 700 },
+        { "family": "Pretendard", "weight": "ExtraBold", "css_family": "Pretendard", "css_weight": 800 },
+        { "family": "TAEBAEK", "weight": null, "css_family": "TAEBAEK", "css_weight": 400 }
+      ]
+    },
+    "sub_copy": {
+      "default": { "family": "Gmarket Sans", "weight": "Medium" },
+      "options": [
+        { "family": "Gmarket Sans", "weight": "Medium", "css_family": "GmarketSansMedium", "css_weight": 500 },
+        { "family": "Paperlogy", "weight": "4 Regular", "css_family": "Paperlogy-4Regular", "css_weight": 400 },
+        { "family": "Pretendard", "weight": "Regular", "css_family": "Pretendard", "css_weight": 400 }
+      ]
+    }
+  },
 
   "allowed_fonts": [
     {
