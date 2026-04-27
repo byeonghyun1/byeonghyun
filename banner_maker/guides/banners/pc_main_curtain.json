@@ -1,0 +1,62 @@
+{
+  "id": "pc_main_curtain",
+  "name": "메인 커튼 배너",
+  "last_updated": "2026-04-27",
+  "source": "Figma Agent-Test > PC Main Curtain Banner",
+
+  "basic_info": {
+    "dimensions": { "width": 2160, "height": 160 },
+    "display_size": { "width": 1080, "height": 80 },
+    "position": "PC > 메인 최 상단",
+    "layout": "horizontal",
+    "max_file_size": "30KB"
+  },
+
+  "margins": {
+    "left": 20,
+    "right": 20,
+    "top": 40,
+    "bottom": 40,
+    "審議筆": 26
+  },
+
+  "fonts": {
+    "main": {
+      "family": "Gmarket Sans",
+      "weight": "Bold",
+      "size_px": 72,
+      "letter_spacing": "-2%"
+    },
+    "sub": {
+      "family": "Gmarket Sans",
+      "weight": "Medium",
+      "size_px": 40,
+      "letter_spacing": "-2%"
+    },
+    "review": {
+      "family": "Pretendard",
+      "weight": "Light",
+      "size_px": 20,
+      "letter_spacing": "-1.5%",
+      "color": "#787878"
+    }
+  },
+
+  "text_rules": {
+    "align": "center",
+    "composition": "메인 카피 1줄 중앙정렬 / 서브+메인 1줄 중앙정렬"
+  },
+
+  "color_rules": {
+    "banned_bg": ["붉은계열", "검정"],
+    "required": "배경 컬러코드 필수 제출",
+    "reason": "BI와 인접한 위치이므로 붉은계열 및 검정 배경 금지"
+  },
+
+  "rules": [
+    { "type": "필수", "text": "파일명에 배경 컬러코드 기입 필수" },
+    { "type": "필수", "text": "출처 표기 8px (우측상단 지향)" },
+    { "type": "금지", "text": "BG 블랙 컬러 사용 불가" },
+    { "type": "금지", "text": "좌우 20px내 패턴이나 이미지 노출 금지" }
+  ]
+}

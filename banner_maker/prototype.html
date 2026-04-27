@@ -494,6 +494,13 @@ if (!CanvasRenderingContext2D.prototype.roundRect) {
 
 // ===== 배너 프리셋 데이터 =====
 const PRESETS = {
+  pc_main_curtain: {
+    name: "메인 커튼 배너", w: 2160, h: 160,
+    margins: { left: 20, right: 20, top: 40, bottom: 40 },
+    fonts: { main: { size: 72, spacing: -0.02 }, sub: { size: 40, spacing: -0.02 } },
+    minFont: 20, textRatio: 1, imgRatio: 0, layout: "horizontal",
+    rules: ["[필수] 파일명에 배경 컬러코드 기입 필수","[필수] 출처 표기 8px (우측상단 지향)","[금지] BG 블랙 컬러 사용 불가","[금지] 좌우 20px내 패턴이나 이미지 노출 금지"]
+  },
   pc_main_top: {
     name: "메인 탑 배너", w: 1556, h: 232,
     margins: { left: 96, right: 96, top: 54, bottom: 54 },
@@ -948,7 +955,13 @@ function renderToCanvas(preset, callback) {
           ctx.drawImage(img, (preset.w - dw) / 2, preset.h * preset.textRatio + (preset.h * preset.imgRatio - dh) / 2, dw, dh);
         }
       } else {
-        ctx.drawImage(img, 0, 0, preset.w, preset.h);
+        // 비율 유지 크롭 (cover 모드): 프레임에 꽉 채우되 비율 유지, 넘치는 부분은 잘림
+        const coverScale = Math.max(preset.w / img.width, preset.h / img.height);
+        const dw = img.width * coverScale;
+        const dh = img.height * coverScale;
+        const dx = (preset.w - dw) / 2;
+        const dy = (preset.h - dh) / 2;
+        ctx.drawImage(img, dx, dy, dw, dh);
       }
       drawContent();
     };

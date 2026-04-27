@@ -1,0 +1,26 @@
+{
+  "id": "pc_search_right",
+  "name": "검색 우측 배너",
+  "last_updated": "2026-04-27",
+  "dimensions": { "width": 320, "height": 155 },
+  "layout": "horizontal",
+  "textRatio": 0.6,
+  "imgRatio": 0.4,
+  "margins": { "left": 10, "right": 10, "top": 0, "bottom": 0 },
+  "fonts": {
+    "main": { "family": "Gmarket Sans", "weight": "Bold", "size_px": 24, "letter_spacing": "-2%" },
+    "sub": { "family": "Gmarket Sans", "weight": "Medium", "size_px": 16, "letter_spacing": "-2%" }
+  },
+  "minFont": 12,
+  "color_rules": {
+    "fixed_bg": "#DFE6EE",
+    "required": "#DFE6EE 배경에서 가시성 있는 BG컬러 사용",
+    "variable_area": "단일컬러 사용"
+  },
+  "rules": [
+    { "type": "필수", "text": "#DFE6EE 배경에서 가시성 있는 BG컬러 사용" },
+    { "type": "금지", "text": "좌우 10px내 패턴 및 이미지 노출 금지, 단일컬러 사용" },
+    { "type": "권장", "text": "서브 1줄 + 메인 1줄 권장" },
+    { "type": "권장", "text": "최소 폰트: 12px" }
+  ]
+}

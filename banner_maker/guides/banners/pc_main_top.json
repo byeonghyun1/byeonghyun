@@ -1,0 +1,25 @@
+{
+  "id": "pc_main_top",
+  "name": "메인 탑 배너",
+  "last_updated": "2026-04-27",
+  "dimensions": { "width": 1556, "height": 232 },
+  "layout": "horizontal",
+  "textRatio": 0.55,
+  "imgRatio": 0.45,
+  "margins": { "left": 96, "right": 96, "top": 54, "bottom": 54 },
+  "fonts": {
+    "main": { "family": "Gmarket Sans", "weight": "Bold", "size_px": 62, "letter_spacing": "-2%" },
+    "sub": { "family": "Gmarket Sans", "weight": "Medium", "size_px": 38, "letter_spacing": "-2%" }
+  },
+  "minFont": 26,
+  "color_rules": {
+    "banned_bg": ["붉은계열"],
+    "required": "배경과 구분이 되는 Background Color 사용",
+    "reason": "BI와 인접한 위치이므로 붉은계열 배경 지양"
+  },
+  "rules": [
+    { "type": "필수", "text": "배경과 구분되는 BG Color 사용" },
+    { "type": "권장", "text": "서브 1줄 + 메인 1줄 권장" },
+    { "type": "권장", "text": "최소 폰트: 26px" }
+  ]
+}
