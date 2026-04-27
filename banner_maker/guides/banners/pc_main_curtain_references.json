@@ -1,0 +1,252 @@
+{
+  "id": "pc_main_curtain_references",
+  "banner_type": "pc_main_curtain",
+  "source": "Figma Agent-Test > PC Main Curtain Banner (node 73:1746)",
+  "last_updated": "2026-04-27",
+  "total_samples": 7,
+  "unique_designs": 5,
+  "note": "Frame 3=6(중복), Frame 5=7(중복)",
+
+  "examples": [
+    {
+      "frame_id": "73:1747",
+      "frame_name": "1",
+      "bg_color": "#083ccc",
+      "bg_type": "파랑",
+      "has_image": true,
+      "composition": "vertical_sub_main",
+      "composition_label": "서브+메인 세로 2줄",
+      "texts": [
+        {
+          "role": "main",
+          "content": "엽떡 먹고 퇴근 지원금 받자",
+          "char_count": 14,
+          "font_family": "Gmarket Sans",
+          "font_weight": "Bold",
+          "font_size": 72,
+          "letter_spacing": -4,
+          "color": "#ffffff"
+        },
+        {
+          "role": "sub",
+          "content": "잡코리아 단독! HOT한 공채 소식",
+          "char_count": 17,
+          "font_family": "Gmarket Sans",
+          "font_weight": "Medium",
+          "font_size": 40,
+          "letter_spacing": -2,
+          "color": "#ffffff"
+        }
+      ]
+    },
+    {
+      "frame_id": "73:1761",
+      "frame_name": "2",
+      "bg_color": "#fbefff",
+      "bg_type": "연보라",
+      "has_image": true,
+      "composition": "single_main",
+      "composition_label": "메인 단독 1줄",
+      "note": "원본은 Paperlogy 사용 — Gmarket Sans 고정 정책에 따라 무시",
+      "texts": [
+        {
+          "role": "main",
+          "content": "3월, 커리어 컨퍼런스 듣고 이직 도전하세요!",
+          "char_count": 22,
+          "font_family": "Gmarket Sans",
+          "font_weight": "Bold",
+          "font_size": 72,
+          "letter_spacing": -2,
+          "color": "gradient"
+        }
+      ]
+    },
+    {
+      "frame_id": "73:1810",
+      "frame_name": "3",
+      "bg_color": "#fc4e00",
+      "bg_type": "오렌지",
+      "has_image": true,
+      "composition": "horizontal_sub_main",
+      "composition_label": "서브+메인 가로 1줄",
+      "texts": [
+        {
+          "role": "sub",
+          "content": "일급 100만원, 유니폼 증정 이벤트!",
+          "char_count": 17,
+          "font_family": "Gmarket Sans",
+          "font_weight": "Medium",
+          "font_size": 64,
+          "letter_spacing": -2,
+          "color": "#ffffff"
+        },
+        {
+          "role": "main",
+          "content": "가을야구 응원요정 알바몬 모집",
+          "char_count": 14,
+          "font_family": "Gmarket Sans",
+          "font_weight": "Bold",
+          "font_size": 64,
+          "letter_spacing": -4,
+          "color": "#fff58d"
+        }
+      ]
+    },
+    {
+      "frame_id": "73:2311",
+      "frame_name": "4",
+      "bg_color": "#252525",
+      "bg_type": "다크그레이",
+      "has_image": true,
+      "composition": "horizontal_sub_main",
+      "composition_label": "서브+메인 가로 1줄",
+      "texts": [
+        {
+          "role": "sub",
+          "content": "기업회원 응원 이벤트",
+          "char_count": 10,
+          "font_family": "Gmarket Sans",
+          "font_weight": "Medium",
+          "font_size": 72,
+          "letter_spacing": -2,
+          "color": "#ffffff"
+        },
+        {
+          "role": "main",
+          "content": "사장님! 퇴근 길 치킨 드세요",
+          "char_count": 14,
+          "font_family": "Gmarket Sans",
+          "font_weight": "Bold",
+          "font_size": 72,
+          "letter_spacing": -4,
+          "color": "gradient"
+        }
+      ]
+    },
+    {
+      "frame_id": "73:1867",
+      "frame_name": "5",
+      "bg_color": "#fc4242",
+      "bg_type": "빨강",
+      "has_image": true,
+      "composition": "horizontal_sub_main",
+      "composition_label": "서브+메인 가로 1줄",
+      "texts": [
+        {
+          "role": "sub",
+          "content": "기업회원 감사 이벤트",
+          "char_count": 10,
+          "font_family": "Gmarket Sans",
+          "font_weight": "Medium",
+          "font_size": 64,
+          "letter_spacing": -4,
+          "color": "#ffffff"
+        },
+        {
+          "role": "main",
+          "content": "인담자님! 시원한 수박주스 드세요!",
+          "char_count": 16,
+          "font_family": "Gmarket Sans",
+          "font_weight": "Bold",
+          "font_size": 64,
+          "letter_spacing": -1.5,
+          "color": "#ffffff"
+        }
+      ]
+    }
+  ],
+
+  "analysis": {
+    "composition_patterns": {
+      "types_found": [
+        {
+          "type": "vertical_sub_main",
+          "label": "서브+메인 세로 2줄",
+          "count": 1,
+          "description": "서브카피(위) + 메인카피(아래) 세로 배치"
+        },
+        {
+          "type": "single_main",
+          "label": "메인 단독 1줄",
+          "count": 1,
+          "description": "메인카피 1줄만 중앙 배치"
+        },
+        {
+          "type": "horizontal_sub_main",
+          "label": "서브+메인 가로 1줄",
+          "count": 3,
+          "description": "서브카피(좌) + 메인카피(우) 가로 배치 — 가장 빈번"
+        }
+      ],
+      "most_common": "horizontal_sub_main"
+    },
+
+    "font_size_patterns": {
+      "main_sizes_used": [72, 64],
+      "sub_sizes_used": [40, 64, 72],
+      "rules": [
+        "세로 2줄 구성 → 메인 72px, 서브 40px (크기 차이로 위계 구분)",
+        "단독 1줄 → 메인 72px",
+        "가로 1줄 + 텍스트 합계 ≤ 24자 → 서브/메인 모두 72px",
+        "가로 1줄 + 텍스트 합계 > 24자 → 서브/메인 모두 64px (공간 확보)"
+      ]
+    },
+
+    "font_weight_patterns": {
+      "main": "항상 Bold",
+      "sub": "항상 Medium",
+      "exception": "Paperlogy 사용 시 '7 Bold' (단독 1줄일 때)"
+    },
+
+    "font_family_patterns": {
+      "fixed": "Gmarket Sans (고정)",
+      "note": "Paperlogy 사례 1건 있었으나 고정 정책에 따라 무시"
+    },
+
+    "letter_spacing_patterns": {
+      "fixed": -2,
+      "unit": "percent",
+      "note": "자간 -2% 고정 (가이드 기준값)"
+    },
+
+    "color_patterns": {
+      "text_primary": "#ffffff (흰색 — 대부분)",
+      "text_accent": "#fff58d (노란색 — 메인 강조용)",
+      "text_gradient": "그라디언트 (특수 강조용)",
+      "bg_colors_used": ["#083ccc", "#fbefff", "#fc4e00", "#252525", "#fc4242"],
+      "bg_rule": "다양한 배경색 사용, 어두운 배경일수록 흰색 텍스트"
+    },
+
+    "image_usage": {
+      "all_have_image": true,
+      "note": "7개 사례 모두 이미지 포함 — 커튼 배너는 항상 이미지 사용"
+    }
+  },
+
+  "auto_decision_rules": {
+    "description": "사례 데이터에서 도출한 자동 디자인 결정 규칙",
+    "composition_rule": {
+      "condition": "서브카피 유무 + 텍스트 총 길이",
+      "logic": [
+        { "if": "서브카피 없음", "then": "single_main (메인 단독 1줄, 72px Bold)" },
+        { "if": "서브카피 있음 && 서브 길이 ≤ 12자 && 메인 길이 ≤ 15자", "then": "vertical_sub_main (세로 2줄, 메인 72px / 서브 40px)" },
+        { "if": "서브카피 있음 && 합계 ≤ 24자", "then": "horizontal_sub_main (가로 1줄, 둘 다 72px)" },
+        { "if": "서브카피 있음 && 합계 > 24자", "then": "horizontal_sub_main (가로 1줄, 둘 다 64px)" }
+      ]
+    },
+    "font_weight_rule": {
+      "main": "Bold (항상)",
+      "sub": "Medium (항상)"
+    },
+    "letter_spacing_rule": {
+      "fixed": -2,
+      "note": "자간 -2% 고정"
+    },
+    "text_color_rule": {
+      "logic": [
+        { "if": "서브+메인 동시 && 강조 필요", "then": "메인: 강조색(#fff58d 등), 서브: 흰색" },
+        { "if": "기본", "then": "모두 흰색(#ffffff)" }
+      ]
+    }
+  }
+}
