@@ -1,0 +1,29 @@
+{
+  "id": "pc_recruit_bottom_text",
+  "name": "채용 하단 텍스트 배너",
+  "last_updated": "2026-04-28",
+  "source": "config/presets/internal.json 이관",
+
+  "basic_info": {
+    "dimensions": null,
+    "display_size": null,
+    "position": "PC > 서브페이지 하단",
+    "layout": "text_only",
+    "max_file_size": "30KB",
+    "file_types": ["text"]
+  },
+
+  "text_rules": {
+    "max_lines": 2,
+    "max_chars_per_line": 15,
+    "emphasis_position": "bottom",
+    "composition": "텍스트 노출 전용, 최대 2줄, 1줄당 15자 이하"
+  },
+
+  "rules": [
+    { "type": "필수", "text": "텍스트 노출 전용" },
+    { "type": "필수", "text": "텍스트 최대 2줄 준수" },
+    { "type": "필수", "text": "1줄당 15자 이하 준수" },
+    { "type": "권장", "text": "강조해야하는 문구는 하단배치 지향" }
+  ]
+}

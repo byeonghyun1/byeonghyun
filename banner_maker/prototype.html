@@ -164,21 +164,6 @@ body { font-family: 'Pretendard', -apple-system, sans-serif; background: #F5F5F7
 .cta-options.active { display: flex; }
 .cta-color-row { display: flex; align-items: center; gap: 10px; }
 .cta-color-row label { font-size: 13px; font-weight: 500; color: #555; white-space: nowrap; }
-.cta-style-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.cta-style-card {
-  border: 2px solid #E5E7EB; border-radius: 8px; padding: 12px 8px;
-  cursor: pointer; transition: all 0.2s; background: #FFF; text-align: center;
-}
-.cta-style-card:hover { border-color: #93B4F5; }
-.cta-style-card.selected { border-color: #2563EB; background: #F0F4FF; }
-.cta-style-card .cta-style-label { font-size: 11px; color: #888; margin-bottom: 6px; }
-.cta-style-card .cta-style-demo { display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; color: #FFF; background: #333; }
-.cta-style-card .cta-style-demo.cta1 { width: 100%; padding: 6px 0; border-radius: 4px; }
-.cta-style-card .cta-style-demo.cta2 { padding: 6px 18px; border-radius: 50px; }
-.cta-auto-badge {
-  display: inline-block; font-size: 10px; color: #2563EB; background: #EFF6FF;
-  padding: 2px 8px; border-radius: 4px; margin-left: 6px; font-weight: 500;
-}
 .cta-preview-chip {
   display: inline-flex; align-items: center; justify-content: center;
   font-size: 12px; font-weight: 600;
@@ -415,22 +400,6 @@ body { font-family: 'Pretendard', -apple-system, sans-serif; background: #F5F5F7
           <input type="text" id="ctaText" placeholder="예: 지원하기" maxlength="15">
           <div class="char-count"><span id="ctaCount">0</span>/15 · 화살표(›) 자동 추가</div>
         </div>
-        <div>
-          <label style="font-size:13px;font-weight:500;color:#555;display:block;margin-bottom:6px;">버튼 스타일 <span class="cta-auto-badge" id="ctaAutoBadge">자동</span></label>
-          <div class="cta-style-grid">
-            <div class="cta-style-card" data-style="cta1" onclick="selectCtaStyle(this)">
-              <div class="cta-style-label">CTA_1 풀너비</div>
-              <div class="cta-style-demo cta1">텍스트 ›</div>
-            </div>
-            <div class="cta-style-card" data-style="cta2" onclick="selectCtaStyle(this)">
-              <div class="cta-style-label">CTA_2 pill형</div>
-              <div class="cta-style-demo cta2">텍스트 ›</div>
-            </div>
-          </div>
-          <div style="margin-top:4px;">
-            <span class="cta-auto-reset" id="ctaAutoReset" onclick="resetCtaAuto()" style="font-size:11px;color:#2563EB;cursor:pointer;display:none;">↺ 자동 매칭으로 되돌리기</span>
-          </div>
-        </div>
         <div class="cta-color-row">
           <label>버튼 컬러</label>
           <div class="color-input-wrap">
@@ -483,20 +452,9 @@ body { font-family: 'Pretendard', -apple-system, sans-serif; background: #F5F5F7
 </div>
 
 <script>
-// ===== roundRect 폴리필 (구형 브라우저 호환) =====
-if (!CanvasRenderingContext2D.prototype.roundRect) {
-  CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
-    if (typeof r === "number") r = [r, r, r, r];
-    const [tl, tr, br, bl] = r;
-    this.moveTo(x + tl, y);
-    this.lineTo(x + w - tr, y); this.quadraticCurveTo(x + w, y, x + w, y + tr);
-    this.lineTo(x + w, y + h - br); this.quadraticCurveTo(x + w, y + h, x + w - br, y + h);
-    this.lineTo(x + bl, y + h); this.quadraticCurveTo(x, y + h, x, y + h - bl);
-    this.lineTo(x, y + tl); this.quadraticCurveTo(x, y, x + tl, y);
-    this.closePath();
-    return this;
-  };
-}
+// ===== 텍스트 렌더링 상수 =====
+const ASCENT_RATIO = 0.75;        // 폰트 상단 → 베이스라인 비율 (top 좌표 기준)
+const CENTER_OFFSET = 0.35;       // 중앙정렬 시 베이스라인 보정값
 
 // ===== 배너 프리셋 데이터 =====
 const PRESETS = {
@@ -588,16 +546,30 @@ let state = {
   ctaText: "",
   ctaColor: "#1A1A1A",
   ctaTextColor: "#FFFFFF",
-  ctaManualStyle: null
 };
+
+// ===== 컬러 입력 쌍 바인딩 헬퍼 =====
+function bindColorPair(stateKey, pickerId, textId, onChange) {
+  document.getElementById(pickerId).addEventListener("input", e => {
+    state[stateKey] = e.target.value;
+    document.getElementById(textId).value = e.target.value;
+    onChange();
+  });
+  document.getElementById(textId).addEventListener("change", e => {
+    if (/^#[0-9A-Fa-f]{6}$/.test(e.target.value)) {
+      state[stateKey] = e.target.value;
+      document.getElementById(pickerId).value = e.target.value;
+      onChange();
+    }
+  });
+}
 
 // ===== 초기화 =====
 function init() {
   document.getElementById("fileInput").addEventListener("change", handleFileUpload);
   document.getElementById("mainText").addEventListener("input", e => { state.mainText = e.target.value; document.getElementById("mainCount").textContent = e.target.value.length; updateFontPreview(); updatePreview(); });
   document.getElementById("subText").addEventListener("input", e => { state.subText = e.target.value; document.getElementById("subCount").textContent = e.target.value.length; updateFontPreview(); updatePreview(); });
-  document.getElementById("bgColorPicker").addEventListener("input", e => setBgColor(e.target.value));
-  document.getElementById("bgColorText").addEventListener("change", e => { if (/^#[0-9A-Fa-f]{6}$/.test(e.target.value)) setBgColor(e.target.value); });
+  bindColorPair("bgColor", "bgColorPicker", "bgColorText", () => updatePreview());
 
   // CTA 이벤트
   document.getElementById("ctaText").addEventListener("input", e => {
@@ -606,10 +578,8 @@ function init() {
     updateCtaChip();
     updatePreview();
   });
-  document.getElementById("ctaColorPicker").addEventListener("input", e => { state.ctaColor = e.target.value; document.getElementById("ctaColorText").value = e.target.value; updateCtaChip(); updatePreview(); });
-  document.getElementById("ctaColorText").addEventListener("change", e => { if (/^#[0-9A-Fa-f]{6}$/.test(e.target.value)) { state.ctaColor = e.target.value; document.getElementById("ctaColorPicker").value = e.target.value; updateCtaChip(); updatePreview(); }});
-  document.getElementById("ctaTextColorPicker").addEventListener("input", e => { state.ctaTextColor = e.target.value; document.getElementById("ctaTextColorText").value = e.target.value; updateCtaChip(); updatePreview(); });
-  document.getElementById("ctaTextColorText").addEventListener("change", e => { if (/^#[0-9A-Fa-f]{6}$/.test(e.target.value)) { state.ctaTextColor = e.target.value; document.getElementById("ctaTextColorPicker").value = e.target.value; updateCtaChip(); updatePreview(); }});
+  bindColorPair("ctaColor", "ctaColorPicker", "ctaColorText", () => { updateCtaChip(); updatePreview(); });
+  bindColorPair("ctaTextColor", "ctaTextColorPicker", "ctaTextColorText", () => { updateCtaChip(); updatePreview(); });
 
   // 드래그 앤 드롭
   const uploadArea = document.getElementById("uploadArea");
@@ -753,66 +723,14 @@ function toggleCta() {
   updatePreview();
 }
 
-function selectCtaStyle(el) {
-  document.querySelectorAll(".cta-style-card").forEach(c => c.classList.remove("selected"));
-  el.classList.add("selected");
-  state.ctaManualStyle = el.dataset.style;
-  document.getElementById("ctaAutoBadge").textContent = "수동";
-  document.getElementById("ctaAutoBadge").style.color = "#888";
-  document.getElementById("ctaAutoBadge").style.background = "#F3F4F6";
-  document.getElementById("ctaAutoReset").style.display = "inline";
-  updateCtaChip();
-  updatePreview();
-}
-
-function resetCtaAuto() {
-  state.ctaManualStyle = null;
-  document.querySelectorAll(".cta-style-card").forEach(c => c.classList.remove("selected"));
-  document.getElementById("ctaAutoBadge").textContent = "자동";
-  document.getElementById("ctaAutoBadge").style.color = "#2563EB";
-  document.getElementById("ctaAutoBadge").style.background = "#EFF6FF";
-  document.getElementById("ctaAutoReset").style.display = "none";
-  updateCtaChip();
-  updatePreview();
-}
-
-// 레이아웃에 따라 최적 CTA 스타일 자동 결정
-function getAutoCtaStyle(preset) {
-  if (preset.layout === "horizontal") return "cta2"; // 가로형 → pill
-  return "cta1"; // 세로형/정방형 → 풀너비
-}
-
-function getCtaStyleForPreset(preset) {
-  if (state.ctaManualStyle) return state.ctaManualStyle;
-  return getAutoCtaStyle(preset);
-}
-
 function updateCtaChip() {
   const chip = document.getElementById("ctaPreviewChip");
   chip.style.background = state.ctaColor;
   chip.style.color = state.ctaTextColor;
   chip.textContent = (state.ctaText || "지원하기") + " ›";
-  // 자동 모드면 첫 번째 선택된 배너 기준으로 스타일 결정
-  let style;
-  if (state.ctaManualStyle) {
-    style = state.ctaManualStyle;
-  } else if (state.selectedSizes.length > 0) {
-    style = getAutoCtaStyle(PRESETS[state.selectedSizes[0]]);
-  } else {
-    style = "cta1";
-  }
-  if (style === "cta1") {
-    chip.style.width = "100%"; chip.style.padding = "6px 0"; chip.style.borderRadius = "4px";
-  } else {
-    chip.style.width = "auto"; chip.style.padding = "6px 20px"; chip.style.borderRadius = "50px";
-  }
-}
-
-function setBgColor(color) {
-  state.bgColor = color;
-  document.getElementById("bgColorPicker").value = color;
-  document.getElementById("bgColorText").value = color;
-  updatePreview();
+  chip.style.width = "100%";
+  chip.style.padding = "6px 0";
+  chip.style.borderRadius = "4px";
 }
 
 function updateGuide() {
@@ -932,31 +850,7 @@ function renderToCanvas(presetId, preset, callback) {
       const GAP = 24; // 피그마 레퍼런스 기준 서브-메인 간격
 
       if (decision.type === 'single_main' && state.mainText) {
-        ctx.save();
-        ctx.font = mFont.weight + " " + decision.mainSize + "px " + mFont.css;
-        const sp = preset.fonts.main.spacing * decision.mainSize;
-        drawTextWithSpacing(ctx, state.mainText, cx, cy + decision.mainSize * 0.35, sp, "center");
-        ctx.restore();
-
-      } else if (decision.type === 'vertical_sub_main') {
-        const lineGap = 8;
-        const blockH = decision.subSize + lineGap + decision.mainSize;
-        const startY = cy - blockH / 2;
-
-        if (state.subText) {
-          ctx.save();
-          ctx.font = sFont.weight + " " + decision.subSize + "px " + sFont.css;
-          const sp = preset.fonts.sub.spacing * decision.subSize;
-          drawTextWithSpacing(ctx, state.subText, cx, startY + decision.subSize * 0.75, sp, "center");
-          ctx.restore();
-        }
-        if (state.mainText) {
-          ctx.save();
-          ctx.font = mFont.weight + " " + decision.mainSize + "px " + mFont.css;
-          const sp = preset.fonts.main.spacing * decision.mainSize;
-          drawTextWithSpacing(ctx, state.mainText, cx, startY + decision.subSize + lineGap + decision.mainSize * 0.75, sp, "center");
-          ctx.restore();
-        }
+        drawLabel(ctx, state.mainText, mFont, decision.mainSize, preset.fonts.main.spacing, cx, cy + decision.mainSize * CENTER_OFFSET, "center");
 
       } else if (decision.type === 'horizontal_sub_main') {
         const subSp = preset.fonts.sub.spacing * decision.subSize;
@@ -969,21 +863,15 @@ function renderToCanvas(presetId, preset, callback) {
 
         const totalW = subW + GAP + mainW;
         const startX = cx - totalW / 2;
-        const textY = cy + decision.mainSize * 0.35;
+        const textY = cy + decision.mainSize * CENTER_OFFSET;
 
         if (state.subText) {
-          ctx.save();
-          ctx.font = sFont.weight + " " + decision.subSize + "px " + sFont.css;
           ctx.fillStyle = textColor;
-          drawTextWithSpacing(ctx, state.subText, startX, textY, subSp, "left");
-          ctx.restore();
+          drawLabel(ctx, state.subText, sFont, decision.subSize, preset.fonts.sub.spacing, startX, textY, "left");
         }
         if (state.mainText) {
-          ctx.save();
-          ctx.font = mFont.weight + " " + decision.mainSize + "px " + mFont.css;
           ctx.fillStyle = textColor;
-          drawTextWithSpacing(ctx, state.mainText, startX + subW + GAP, textY, mainSp, "left");
-          ctx.restore();
+          drawLabel(ctx, state.mainText, mFont, decision.mainSize, preset.fonts.main.spacing, startX + subW + GAP, textY, "left");
         }
       }
 
@@ -994,33 +882,14 @@ function renderToCanvas(presetId, preset, callback) {
 
       if (state.subText && state.mainText) {
         // 서브+메인 둘 다 있으면 → 피그마 고정 좌표
-        ctx.save();
-        ctx.font = sFont.weight + " " + subSize + "px " + sFont.css;
-        const subSpacing = preset.fonts.sub.spacing * subSize;
-        drawTextWithSpacing(ctx, state.subText, textX, preset.textY.sub + subSize * 0.75, subSpacing, textAlign);
-        ctx.restore();
-
-        ctx.save();
-        ctx.font = mFont.weight + " " + mainSize + "px " + mFont.css;
-        const mainSpacing = preset.fonts.main.spacing * mainSize;
-        drawTextWithSpacing(ctx, state.mainText, textX, preset.textY.main + mainSize * 0.75, mainSpacing, textAlign);
-        ctx.restore();
+        drawLabel(ctx, state.subText, sFont, subSize, preset.fonts.sub.spacing, textX, preset.textY.sub + subSize * ASCENT_RATIO, textAlign);
+        drawLabel(ctx, state.mainText, mFont, mainSize, preset.fonts.main.spacing, textX, preset.textY.main + mainSize * ASCENT_RATIO, textAlign);
       } else if (state.mainText) {
         // 메인만 있으면 → 세로 중앙 배치
-        ctx.save();
-        ctx.font = mFont.weight + " " + mainSize + "px " + mFont.css;
-        const mainSpacing = preset.fonts.main.spacing * mainSize;
-        const mainY = centerY + mainSize * 0.35;
-        drawTextWithSpacing(ctx, state.mainText, textX, mainY, mainSpacing, textAlign);
-        ctx.restore();
+        drawLabel(ctx, state.mainText, mFont, mainSize, preset.fonts.main.spacing, textX, centerY + mainSize * CENTER_OFFSET, textAlign);
       } else if (state.subText) {
         // 서브만 있으면 → 세로 중앙 배치
-        ctx.save();
-        ctx.font = sFont.weight + " " + subSize + "px " + sFont.css;
-        const subSpacing = preset.fonts.sub.spacing * subSize;
-        const subY = centerY + subSize * 0.35;
-        drawTextWithSpacing(ctx, state.subText, textX, subY, subSpacing, textAlign);
-        ctx.restore();
+        drawLabel(ctx, state.subText, sFont, subSize, preset.fonts.sub.spacing, textX, centerY + subSize * CENTER_OFFSET, textAlign);
       }
 
     } else {
@@ -1032,53 +901,27 @@ function renderToCanvas(presetId, preset, callback) {
       const startY = centerY - blockH / 2;
 
       if (state.subText) {
-        ctx.save();
-        ctx.font = sFont.weight + " " + subSize + "px " + sFont.css;
-        const subSpacing = preset.fonts.sub.spacing * subSize;
-        drawTextWithSpacing(ctx, state.subText, textX, startY + subSize * 0.75, subSpacing, textAlign);
-        ctx.restore();
+        drawLabel(ctx, state.subText, sFont, subSize, preset.fonts.sub.spacing, textX, startY + subSize * ASCENT_RATIO, textAlign);
       }
       if (state.mainText) {
-        ctx.save();
-        ctx.font = mFont.weight + " " + mainSize + "px " + mFont.css;
-        const mainSpacing = preset.fonts.main.spacing * mainSize;
-        const mainY = state.subText ? startY + subSize + gap + mainSize * 0.75 : startY + mainSize * 0.75;
-        drawTextWithSpacing(ctx, state.mainText, textX, mainY, mainSpacing, textAlign);
-        ctx.restore();
+        const mainY = state.subText ? startY + subSize + gap + mainSize * ASCENT_RATIO : startY + mainSize * ASCENT_RATIO;
+        drawLabel(ctx, state.mainText, mFont, mainSize, preset.fonts.main.spacing, textX, mainY, textAlign);
       }
     }
 
-    // 4. CTA 버튼
+    // 4. CTA 버튼 (풀너비 고정)
     if (state.ctaEnabled && state.ctaText) {
-      const ctaStyle = getCtaStyleForPreset(preset);
       const ctaFS = Math.min(preset.fonts.sub.size * 0.7, 24);
       const ctaLabel = state.ctaText + " ›";
-      ctx.font = "700 " + ctaFS + "px " + state.mainFont.css;
-
-      if (ctaStyle === "cta1") {
-        const ctaBarH = Math.max(preset.h * 0.17, 30);
-        const ctaY = preset.h - ctaBarH;
-        ctx.fillStyle = state.ctaColor;
-        ctx.fillRect(0, ctaY, preset.w, ctaBarH);
-        ctx.fillStyle = state.ctaTextColor;
-        ctx.textAlign = "center";
-        ctx.fillText(ctaLabel, preset.w / 2, ctaY + ctaBarH / 2 + ctaFS * 0.35);
-      } else {
-        const ctaPadX = ctaFS * 2;
-        const ctaPadY = ctaFS * 0.7;
-        const ctaW = ctx.measureText(ctaLabel).width + ctaPadX * 2;
-        const ctaH = ctaFS + ctaPadY * 2;
-        const ctaX = textX - ctaW / 2;
-        const ctaY = centerY + preset.fonts.main.size * 0.5 + preset.fonts.main.size * 0.5;
-        const ctaR = ctaH / 2;
-        ctx.fillStyle = state.ctaColor;
-        ctx.beginPath();
-        ctx.roundRect(ctaX, ctaY, ctaW, ctaH, ctaR);
-        ctx.fill();
-        ctx.fillStyle = state.ctaTextColor;
-        ctx.textAlign = "center";
-        ctx.fillText(ctaLabel, ctaX + ctaW / 2, ctaY + ctaPadY + ctaFS * 0.35);
-      }
+      const ctaFont = getFontForPreset(preset, "main");
+      ctx.font = "700 " + ctaFS + "px " + ctaFont.css;
+      const ctaBarH = Math.max(preset.h * 0.17, 30);
+      const ctaY = preset.h - ctaBarH;
+      ctx.fillStyle = state.ctaColor;
+      ctx.fillRect(0, ctaY, preset.w, ctaBarH);
+      ctx.fillStyle = state.ctaTextColor;
+      ctx.textAlign = "center";
+      ctx.fillText(ctaLabel, preset.w / 2, ctaY + ctaBarH / 2 + ctaFS * CENTER_OFFSET);
     }
 
     callback(canvas);
@@ -1150,6 +993,15 @@ function drawTextWithSpacing(ctx, text, x, y, spacing, align) {
   ctx.letterSpacing = (spacing || 0) + "px";
   ctx.fillText(text, x, y);
   ctx.letterSpacing = prev || "0px";
+}
+
+// 텍스트 한 줄 렌더링 헬퍼 (ctx.save/restore, font, spacing, draw 통합)
+function drawLabel(ctx, text, fontObj, fontSize, spacingRatio, x, y, align) {
+  ctx.save();
+  ctx.font = fontObj.weight + " " + fontSize + "px " + fontObj.css;
+  const sp = spacingRatio * fontSize;
+  drawTextWithSpacing(ctx, text, x, y, sp, align);
+  ctx.restore();
 }
 
 // 미리보기용: Canvas를 축소해서 표시 + 마진 오버레이
