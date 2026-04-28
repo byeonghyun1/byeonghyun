@@ -21,30 +21,29 @@
   },
 
   "fonts": {
-    "main": {
+    "fixed": {
       "family": "Gmarket Sans",
-      "weight": "Bold",
-      "size_px": 72,
       "letter_spacing": "-2%"
     },
-    "sub": {
-      "family": "Gmarket Sans",
-      "weight": "Medium",
-      "size_px": 40,
-      "letter_spacing": "-2%"
-    },
+    "main": { "weight": "Bold", "size_px": 72 },
+    "sub": { "weight": "Medium", "size_px": 40 },
     "review": {
       "family": "Pretendard",
       "weight": "Light",
       "size_px": 20,
-      "letter_spacing": "-1.5%",
-      "color": "#787878"
+      "letter_spacing": "-1.5%"
     }
   },
 
   "text_rules": {
     "align": "center",
-    "composition": "메인 카피 1줄 중앙정렬 / 서브+메인 1줄 중앙정렬"
+    "origin": "배너 중앙 (width/2, height/2) 기준, 좌우/상하로 뻗어나가는 구조",
+    "composition": "메인 카피 1줄 중앙정렬 / 서브+메인 1줄 중앙정렬",
+    "text_position": {
+      "single_main": "중앙 기준, 메인 카피 좌우 균등 배치",
+      "horizontal_sub_main": "중앙 기준, 서브(좌로) + 메인(우로) 뻗어나감",
+      "vertical_sub_main": "중앙 기준, 서브(위로) + 메인(아래로) 뻗어나감"
+    }
   },
 
   "color_rules": {
@@ -58,5 +57,55 @@
     { "type": "필수", "text": "출처 표기 8px (우측상단 지향)" },
     { "type": "금지", "text": "BG 블랙 컬러 사용 불가" },
     { "type": "금지", "text": "좌우 20px내 패턴이나 이미지 노출 금지" }
-  ]
+  ],
+
+  "reference_analysis": {
+    "source": "Figma node 73:1746 (7개 사례, 고유 5개)",
+    "examples": [
+      {
+        "name": "1",
+        "composition": "vertical_sub_main",
+        "label": "서브+메인 세로 2줄",
+        "main": { "content": "엽떡 먹고 퇴근 지원금 받자", "char_count": 14, "weight": "Bold", "size": 72 },
+        "sub": { "content": "잡코리아 단독! HOT한 공채 소식", "char_count": 17, "weight": "Medium", "size": 40 }
+      },
+      {
+        "name": "2",
+        "composition": "single_main",
+        "label": "메인 단독 1줄",
+        "main": { "content": "3월, 커리어 컨퍼런스 듣고 이직 도전하세요!", "char_count": 22, "weight": "Bold", "size": 72 }
+      },
+      {
+        "name": "3",
+        "composition": "horizontal_sub_main",
+        "label": "서브+메인 가로 1줄",
+        "sub": { "content": "일급 100만원, 유니폼 증정 이벤트!", "char_count": 17, "weight": "Medium", "size": 64 },
+        "main": { "content": "가을야구 응원요정 알바몬 모집", "char_count": 14, "weight": "Bold", "size": 64 }
+      },
+      {
+        "name": "4",
+        "composition": "horizontal_sub_main",
+        "label": "서브+메인 가로 1줄",
+        "sub": { "content": "기업회원 응원 이벤트", "char_count": 10, "weight": "Medium", "size": 72 },
+        "main": { "content": "사장님! 퇴근 길 치킨 드세요", "char_count": 14, "weight": "Bold", "size": 72 }
+      },
+      {
+        "name": "5",
+        "composition": "horizontal_sub_main",
+        "label": "서브+메인 가로 1줄",
+        "sub": { "content": "기업회원 감사 이벤트", "char_count": 10, "weight": "Medium", "size": 64 },
+        "main": { "content": "인담자님! 시원한 수박주스 드세요!", "char_count": 16, "weight": "Bold", "size": 64 }
+      }
+    ],
+
+    "auto_decision_rules": {
+      "composition_rule": [
+        { "if": "서브카피 없음", "then": "single_main (메인 단독 1줄, 72px Bold)" },
+        { "if": "서브카피 있음 && 서브 ≤ 12자 && 메인 ≤ 15자", "then": "vertical_sub_main (세로 2줄, 메인 72px / 서브 40px)" },
+        { "if": "서브카피 있음 && 합계 ≤ 24자", "then": "horizontal_sub_main (가로 1줄, 둘 다 72px)" },
+        { "if": "서브카피 있음 && 합계 > 24자", "then": "horizontal_sub_main (가로 1줄, 둘 다 64px)" }
+      ],
+      "font_weight_rule": { "main": "Bold (항상)", "sub": "Medium (항상)" }
+    }
+  }
 }

@@ -1,25 +1,66 @@
 {
   "id": "pc_main_top",
   "name": "메인 탑 배너",
-  "last_updated": "2026-04-27",
-  "dimensions": { "width": 1556, "height": 232 },
-  "layout": "horizontal",
+  "last_updated": "2026-04-28",
+  "source": "pc_main_top.md (Cursor 수정본)",
+
+  "basic_info": {
+    "dimensions": { "width": 1556, "height": 232 },
+    "display_size": { "width": 778, "height": 116 },
+    "position": "PC > 알바몬 메인 좌측 상단",
+    "layout": "horizontal",
+    "max_file_size": "50KB",
+    "file_types": ["jpg", "jpeg", "gif", "png"]
+  },
+
+  "margins": {
+    "left": 96,
+    "right": 96,
+    "top": 54,
+    "bottom": 54,
+    "출처": 16
+  },
+
   "textRatio": 0.55,
   "imgRatio": 0.45,
-  "margins": { "left": 96, "right": 96, "top": 54, "bottom": 54 },
+
   "fonts": {
-    "main": { "family": "Gmarket Sans", "weight": "Bold", "size_px": 62, "letter_spacing": "-2%" },
-    "sub": { "family": "Gmarket Sans", "weight": "Medium", "size_px": 38, "letter_spacing": "-2%" }
+    "main": {
+      "family": "Paperlogy",
+      "weight": "7 Bold",
+      "size_px": 62,
+      "letter_spacing": "-4%"
+    },
+    "sub": {
+      "family": "Paperlogy",
+      "weight": "4 Regular",
+      "size_px": 38,
+      "letter_spacing": "-2%"
+    }
   },
   "minFont": 26,
+
+  "text_rules": {
+    "align": "left",
+    "composition": "서브카피 1줄(위) + 메인카피 1줄(아래), 좌측 정렬",
+    "line_gap": 19
+  },
+
   "color_rules": {
     "banned_bg": ["붉은계열"],
     "required": "배경과 구분이 되는 Background Color 사용",
+    "border": "이미지 외곽 테두리 삽입 불가",
     "reason": "BI와 인접한 위치이므로 붉은계열 배경 지양"
   },
+
   "rules": [
     { "type": "필수", "text": "배경과 구분되는 BG Color 사용" },
+    { "type": "필수", "text": "최종파일 라운딩 없이 직각 사각형으로 전달" },
+    { "type": "필수", "text": "파일 용량 50KB 이내" },
+    { "type": "금지", "text": "이미지 외곽 테두리 삽입 불가" },
+    { "type": "금지", "text": "붉은계열 배경 (BI 인접)" },
     { "type": "권장", "text": "서브 1줄 + 메인 1줄 권장" },
+    { "type": "권장", "text": "출처표기 우측 상단 16px" },
     { "type": "권장", "text": "최소 폰트: 26px" }
   ]
 }

@@ -328,8 +328,8 @@ body { font-family: 'Pretendard', -apple-system, sans-serif; background: #F5F5F7
         <div class="font-select-row">
           <label>메인 카피</label>
           <select id="mainFontSelect" onchange="changeFont()">
-            <option value="GmarketSansBold" data-weight="700" selected>Gmarket Sans Bold</option>
-            <option value="Paperlogy-7Bold" data-weight="700">Paperlogy 7Bold</option>
+            <option value="Paperlogy-7Bold" data-weight="normal" selected>Paperlogy 7Bold</option>
+            <option value="GmarketSansBold" data-weight="normal">Gmarket Sans Bold</option>
             <option value="Pretendard" data-weight="800">Pretendard ExtraBold</option>
             <option value="TAEBAEK" data-weight="400">TAEBAEK</option>
           </select>
@@ -337,16 +337,16 @@ body { font-family: 'Pretendard', -apple-system, sans-serif; background: #F5F5F7
         <div class="font-select-row">
           <label>서브 카피</label>
           <select id="subFontSelect" onchange="changeFont()">
-            <option value="GmarketSansMedium" data-weight="500" selected>Gmarket Sans Medium</option>
-            <option value="Paperlogy-4Regular" data-weight="400">Paperlogy 4 Regular</option>
+            <option value="Paperlogy-4Regular" data-weight="normal" selected>Paperlogy 4 Regular</option>
+            <option value="GmarketSansMedium" data-weight="normal">Gmarket Sans Medium</option>
             <option value="Pretendard" data-weight="400">Pretendard Regular</option>
           </select>
         </div>
         <div>
           <div style="font-size:12px;color:#888;margin-bottom:4px;">미리보기</div>
           <div class="font-preview-text" id="fontPreview">
-            <div id="fontPreviewMain" style="font-family:'GmarketSansBold',sans-serif;font-weight:700;font-size:20px;margin-bottom:4px;">메인 카피 미리보기</div>
-            <div id="fontPreviewSub" style="font-family:'GmarketSansMedium',sans-serif;font-weight:500;font-size:14px;color:#666;">서브 카피 미리보기</div>
+            <div id="fontPreviewMain" style="font-family:'Paperlogy-7Bold',sans-serif;font-weight:normal;font-size:20px;margin-bottom:4px;">메인 카피 미리보기</div>
+            <div id="fontPreviewSub" style="font-family:'Paperlogy-4Regular',sans-serif;font-weight:normal;font-size:14px;color:#666;">서브 카피 미리보기</div>
           </div>
         </div>
       </div>
@@ -356,6 +356,12 @@ body { font-family: 'Pretendard', -apple-system, sans-serif; background: #F5F5F7
     <div>
       <div class="section-title">4. 배너 사이즈</div>
       <div class="size-grid">
+        <div class="size-card" data-id="pc_main_curtain" onclick="toggleSize(this)">
+          <div class="check-icon">✓</div>
+          <div class="size-name">메인 커튼</div>
+          <div class="size-dim">2160 x 160</div>
+          <div class="size-ratio">가로형 · PC</div>
+        </div>
         <div class="size-card selected" data-id="pc_main_top" onclick="toggleSize(this)">
           <div class="check-icon">✓</div>
           <div class="size-name">메인 탑</div>
@@ -504,9 +510,12 @@ const PRESETS = {
   pc_main_top: {
     name: "메인 탑 배너", w: 1556, h: 232,
     margins: { left: 96, right: 96, top: 54, bottom: 54 },
-    fonts: { main: { size: 62, spacing: -0.02 }, sub: { size: 38, spacing: -0.02 } },
+    fonts: { main: { size: 62, spacing: -0.04 }, sub: { size: 38, spacing: -0.02 } },
+    defaultFont: { main: "Paperlogy-7Bold", sub: "Paperlogy-4Regular" },
+    textAlign: "left", lineGap: 19,
+    textY: { sub: 61, main: 116 },
     minFont: 26, textRatio: 0.55, imgRatio: 0.45, layout: "horizontal",
-    rules: ["붉은계열 배경 컬러 지양 (BI 인접)","배경과 구분되는 BG Color 사용","이미지 외곽 테두리 삽입 불가","서브카피 1줄 / 메인카피 1줄 권장","최종파일 라운딩 없이 전달","최소 폰트: 26px"]
+    rules: ["[금지] 붉은계열 배경 (BI 인접)","[금지] 이미지 외곽 테두리 삽입 불가","[필수] 배경과 구분되는 BG Color 사용","[필수] 최종파일 라운딩 없이 직각 전달","[필수] 파일 용량 50KB 이내","[권장] 서브 1줄 + 메인 1줄","[권장] 출처표기 우측 상단 16px","[권장] 최소 폰트: 26px"]
   },
   pc_job_sky: {
     name: "공고 스카이 배너", w: 560, h: 700,
@@ -534,23 +543,35 @@ const PRESETS = {
 // ===== 폰트 시스템 정의 =====
 const FONT_SYSTEM = {
   main: {
-    default: { family: "GmarketSansBold", label: "Gmarket Sans Bold", weight: 700, css: "'GmarketSansBold', sans-serif" },
+    default: { family: "Paperlogy-7Bold", label: "Paperlogy 7Bold", weight: "normal", css: "'Paperlogy-7Bold', sans-serif" },
     options: [
-      { family: "GmarketSansBold", label: "Gmarket Sans Bold", weight: 700, css: "'GmarketSansBold', sans-serif" },
-      { family: "Paperlogy-7Bold", label: "Paperlogy 7Bold", weight: 700, css: "'Paperlogy-7Bold', sans-serif" },
+      { family: "Paperlogy-7Bold", label: "Paperlogy 7Bold", weight: "normal", css: "'Paperlogy-7Bold', sans-serif" },
+      { family: "GmarketSansBold", label: "Gmarket Sans Bold", weight: "normal", css: "'GmarketSansBold', sans-serif" },
       { family: "Pretendard", label: "Pretendard ExtraBold", weight: 800, css: "'Pretendard', sans-serif" },
-      { family: "TAEBAEK", label: "TAEBAEK", weight: 400, css: "'TAEBAEK', sans-serif" }
+      { family: "TAEBAEK", label: "TAEBAEK", weight: "normal", css: "'TAEBAEK', sans-serif" }
     ]
   },
   sub: {
-    default: { family: "GmarketSansMedium", label: "Gmarket Sans Medium", weight: 500, css: "'GmarketSansMedium', sans-serif" },
+    default: { family: "Paperlogy-4Regular", label: "Paperlogy 4 Regular", weight: "normal", css: "'Paperlogy-4Regular', sans-serif" },
     options: [
-      { family: "GmarketSansMedium", label: "Gmarket Sans Medium", weight: 500, css: "'GmarketSansMedium', sans-serif" },
-      { family: "Paperlogy-4Regular", label: "Paperlogy 4 Regular", weight: 400, css: "'Paperlogy-4Regular', sans-serif" },
+      { family: "Paperlogy-4Regular", label: "Paperlogy 4 Regular", weight: "normal", css: "'Paperlogy-4Regular', sans-serif" },
+      { family: "GmarketSansMedium", label: "Gmarket Sans Medium", weight: "normal", css: "'GmarketSansMedium', sans-serif" },
       { family: "Pretendard", label: "Pretendard Regular", weight: 400, css: "'Pretendard', sans-serif" }
     ]
   }
 };
+
+// 프리셋별 기본 폰트 조회 (defaultFont가 있으면 해당 폰트, 없으면 글로벌 기본)
+function getFontForPreset(preset, role) {
+  if (!state.fontEnabled && preset.defaultFont) {
+    const familyKey = preset.defaultFont[role];
+    if (familyKey) {
+      const found = FONT_SYSTEM[role].options.find(f => f.family === familyKey);
+      if (found) return found;
+    }
+  }
+  return state[role + "Font"];
+}
 
 let state = {
   selectedSizes: ["pc_main_top"],
@@ -860,13 +881,13 @@ function updatePreview() {
     previewList.appendChild(item);
 
     const canvasContainer = item.querySelector(".preview-item-canvas");
-    renderPreviewItem(canvasContainer, preset, scale);
+    renderPreviewItem(canvasContainer, sizeId, preset, scale);
   });
 }
 
 // ===== 통합 Canvas 렌더링 (미리보기 = 출력 동일) =====
 // 원본 사이즈로 Canvas에 그린 후, 미리보기에서는 CSS 축소로 표시
-function renderToCanvas(preset, callback) {
+function renderToCanvas(presetId, preset, callback) {
   const canvas = document.createElement("canvas");
   canvas.width = preset.w;
   canvas.height = preset.h;
@@ -878,29 +899,153 @@ function renderToCanvas(preset, callback) {
 
   const m = preset.margins;
   const isObjLayout = state.imageIsTransparent && preset.layout === "horizontal";
-  const textX = isObjLayout ? m.left + (preset.w * preset.textRatio - m.left) / 2 : preset.w / 2;
-  const textAlign = isObjLayout ? "left" : "center";
+  // 프리셋에 textAlign이 지정되어 있으면 우선 사용
+  const presetAlign = preset.textAlign || null;
+  let textX, textAlign;
+  if (presetAlign === "left") {
+    textX = m.left;
+    textAlign = "left";
+  } else if (isObjLayout) {
+    textX = m.left + (preset.w * preset.textRatio - m.left) / 2;
+    textAlign = "left";
+  } else {
+    textX = preset.w / 2;
+    textAlign = "center";
+  }
   const centerY = preset.h / 2;
   const textColor = getContrastColor(state.bgColor);
 
   const drawContent = () => {
     // 3. 텍스트 (자간 반영)
-    ctx.textAlign = "center";
     ctx.fillStyle = textColor;
 
-    if (state.subText) {
-      ctx.save();
-      ctx.font = state.subFont.weight + " " + preset.fonts.sub.size + "px " + state.subFont.css;
-      const subSpacing = preset.fonts.sub.spacing * preset.fonts.sub.size;
-      drawTextWithSpacing(ctx, state.subText, textX, centerY - preset.fonts.main.size * 0.3, subSpacing, textAlign);
-      ctx.restore();
-    }
-    if (state.mainText) {
-      ctx.save();
-      ctx.font = state.mainFont.weight + " " + preset.fonts.main.size + "px " + state.mainFont.css;
-      const mainSpacing = preset.fonts.main.spacing * preset.fonts.main.size;
-      drawTextWithSpacing(ctx, state.mainText, textX, centerY + preset.fonts.main.size * 0.5, mainSpacing, textAlign);
-      ctx.restore();
+    // 프리셋별 기본 폰트 적용 (폰트 토글 꺼져있으면 프리셋 기본폰트 사용)
+    const mFont = getFontForPreset(preset, "main");
+    const sFont = getFontForPreset(preset, "sub");
+
+    const decision = getCompositionDecision(presetId, state.mainText, state.subText);
+
+    if (decision) {
+      // ===== 자동 구성 기반 렌더링 (중앙 기준 정렬) =====
+      const cx = preset.w / 2;
+      const cy = preset.h / 2;
+      const GAP = 24; // 피그마 레퍼런스 기준 서브-메인 간격
+
+      if (decision.type === 'single_main' && state.mainText) {
+        ctx.save();
+        ctx.font = mFont.weight + " " + decision.mainSize + "px " + mFont.css;
+        const sp = preset.fonts.main.spacing * decision.mainSize;
+        drawTextWithSpacing(ctx, state.mainText, cx, cy + decision.mainSize * 0.35, sp, "center");
+        ctx.restore();
+
+      } else if (decision.type === 'vertical_sub_main') {
+        const lineGap = 8;
+        const blockH = decision.subSize + lineGap + decision.mainSize;
+        const startY = cy - blockH / 2;
+
+        if (state.subText) {
+          ctx.save();
+          ctx.font = sFont.weight + " " + decision.subSize + "px " + sFont.css;
+          const sp = preset.fonts.sub.spacing * decision.subSize;
+          drawTextWithSpacing(ctx, state.subText, cx, startY + decision.subSize * 0.75, sp, "center");
+          ctx.restore();
+        }
+        if (state.mainText) {
+          ctx.save();
+          ctx.font = mFont.weight + " " + decision.mainSize + "px " + mFont.css;
+          const sp = preset.fonts.main.spacing * decision.mainSize;
+          drawTextWithSpacing(ctx, state.mainText, cx, startY + decision.subSize + lineGap + decision.mainSize * 0.75, sp, "center");
+          ctx.restore();
+        }
+
+      } else if (decision.type === 'horizontal_sub_main') {
+        const subSp = preset.fonts.sub.spacing * decision.subSize;
+        const mainSp = preset.fonts.main.spacing * decision.mainSize;
+
+        ctx.font = sFont.weight + " " + decision.subSize + "px " + sFont.css;
+        const subW = state.subText ? measureTextWithSpacing(ctx, state.subText, subSp) : 0;
+        ctx.font = mFont.weight + " " + decision.mainSize + "px " + mFont.css;
+        const mainW = state.mainText ? measureTextWithSpacing(ctx, state.mainText, mainSp) : 0;
+
+        const totalW = subW + GAP + mainW;
+        const startX = cx - totalW / 2;
+        const textY = cy + decision.mainSize * 0.35;
+
+        if (state.subText) {
+          ctx.save();
+          ctx.font = sFont.weight + " " + decision.subSize + "px " + sFont.css;
+          ctx.fillStyle = textColor;
+          drawTextWithSpacing(ctx, state.subText, startX, textY, subSp, "left");
+          ctx.restore();
+        }
+        if (state.mainText) {
+          ctx.save();
+          ctx.font = mFont.weight + " " + decision.mainSize + "px " + mFont.css;
+          ctx.fillStyle = textColor;
+          drawTextWithSpacing(ctx, state.mainText, startX + subW + GAP, textY, mainSp, "left");
+          ctx.restore();
+        }
+      }
+
+    } else if (preset.textY) {
+      // ===== 피그마 고정 좌표 렌더링 =====
+      const subSize = preset.fonts.sub.size;
+      const mainSize = preset.fonts.main.size;
+
+      if (state.subText && state.mainText) {
+        // 서브+메인 둘 다 있으면 → 피그마 고정 좌표
+        ctx.save();
+        ctx.font = sFont.weight + " " + subSize + "px " + sFont.css;
+        const subSpacing = preset.fonts.sub.spacing * subSize;
+        drawTextWithSpacing(ctx, state.subText, textX, preset.textY.sub + subSize * 0.75, subSpacing, textAlign);
+        ctx.restore();
+
+        ctx.save();
+        ctx.font = mFont.weight + " " + mainSize + "px " + mFont.css;
+        const mainSpacing = preset.fonts.main.spacing * mainSize;
+        drawTextWithSpacing(ctx, state.mainText, textX, preset.textY.main + mainSize * 0.75, mainSpacing, textAlign);
+        ctx.restore();
+      } else if (state.mainText) {
+        // 메인만 있으면 → 세로 중앙 배치
+        ctx.save();
+        ctx.font = mFont.weight + " " + mainSize + "px " + mFont.css;
+        const mainSpacing = preset.fonts.main.spacing * mainSize;
+        const mainY = centerY + mainSize * 0.35;
+        drawTextWithSpacing(ctx, state.mainText, textX, mainY, mainSpacing, textAlign);
+        ctx.restore();
+      } else if (state.subText) {
+        // 서브만 있으면 → 세로 중앙 배치
+        ctx.save();
+        ctx.font = sFont.weight + " " + subSize + "px " + sFont.css;
+        const subSpacing = preset.fonts.sub.spacing * subSize;
+        const subY = centerY + subSize * 0.35;
+        drawTextWithSpacing(ctx, state.subText, textX, subY, subSpacing, textAlign);
+        ctx.restore();
+      }
+
+    } else {
+      // ===== 기본 렌더링 (좌표 없는 배너) =====
+      const gap = preset.lineGap || Math.round(preset.fonts.main.size * 0.3);
+      const subSize = preset.fonts.sub.size;
+      const mainSize = preset.fonts.main.size;
+      const blockH = (state.subText ? subSize : 0) + (state.subText && state.mainText ? gap : 0) + (state.mainText ? mainSize : 0);
+      const startY = centerY - blockH / 2;
+
+      if (state.subText) {
+        ctx.save();
+        ctx.font = sFont.weight + " " + subSize + "px " + sFont.css;
+        const subSpacing = preset.fonts.sub.spacing * subSize;
+        drawTextWithSpacing(ctx, state.subText, textX, startY + subSize * 0.75, subSpacing, textAlign);
+        ctx.restore();
+      }
+      if (state.mainText) {
+        ctx.save();
+        ctx.font = mFont.weight + " " + mainSize + "px " + mFont.css;
+        const mainSpacing = preset.fonts.main.spacing * mainSize;
+        const mainY = state.subText ? startY + subSize + gap + mainSize * 0.75 : startY + mainSize * 0.75;
+        drawTextWithSpacing(ctx, state.mainText, textX, mainY, mainSpacing, textAlign);
+        ctx.restore();
+      }
     }
 
     // 4. CTA 버튼
@@ -971,38 +1116,48 @@ function renderToCanvas(preset, callback) {
   }
 }
 
-// 자간을 적용한 텍스트 렌더링
-function drawTextWithSpacing(ctx, text, x, y, spacing, align) {
-  if (!spacing || spacing === 0) {
-    ctx.textAlign = align;
-    ctx.fillText(text, x, y);
-    return;
-  }
-  // 전체 텍스트 폭 계산 (자간 포함)
-  let totalW = 0;
-  for (let i = 0; i < text.length; i++) {
-    totalW += ctx.measureText(text[i]).width;
-    if (i < text.length - 1) totalW += spacing;
-  }
-  // 정렬에 따른 시작 x 계산
-  let startX = x;
-  if (align === "center") startX = x - totalW / 2;
-  else if (align === "right") startX = x - totalW;
+// ===== 자동 구성 결정 (레퍼런스 사례 기반) =====
+function getCompositionDecision(presetId, mainText, subText) {
+  if (presetId !== 'pc_main_curtain') return null;
 
-  ctx.textAlign = "left";
-  let curX = startX;
-  for (let i = 0; i < text.length; i++) {
-    ctx.fillText(text[i], curX, y);
-    curX += ctx.measureText(text[i]).width + spacing;
+  const mainLen = (mainText || '').length;
+  const subLen = (subText || '').length;
+  const totalLen = mainLen + subLen;
+
+  if (!subText || subLen === 0) {
+    return { type: 'single_main', mainSize: 72, subSize: 0 };
   }
+  // vertical_sub_main (세로 2줄) 조건은 추후 추가 예정
+  if (totalLen <= 24) {
+    return { type: 'horizontal_sub_main', mainSize: 72, subSize: 72 };
+  }
+  return { type: 'horizontal_sub_main', mainSize: 64, subSize: 64 };
+}
+
+// 자간 포함 텍스트 폭 측정 (네이티브 letterSpacing 활용)
+function measureTextWithSpacing(ctx, text, spacing) {
+  const prev = ctx.letterSpacing;
+  ctx.letterSpacing = spacing + "px";
+  const w = ctx.measureText(text).width;
+  ctx.letterSpacing = prev || "0px";
+  return w;
+}
+
+// 자간을 적용한 텍스트 렌더링 (네이티브 letterSpacing — 커닝 유지, 깨끗한 렌더링)
+function drawTextWithSpacing(ctx, text, x, y, spacing, align) {
+  ctx.textAlign = align;
+  const prev = ctx.letterSpacing;
+  ctx.letterSpacing = (spacing || 0) + "px";
+  ctx.fillText(text, x, y);
+  ctx.letterSpacing = prev || "0px";
 }
 
 // 미리보기용: Canvas를 축소해서 표시 + 마진 오버레이
-function renderPreviewItem(container, preset, scale) {
+function renderPreviewItem(container, presetId, preset, scale) {
   const wrapper = document.createElement("div");
   wrapper.style.cssText = "position:relative;display:inline-block;";
 
-  renderToCanvas(preset, (canvas) => {
+  renderToCanvas(presetId, preset, (canvas) => {
     // Canvas를 CSS로 축소 표시
     canvas.style.width = (preset.w * scale) + "px";
     canvas.style.height = (preset.h * scale) + "px";
@@ -1053,7 +1208,7 @@ function downloadAllBanners() {
 
 function downloadBanner(sizeId) {
   const preset = PRESETS[sizeId];
-  renderToCanvas(preset, (canvas) => {
+  renderToCanvas(sizeId, preset, (canvas) => {
     const link = document.createElement("a");
     link.download = "banner_" + preset.w + "x" + preset.h + "_" + state.bgColor.slice(1) + ".png";
     link.href = canvas.toDataURL("image/png");
