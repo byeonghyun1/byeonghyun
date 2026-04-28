@@ -1,15 +1,15 @@
 {
   "id": "pc_search_right",
   "name": "검색 우측 배너",
-  "last_updated": "2026-04-28",
+  "last_updated": "2026-04-27",
   "dimensions": { "width": 320, "height": 155 },
   "layout": "horizontal",
   "textRatio": 0.6,
   "imgRatio": 0.4,
   "margins": { "left": 10, "right": 10, "top": 0, "bottom": 0 },
   "fonts": {
-    "main": { "family": "Paperlogy", "weight": "7Bold", "size_px": 24, "letter_spacing": "-2%" },
-    "sub": { "family": "Paperlogy", "weight": "4Regular", "size_px": 16, "letter_spacing": "-2%" }
+    "main": { "family": "Gmarket Sans", "weight": "Bold", "size_px": 24, "letter_spacing": "-2%" },
+    "sub": { "family": "Gmarket Sans", "weight": "Medium", "size_px": 16, "letter_spacing": "-2%" }
   },
   "minFont": 12,
   "color_rules": {

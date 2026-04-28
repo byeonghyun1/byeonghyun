@@ -1,6 +1,6 @@
 {
   "version": "1.1",
-  "last_updated": "2026-04-27",
+  "last_updated": "2026-04-28",
   "source": "잡코리아 알바몬 통합 배너가이드 PDF",
   "description": "사용 가능한 폰트와 배너 사이즈별 폰트 매핑. 엔진이 이 파일을 읽어 폰트를 자동 적용합니다.",
 
@@ -10,19 +10,19 @@
     "default_note": "특이사항이 없다면 기준 폰트 활용을 권장합니다",
     "available_families": ["Gmarket Sans", "Paperlogy", "Pretendard", "TAEBAEK"],
     "main_copy": {
-      "default": { "family": "Gmarket Sans", "weight": "Bold" },
+      "default": { "family": "Paperlogy", "weight": "7Bold" },
       "options": [
-        { "family": "Gmarket Sans", "weight": "Bold", "css_family": "GmarketSansBold", "css_weight": 700 },
         { "family": "Paperlogy", "weight": "7Bold", "css_family": "Paperlogy-7Bold", "css_weight": 700 },
+        { "family": "Gmarket Sans", "weight": "Bold", "css_family": "GmarketSansBold", "css_weight": 700 },
         { "family": "Pretendard", "weight": "ExtraBold", "css_family": "Pretendard", "css_weight": 800 },
         { "family": "TAEBAEK", "weight": null, "css_family": "TAEBAEK", "css_weight": 400 }
       ]
     },
     "sub_copy": {
-      "default": { "family": "Gmarket Sans", "weight": "Medium" },
+      "default": { "family": "Paperlogy", "weight": "4Regular" },
       "options": [
+        { "family": "Paperlogy", "weight": "4Regular", "css_family": "Paperlogy-4Regular", "css_weight": 400 },
         { "family": "Gmarket Sans", "weight": "Medium", "css_family": "GmarketSansMedium", "css_weight": 500 },
-        { "family": "Paperlogy", "weight": "4 Regular", "css_family": "Paperlogy-4Regular", "css_weight": 400 },
         { "family": "Pretendard", "weight": "Regular", "css_family": "Pretendard", "css_weight": 400 }
       ]
     }
@@ -30,11 +30,11 @@
 
   "allowed_fonts": [
     {
-      "family": "Gmarket Sans",
+      "family": "Paperlogy",
       "category": "gothic",
-      "available_weights": ["Light", "Medium", "Bold"],
-      "usage": "PC 배너 메인/서브 카피, 모바일 서브 배너",
-      "description": "주력 폰트. 대부분의 PC 배너와 모바일 서브 배너에 사용"
+      "available_weights": ["4Regular", "7Bold"],
+      "usage": "전체 배너 기본 폰트",
+      "description": "주력 폰트. 모든 배너의 기본 고정 폰트"
     },
     {
       "family": "Pretendard",
@@ -56,16 +56,16 @@
   "per_banner_fonts": {
     "pc_main_curtain": {
       "slots": {
-        "main": { "family": "Gmarket Sans", "weight": "Bold", "size_px": 72, "letter_spacing": "-4%" },
-        "sub": { "family": "Gmarket Sans", "weight": "Medium", "size_px": 40, "letter_spacing": "-2%" },
+        "main": { "family": "Paperlogy", "weight": "7Bold", "size_px": 72, "letter_spacing": "-2%" },
+        "sub": { "family": "Paperlogy", "weight": "4Regular", "size_px": 40, "letter_spacing": "-2%" },
         "review": { "family": "Pretendard", "weight": "Light", "size_px": 20, "letter_spacing": "-1.5%", "color": "#787878" }
       },
       "min_size_px": null
     },
     "pc_main_top": {
       "slots": {
-        "main": { "family": "Gmarket Sans", "weight": "Bold", "size_px": 62, "letter_spacing": "-4%" },
-        "sub": { "family": "Gmarket Sans", "weight": "Medium", "size_px": 38, "letter_spacing": "-2%" }
+        "main": { "family": "Paperlogy", "weight": "7Bold", "size_px": 62, "letter_spacing": "-4%" },
+        "sub": { "family": "Paperlogy", "weight": "4Regular", "size_px": 38, "letter_spacing": "-2%" }
       },
       "min_size_px": 26
     },
@@ -108,7 +108,7 @@
     },
     "m_sub_banner": {
       "slots": {
-        "main": { "family": "Gmarket Sans", "weight": "Bold", "size_px": 56, "letter_spacing": "-4%" }
+        "main": { "family": "Paperlogy", "weight": "7Bold", "size_px": 56, "letter_spacing": "-2%" }
       },
       "min_size_px": null,
       "note": "최대 56px 권장"

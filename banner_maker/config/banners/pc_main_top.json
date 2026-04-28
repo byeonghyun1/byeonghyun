@@ -1,0 +1,190 @@
+{
+  "id": "pc_main_top",
+  "name": "메인 탑 배너",
+  "last_updated": "2026-04-28",
+  "location": "PC > 알바몬 메인 좌측",
+  "dimensions": { "width": 1556, "height": 232 },
+  "display_size": { "width": 778, "height": 116 },
+  "layout": "horizontal",
+  "textRatio": 0.55,
+  "imgRatio": 0.45,
+  "margins": { "left": 80, "right": 80, "top": 52, "bottom": 52 },
+  "source_label": { "size_px": 16, "position": "top_right" },
+  "image_box": {
+    "width_ratio": 0.40,
+    "height_ratio": 0.95,
+    "anchor": "right_center",
+    "v_padding": 8,
+    "_note": "이미지 자동 배치 권장값. 사용자가 빌더 UI에서 imageScale·anchor로 미세 조정 가능"
+  },
+  "fonts": {
+    "main": { "family": "Paperlogy", "weight": "7Bold", "size_px": 60, "letter_spacing": "-2%", "line_height": 1.2, "box_h_px": 72 },
+    "sub": { "family": "Paperlogy", "weight": "4 Regular", "size_px": 36, "letter_spacing": "-2%", "line_height": 1.2, "box_h_px": 44 }
+  },
+  "minFont": 26,
+  "font_size_strict": true,
+  "file": {
+    "max_size_kb": 50,
+    "extensions": ["jpg", "jpeg", "gif", "png"],
+    "rounding": false,
+    "border": false
+  },
+  "color_rules": {
+    "page_bg": "#FFFFFF",
+    "required": "메인 페이지(흰 #FFFFFF)와 구분되는 Background Color 사용"
+  },
+  "audience": {
+    "targets": ["구직자", "사장님"],
+    "description": "알바몬 메인 방문자는 구직자(알바생)와 사장님(자영업자)을 모두 포함. 광고 컨텍스트에 맞춰 두 청자 중 하나 또는 양쪽을 향하도록 카피·비주얼을 잡는다.",
+    "case_distribution": {
+      "구직자": ["case_1_jjin", "case_3_expedition", "case_4_albatour"],
+      "사장님": ["case_2_kbank"]
+    }
+  },
+  "copy": {
+    "structure": "서브 1줄 + 메인 1줄",
+    "line_gap_px": 12,
+    "main_max_chars_kr": 17,
+    "main_recommended_chars_kr": [13, 17],
+    "sub_max_chars_kr": 14,
+    "sub_recommended_chars_kr": [8, 13],
+    "main_line_break_allowed": false,
+    "tone": {
+      "sub": "맥락·후크·인용·캠페인명",
+      "main": "행동 유도·핵심 메시지"
+    }
+  },
+  "text_color_rule": {
+    "method": "luminance_based",
+    "threshold": 0.5,
+    "dark_bg_text": "#FFFFFF",
+    "light_bg_text": "#171717",
+    "max_text_colors": 2
+  },
+  "layout_pattern": {
+    "default_template": "left_align",
+    "text_area": "좌측 (textRatio 55%)",
+    "visual_area": "우측 (imgRatio 45%)"
+  },
+  "character_policy": {
+    "subject": "알바몬 마스코트 (MONI)",
+    "usage": "conditional",
+    "conditions": [
+      "카피 컨셉에 맞을 때 (의상·소품 변형)",
+      "광고주 자산(제품·로고)을 캐릭터가 들고 있는 결합형",
+      "알바몬 자체 캠페인 광고"
+    ],
+    "prohibited": "조건과 무관한 단순 장식 사용 지양"
+  },
+  "few_shot_refs": [
+    {
+      "id": "case_1_jjin",
+      "advertiser": "알바몬 자체",
+      "audience": "구직자",
+      "bg_tone": "보라 단색",
+      "text_color": "#FFFFFF",
+      "sub_copy": "이 친구 찐입니다",
+      "main_copy": "일 잘한 찐 알바생 추천하기",
+      "visual": "MONI 카드 + 거품 효과",
+      "character_basis": "자사 캠페인 단독 사용"
+    },
+    {
+      "id": "case_2_kbank",
+      "advertiser": "K뱅크",
+      "audience": "사장님",
+      "bg_tone": "파랑 단색",
+      "text_color": "#FFFFFF",
+      "sub_copy": "사장님들을 위한 특별 혜택!",
+      "main_copy": "사장님통장 만들면 최대 3백만원!",
+      "visual": "MONI + Kbank 카드",
+      "character_basis": "광고주 자산(Kbank 카드) 결합형"
+    },
+    {
+      "id": "case_3_expedition",
+      "advertiser": "알바몬 자체",
+      "audience": "구직자",
+      "bg_tone": "주황 단색",
+      "text_color": "#FFFFFF",
+      "sub_copy": "알바몬 원정대 이벤트",
+      "main_copy": "퀴즈 풀고 선물 받을 알바몬 구함",
+      "visual": "MONI(원정대 의상) + 알바몬 로고 가방",
+      "character_basis": "카피 컨셉(원정대) 의상 변형"
+    },
+    {
+      "id": "case_4_albatour",
+      "advertiser": "알바몬 자체",
+      "audience": "구직자",
+      "bg_tone": "하늘 그라데이션 + 일러스트",
+      "text_color": "#FFFFFF",
+      "sub_copy": "알바투어 大모집 중!",
+      "main_copy": "알바와 여행을 한 번에! 알바몬 알바투어",
+      "visual": "MONI(원정대, KTX 탑승) + 부산/통영/경주 표지판",
+      "character_basis": "카피 컨셉(여행) 의상·배경 변형"
+    },
+    {
+      "id": "case_5_eagles_million",
+      "advertiser": "알바몬 × 한화 이글스 (협업)",
+      "audience": "구직자",
+      "bg_tone": "주황 단색 + 야구공 일러스트",
+      "text_color": "#FFFFFF",
+      "emphasis_color": "#FFE600 (메인 일부 강조 — \"100만원?\")",
+      "structure": "main_top_sub_bottom",
+      "main_copy": "헛스윙 날려도 100만원?",
+      "sub_copy": "야구 팬이면 누구나 지원 가능! 시타 알바 지원하기",
+      "visual": "MONI(이글스 유니폼) + 정보박스(시타 체험 일급 1,000,000원) + ALBAMON × Eagles 로고",
+      "character_basis": "협업 캠페인 — 광고주(이글스) 의상 결합형",
+      "image_path": "assets/few_shot_refs/pc_main_top/case_5_eagles_million.png"
+    },
+    {
+      "id": "case_6_eagles_ticketing",
+      "advertiser": "알바몬 × 한화 이글스 (협업)",
+      "audience": "구직자",
+      "bg_tone": "어두운 야구장 사진",
+      "text_color": "#FFFFFF",
+      "emphasis_color": "#F37721 (메인 일부 강조 — \"실패\")",
+      "structure": "sub_top_main_bottom",
+      "sub_copy": "2026 프로야구 시즌 알바몬 단독!",
+      "main_copy": "티켓팅 실패한 야구 팬 찾습니다",
+      "visual": "MONI 2명 + TICKET 표지(시타체험/응원세트) + ALBAMON × Eagles 로고",
+      "character_basis": "협업 캠페인 — 캐릭터 다중 등장",
+      "image_path": "assets/few_shot_refs/pc_main_top/case_6_eagles_ticketing.png"
+    }
+  ],
+
+  "structure_variants": [
+    {
+      "id": "sub_top_main_bottom",
+      "description": "서브(위) + 메인(아래). 기본 구조. 카피 컨셉이 \"맥락 → 결론\" 흐름일 때.",
+      "examples": ["case_1_jjin", "case_2_kbank", "case_3_expedition", "case_4_albatour", "case_6_eagles_ticketing"]
+    },
+    {
+      "id": "main_top_sub_bottom",
+      "description": "메인(위) + 서브(아래). 메인 카피를 후크로 먼저 던지고, 서브로 부연 설명할 때.",
+      "examples": ["case_5_eagles_million"]
+    }
+  ],
+  "builder_io": {
+    "input_mapping": {
+      "UserInput.texts.headline": "text_placements[0] (slot=headline)",
+      "UserInput.texts.subhead": "text_placements[1] (slot=subhead)",
+      "UserInput.image": "image_placement (우측 비주얼)",
+      "UserInput.bg_color": "ImageAnalysis.dominant_colors 추출 (입력 없을 때)"
+    },
+    "cta": {
+      "supported": false,
+      "reason": "메인 탑 배너는 카피 자체가 행동 유도이므로 별도 CTA 버튼 비권장"
+    }
+  },
+  "rules": [
+    { "type": "필수", "text": "메인 페이지(흰 #FFFFFF)와 구분되는 BG Color 사용" },
+    { "type": "필수", "text": "이미지 외곽에 테두리 삽입 불가" },
+    { "type": "필수", "text": "최종파일 라운딩 없이 전달" },
+    { "type": "권장", "text": "서브 1줄 + 메인 1줄 권장" },
+    { "type": "권장", "text": "메인 13~17자 / 서브 8~13자 (한글 기준)" },
+    { "type": "권장", "text": "최소 폰트: 26px" }
+  ],
+  "tbd": [
+    "광고 심의 금지 워딩 사전 (자료 확보 시 추가)",
+    "청자별(구직자/사장님) 카피 톤·시각 모티프 분기 규칙"
+  ]
+}

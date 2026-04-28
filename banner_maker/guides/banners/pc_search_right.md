@@ -1,6 +1,6 @@
 # 검색 우측 배너 (pc_search_right)
 
-> 최종 업데이트: 2026-04-27
+> 최종 업데이트: 2026-04-28
 
 ---
 
@@ -30,8 +30,8 @@
 
 | 슬롯 | 폰트 | 웨이트 | 사이즈 | 자간 |
 |---|---|---|---|---|
-| 메인 | Gmarket Sans | Bold | 24px | -2% |
-| 서브 | Gmarket Sans | Medium | 16px | -2% |
+| 메인 | Paperlogy | 7Bold | 24px | -2% |
+| 서브 | Paperlogy | 4Regular | 16px | -2% |
 
 - 최소 폰트: 12px
 

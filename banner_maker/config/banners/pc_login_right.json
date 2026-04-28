@@ -1,15 +1,15 @@
 {
   "id": "pc_login_right",
   "name": "로그인 우측 배너",
-  "last_updated": "2026-04-28",
+  "last_updated": "2026-04-27",
   "dimensions": { "width": 325, "height": 310 },
   "layout": "vertical",
   "textRatio": 0.5,
   "imgRatio": 0.5,
   "margins": { "left": 10, "right": 10, "top": 10, "bottom": 10 },
   "fonts": {
-    "main": { "family": "Paperlogy", "weight": "7Bold", "size_px": 28, "letter_spacing": "-2%" },
-    "sub": { "family": "Paperlogy", "weight": "4Regular", "size_px": 18, "letter_spacing": "-2%" }
+    "main": { "family": "Gmarket Sans", "weight": "Bold", "size_px": 28, "letter_spacing": "-2%" },
+    "sub": { "family": "Gmarket Sans", "weight": "Medium", "size_px": 18, "letter_spacing": "-2%" }
   },
   "minFont": 12,
   "color_rules": {

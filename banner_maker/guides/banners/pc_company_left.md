@@ -1,6 +1,6 @@
 # 기업 좌측 배너 (pc_company_left)
 
-> 최종 업데이트: 2026-04-27
+> 최종 업데이트: 2026-04-28
 
 ---
 
@@ -30,8 +30,8 @@
 
 | 슬롯 | 폰트 | 웨이트 | 사이즈 | 자간 |
 |---|---|---|---|---|
-| 메인 | Gmarket Sans | Bold | 22px | -2% |
-| 서브 | Gmarket Sans | Medium | 14px | -2% |
+| 메인 | Paperlogy | 7Bold | 22px | -2% |
+| 서브 | Paperlogy | 4Regular | 14px | -2% |
 
 - 최소 폰트: 12px
 

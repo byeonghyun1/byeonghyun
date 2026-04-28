@@ -1,0 +1,82 @@
+{
+  "version": "1.0",
+  "last_updated": "2026-04-24",
+  "source": "잡코리아 알바몬 통합 배너가이드 PDF - 컬러 가이드라인 (p8)",
+  "description": "배경색 규칙, 금지 컬러, 사이즈별 특수 컬러 규칙. 엔진이 배경색 검증에 사용합니다.",
+
+  "global_color_rules": {
+    "background_preference": "solid",
+    "background_description": "단색(솔리드) 배경 권장. 그라데이션은 미세한 톤 변화 정도만 허용",
+
+    "prohibited": [
+      {
+        "type": "pattern",
+        "description": "패턴 배경 사용 금지"
+      },
+      {
+        "type": "white_only",
+        "description": "흰색 단독 배경 지양 (흰 배경 페이지에서 배너 구분 불가)",
+        "exception": "흰 배경에서 가시성 있는 BG컬러를 함께 사용하면 가능"
+      },
+      {
+        "type": "neon",
+        "description": "네온 컬러 사용 금지"
+      },
+      {
+        "type": "fluorescent",
+        "description": "형광 컬러 사용 금지"
+      }
+    ],
+
+    "text_color_max": 2,
+    "text_color_description": "텍스트 컬러는 최대 2가지까지만 사용"
+  },
+
+  "per_banner_color_rules": {
+    "pc_main_curtain": {
+      "prohibited_bg": ["red_warm", "black"],
+      "required": "배경 컬러코드 필수 제출",
+      "reason": "BI와 인접한 위치이므로 붉은계열 및 검정 배경 금지"
+    },
+    "pc_main_top": {
+      "page_bg": "#FFFFFF",
+      "required": "메인 페이지(흰 #FFFFFF)와 구분되는 Background Color 사용"
+    },
+    "pc_job_sky": {
+      "required": "흰 배경에서 가시성 있는 BG컬러 사용"
+    },
+    "pc_recruit_bottom": {
+      "required": "흰 배경에서 가시성 있는 BG컬러 사용"
+    },
+    "pc_login_right": {
+      "required": "흰색 배경에서 가시성 있는 BG컬러 사용"
+    },
+    "pc_search_right": {
+      "fixed_bg": "#DFE6EE",
+      "required": "#DFE6EE 배경에서 가시성 있는 BG컬러 사용",
+      "variable_area": "가변영역 단일컬러 사용"
+    },
+    "pc_company_left": {
+      "required": "흰 배경에서 가시성 있는 BG컬러 사용"
+    },
+    "m_app_splash": {
+      "required": "투명 배경 필수 (transparent PNG)",
+      "text_color": "#171717"
+    },
+    "m_sub_banner": {
+      "required": "흰 배경에서 가시성 있는 BG컬러 사용",
+      "filename_color_code": true,
+      "filename_format": "bn_{컬러코드}.png (예: bn_cceeff.png)"
+    },
+    "email_target": {
+      "required": null,
+      "note": "HTML 이메일이므로 별도 컬러 제한 없음"
+    }
+  },
+
+  "review_text_color": {
+    "value": "#787878",
+    "usage": "메인 커튼 배너 리뷰 텍스트 전용",
+    "banner_id": "pc_main_curtain"
+  }
+}

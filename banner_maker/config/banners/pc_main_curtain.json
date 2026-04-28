@@ -2,36 +2,53 @@
   "id": "pc_main_curtain",
   "name": "메인 커튼 배너",
   "last_updated": "2026-04-28",
+  "location": "PC > 메인 최 상단",
   "source": "Figma Agent-Test > PC Main Curtain Banner",
 
-  "basic_info": {
-    "dimensions": { "width": 2160, "height": 160 },
-    "display_size": { "width": 1080, "height": 80 },
-    "position": "PC > 메인 최 상단",
-    "layout": "horizontal",
-    "max_file_size": "30KB"
+  "dimensions": { "width": 2160, "height": 160 },
+  "display_size": { "width": 1080, "height": 80 },
+  "layout": "horizontal",
+  "textRatio": 1,
+  "imgRatio": 0,
+  "minFont": 20,
+
+  "file": {
+    "max_size_kb": 30,
+    "extensions": ["jpg", "jpeg", "gif", "png"],
+    "rounding": false,
+    "border": false
   },
 
   "margins": {
     "left": 20,
     "right": 20,
     "top": 40,
-    "bottom": 40,
-    "審議筆": 26
+    "bottom": 40
+  },
+
+  "source_label": {
+    "size_px": 8,
+    "position": "top_right",
+    "review_margin_px": 26
+  },
+
+  "safe_zone": {
+    "description": "좌우 20px 내 콘텐츠 배치 금지"
   },
 
   "fonts": {
     "fixed": {
-      "family": "Paperlogy",
+      "family": "Gmarket Sans",
       "letter_spacing": "-2%"
     },
-    "main": { "weight": "7Bold", "size_px": 72 },
-    "sub": { "weight": "4Regular", "size_px": 40 },
+    "main": { "weight": "Bold", "size_px": 72 },
+    "sub": { "weight": "Medium", "size_px": 40 },
     "review": {
       "family": "Pretendard",
       "weight": "Light",
       "size_px": 20,
-      "letter_spacing": "-1.5%"
+      "letter_spacing": "-1.5%",
+      "color": "#787878"
     }
   },
 
@@ -44,12 +61,6 @@
       "horizontal_sub_main": "중앙 기준, 서브(좌로) + 메인(우로) 뻗어나감",
       "vertical_sub_main": "중앙 기준, 서브(위로) + 메인(아래로) 뻗어나감"
     }
-  },
-
-  "object_area": {
-    "position": "right",
-    "gap_px": 24,
-    "max_height_px": 120
   },
 
   "color_rules": {

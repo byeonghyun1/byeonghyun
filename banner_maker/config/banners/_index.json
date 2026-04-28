@@ -1,0 +1,32 @@
+{
+  "description": "config/banners/ 폴더 내 배너 파일 목록. 신규 배너 추가 시 이 배열에도 ID 추가 필수 (fetch로 디렉토리 자동 스캔 불가).",
+  "last_updated": "2026-04-28",
+  "banners": [
+    "pc_main_curtain",
+    "pc_main_top",
+    "pc_job_sky",
+    "pc_recruit_bottom",
+    "pc_recruit_bottom_text",
+    "pc_login_right",
+    "pc_search_right",
+    "pc_company_left",
+    "m_app_splash",
+    "m_sub_banner",
+    "email_target"
+  ],
+  "ui_visible": [
+    "pc_main_curtain",
+    "pc_main_top",
+    "pc_job_sky",
+    "pc_recruit_bottom",
+    "pc_login_right",
+    "pc_search_right",
+    "pc_company_left",
+    "m_sub_banner",
+    "m_app_splash"
+  ],
+  "ui_hidden_reason": {
+    "pc_recruit_bottom_text": "텍스트 전용 — 빌더 미지원 (텍스트 입력만)",
+    "email_target": "HTML 이메일 — 빌더 미지원 (외부 검수 흐름)"
+  }
+}

@@ -1,0 +1,74 @@
+{
+  "version": "2.0",
+  "last_updated": "2026-04-28",
+  "source": "잡코리아 알바몬 통합 배너가이드 PDF",
+  "description": "전역 폰트 가이드. 사용 가능한 폰트 패밀리·옵션·전역 규칙. 배너별 폰트 스펙은 config/banners/{id}.json의 fonts 필드 참조 (SSoT는 banners/).",
+
+  "font_selection_system": {
+    "description": "배너 메이커 폰트 선택 시스템. 사용자는 폰트 종류만 변경 가능 (사이즈/자간/행간 변경 불가).",
+    "toggle": true,
+    "default_note": "특이사항이 없다면 기준 폰트 활용을 권장합니다",
+    "available_families": ["Gmarket Sans", "Paperlogy", "Pretendard", "TAEBAEK"],
+    "main_copy": {
+      "default": { "family": "Paperlogy", "weight": "7Bold" },
+      "options": [
+        { "family": "Paperlogy", "weight": "7Bold", "css_family": "Paperlogy-7Bold", "css_weight": 700 },
+        { "family": "Gmarket Sans", "weight": "Bold", "css_family": "GmarketSansBold", "css_weight": 700 },
+        { "family": "Pretendard", "weight": "ExtraBold", "css_family": "Pretendard", "css_weight": 800 },
+        { "family": "TAEBAEK", "weight": null, "css_family": "TAEBAEK", "css_weight": 400 }
+      ]
+    },
+    "sub_copy": {
+      "default": { "family": "Paperlogy", "weight": "4 Regular" },
+      "options": [
+        { "family": "Paperlogy", "weight": "4 Regular", "css_family": "Paperlogy-4Regular", "css_weight": 400 },
+        { "family": "Gmarket Sans", "weight": "Medium", "css_family": "GmarketSansMedium", "css_weight": 500 },
+        { "family": "Pretendard", "weight": "Regular", "css_family": "Pretendard", "css_weight": 400 }
+      ]
+    }
+  },
+
+  "allowed_fonts": [
+    {
+      "family": "Gmarket Sans",
+      "category": "gothic",
+      "available_weights": ["Light", "Medium", "Bold"],
+      "usage": "PC 배너 메인/서브 카피, 모바일 서브 배너",
+      "description": "주력 폰트. 대부분의 PC 배너와 모바일 서브 배너에 사용"
+    },
+    {
+      "family": "Pretendard",
+      "category": "gothic",
+      "available_weights": ["Light", "Regular", "Medium", "SemiBold", "Bold"],
+      "usage": "모바일 스플래시 배너, PC 커튼 배너 리뷰 텍스트",
+      "description": "보조 폰트. 모바일 스플래시 대문구/소문구, 리뷰 텍스트에 사용"
+    },
+    {
+      "family": "Paperlogy",
+      "category": "gothic",
+      "available_weights": ["4 Regular", "7Bold"],
+      "usage": "사용자가 폰트 토글로 선택 시",
+      "description": "선택 옵션 폰트"
+    },
+    {
+      "family": "TAEBAEK",
+      "category": "gothic",
+      "available_weights": [null],
+      "usage": "사용자가 폰트 토글로 선택 시 (메인 카피 전용)",
+      "description": "선택 옵션 폰트"
+    }
+  ],
+
+  "global_rules": {
+    "category": "gothic_only",
+    "max_font_families_per_banner": 2,
+    "min_size_pc_px": 12,
+    "min_size_mobile_px": 22,
+    "contrast": "배경과 텍스트 간 충분한 명도 대비 필수"
+  },
+
+  "letter_spacing_format": {
+    "json": "문자열 표기, 예: \"-2%\", \"-4%\", \"0%\"",
+    "css_or_canvas": "0.01 단위 숫자로 변환 (예: -2% → -0.02). prototype.html 로더에서 변환"
+  }
+}

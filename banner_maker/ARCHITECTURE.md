@@ -78,22 +78,29 @@ banner_maker/
 │   ├── renderer.py              ← PNG 렌더링
 │   └── figma_writer.py          ← Figma 프레임 생성
 │
-├── guides/                  ← 가이드 문서 + 설정 데이터 (MD+JSON 쌍, SSoT)
-│   ├── color_guide.md / .json    ← 컬러 가이드
-│   ├── font_guide.md / .json     ← 폰트 가이드
-│   ├── design_rules.md / .json   ← 공통 디자인 규정
-│   └── banners/                  ← 배너별 개별 가이드 (MD+JSON 쌍)
-│       ├── pc_main_curtain.md / .json
-│       ├── pc_main_top.md / .json
-│       ├── pc_job_sky.md / .json
-│       ├── pc_login_right.md / .json
-│       ├── pc_search_right.md / .json
-│       ├── pc_recruit_bottom.md / .json
-│       ├── pc_recruit_bottom_text.md / .json
-│       ├── pc_company_left.md / .json
-│       ├── m_sub_banner.md / .json
-│       ├── m_app_splash.md / .json
-│       └── email_target.md / .json
+├── config/                  ← 설정 파일 (JSON, 자주 바뀜) — SSoT
+│   ├── README.md                 ← 폴더 안내
+│   ├── banners/                  ← 배너별 스펙 (1배너 = 1파일, 내부+외부 통합)
+│   │   ├── pc_main_top.json
+│   │   ├── pc_main_curtain.json
+│   │   ├── m_app_splash.json
+│   │   └── ... (배너 추가 시 신규 파일)
+│   ├── templates/                ← 레이아웃 템플릿
+│   │   ├── left_align.json
+│   │   ├── right_align.json
+│   │   ├── top_image.json
+│   │   └── overlay.json
+│   ├── cta_styles/               ← CTA 버튼 스타일
+│   │   ├── bottom_bar.json
+│   │   └── inline_button.json
+│   ├── font_guide.json           ← 폰트 가이드
+│   ├── color_guide.json          ← 색상 가이드
+│   └── design_rules.json         ← 공통 디자인 규정
+│
+├── guides/                  ← 사람용 보조 문서 (config/*.json의 사람용 뷰)
+│   ├── color_guide.md
+│   ├── font_guide.md
+│   └── design_rules.md           ← 진실은 config/, 어긋날 경우 config 우선
 │
 ├── checks/                  ← 검증 체크 모듈 (플러그인 방식)
 ├── dashboard/               ← 웹 대시보드 UI
@@ -103,9 +110,8 @@ banner_maker/
 └── output/                  ← 생성된 결과물
 ```
 
-> **핵심 구조:** `engine/`(코드)과 `guides/`(설정+문서)이 분리.
-> 사이즈 추가 → `guides/banners/`에 MD+JSON 추가. 폰트 변경 → `guides/font_guide.json` 수정. 코드는 건드리지 않음.
-> MD는 사람이 읽는 문서, JSON은 엔진이 읽는 데이터. 항상 쌍으로 관리.
+> **핵심 구조:** `engine/`(코드)과 `config/`(설정)이 완전 분리.
+> 배너 추가 → `config/banners/{id}.json` 신규 작성. 폰트 변경 → `config/font_guide.json` 수정. 코드는 건드리지 않음.
 
 ---
 
@@ -242,13 +248,13 @@ CTA는 텍스트 입력과 분리된 별도 영역으로 제공합니다.
 
 디자이너가 별도로 제공하는 가이드입니다. 에이전트는 이 범위 안에서만 판단합니다.
 
-**폰트 가이드** (guides/font_guide.json)
+**폰트 가이드** (config/font_guide.json)
 - 사용 가능한 폰트 목록
 - 사이즈별 최소/최대 크기
 - 굵기 규칙
 - → 디자이너가 가이드 제공 시 반영 예정
 
-**템플릿** (guides/templates/ (추후))
+**템플릿** (config/templates/)
 - 이미지 영역과 텍스트 영역의 배치 정의
 - → 디자이너가 템플릿 제공 시 반영 예정
 
@@ -266,12 +272,12 @@ CTA는 텍스트 입력과 분리된 별도 영역으로 제공합니다.
 | 구분 | 위치 | 바뀌는 빈도 | 수정 방법 |
 |---|---|---|---|
 | **바뀌는 것 (설정)** | | | |
-| 배너 사이즈 | guides/banners/ | 수시로 | JSON 수정 |
-| 폰트 가이드 | guides/font_guide.json | 자주 | JSON 수정 |
-| 색상 가이드 | guides/color_guide.json | 가끔 | JSON 수정 |
-| 레이아웃 템플릿 | guides/templates/ (추후) | 가끔 | JSON 추가/수정 |
-| CTA 스타일 | guides/cta_styles/ (추후) | 가끔 | JSON 추가 |
-| 디자인 규정 | guides/design_rules.json | 드물게 | JSON 수정 |
+| 배너 스펙 (사이즈·여백·폰트·규칙) | config/banners/{id}.json | 수시로 | JSON 수정 |
+| 전역 폰트 가이드 (사용 가능 폰트·전역 규칙) | config/font_guide.json | 가끔 | JSON 수정 |
+| 색상 가이드 | config/color_guide.json | 가끔 | JSON 수정 |
+| 레이아웃 템플릿 | config/templates/ | 가끔 | JSON 추가/수정 |
+| CTA 스타일 | config/cta_styles/ | 가끔 | JSON 추가 |
+| 디자인 규정 | config/design_rules.json | 드물게 | JSON 수정 |
 | 학습 규칙 | feedback/learned_rules.json | 계속 | 자동 |
 | **안 바뀌는 것 (코드)** | | | |
 | 이미지 분석 로직 | engine/image_analyzer.py | 거의 안 바뀜 | 코드 수정 |
@@ -283,7 +289,7 @@ CTA는 텍스트 입력과 분리된 별도 영역으로 제공합니다.
 
 ### 3.2 설정 파일(JSON) 구조 예시
 
-#### 프리셋 — guides/banners/internal.json
+#### 배너 스펙 — config/banners/{id}.json (배너 1개당 1파일)
 
 ```json
 {
@@ -319,7 +325,7 @@ CTA는 텍스트 입력과 분리된 별도 영역으로 제공합니다.
 > **사이즈 삭제:** 해당 객체를 지우면 끝.
 > **사이즈 변경:** width/height 숫자만 바꾸면 끝.
 
-#### 폰트 가이드 — guides/font_guide.json
+#### 폰트 가이드 — config/font_guide.json
 
 ```json
 {
@@ -346,7 +352,7 @@ CTA는 텍스트 입력과 분리된 별도 영역으로 제공합니다.
 > **사이즈 범위 바꾸기:** min/max 숫자만 수정.
 > 엔진은 이 파일을 읽어서 범위 안에서 자동 계산. 코드 수정 없음.
 
-#### CTA 스타일 — guides/cta_styles/ (추후)bottom_bar.json
+#### CTA 스타일 — config/cta_styles/bottom_bar.json
 
 ```json
 {
@@ -370,10 +376,10 @@ CTA는 텍스트 입력과 분리된 별도 영역으로 제공합니다.
 }
 ```
 
-> **새 CTA 스타일 추가:** guides/cta_styles/ (추후)에 JSON 파일 하나 추가.
+> **새 CTA 스타일 추가:** config/cta_styles/에 JSON 파일 하나 추가.
 > 엔진이 자동으로 인식해서 대시보드 선택지에 추가됨. 코드 수정 없음.
 
-#### 디자인 규정 — guides/design_rules.json
+#### 디자인 규정 — config/design_rules.json
 
 ```json
 {
@@ -410,9 +416,9 @@ CTA는 텍스트 입력과 분리된 별도 영역으로 제공합니다.
 # 설정 파일의 "값"은 몰라도 됨.
 
 class LayoutEngine:
-    def __init__(self, config_path="guides/"):
+    def __init__(self, config_path="config/"):
         # 시작할 때 설정 파일을 전부 로드
-        self.presets = load_all_json(config_path + "presets/")
+        self.banners = load_all_json(config_path + "banners/")
         self.templates = load_all_json(config_path + "templates/")
         self.cta_styles = load_all_json(config_path + "cta_styles/")
         self.font_guide = load_json(config_path + "font_guide.json")
@@ -480,12 +486,12 @@ class FontGuideRangeCheck:
 
 | 시나리오 | 하는 일 | 코드 수정 |
 |---|---|---|
-| 새 배너 사이즈 추가 | guides/banners/ JSON에 객체 추가 | 없음 |
-| 폰트 종류 변경 | guides/font_guide.json 수정 | 없음 |
-| 폰트 사이즈 범위 변경 | guides/font_guide.json min/max 수정 | 없음 |
-| 새 CTA 스타일 추가 | guides/cta_styles/ (추후)에 JSON 추가 | 없음 |
-| 디자인 규정 숫자 변경 | guides/design_rules.json 수정 | 없음 |
-| 새 템플릿 추가 | guides/templates/ (추후)에 JSON 추가 | 없음 |
+| 새 배너 사이즈 추가 | config/banners/ JSON에 객체 추가 | 없음 |
+| 폰트 종류 변경 | config/font_guide.json 수정 | 없음 |
+| 폰트 사이즈 범위 변경 | config/font_guide.json min/max 수정 | 없음 |
+| 새 CTA 스타일 추가 | config/cta_styles/에 JSON 추가 | 없음 |
+| 디자인 규정 숫자 변경 | config/design_rules.json 수정 | 없음 |
+| 새 템플릿 추가 | config/templates/에 JSON 추가 | 없음 |
 | 새 검증 규칙 추가 | checks/에 Python 파일 추가 (플러그인) | 최소한 |
 | 새 이미지 분석 방법 | engine/image_analyzer.py 수정 | 엔진 수정 |
 

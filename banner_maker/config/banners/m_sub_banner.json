@@ -1,15 +1,15 @@
 {
   "id": "m_sub_banner",
   "name": "M 서브 배너",
-  "last_updated": "2026-04-28",
+  "last_updated": "2026-04-27",
   "dimensions": { "width": 1029, "height": 258 },
   "layout": "horizontal",
   "textRatio": 0.55,
   "imgRatio": 0.45,
   "margins": { "left": 10, "right": 10, "top": 0, "bottom": 0 },
   "fonts": {
-    "main": { "family": "Paperlogy", "weight": "7Bold", "size_px": 56, "letter_spacing": "-2%", "note": "최대 56px 권장" },
-    "sub": { "family": "Paperlogy", "weight": "4Regular", "size_px": 34, "letter_spacing": "-2%" }
+    "main": { "family": "Gmarket Sans", "weight": "Bold", "size_px": 56, "letter_spacing": "-2%", "note": "최대 56px 권장" },
+    "sub": { "family": "Gmarket Sans", "weight": "Medium", "size_px": 34, "letter_spacing": "-2%" }
   },
   "minFont": 22,
   "color_rules": {
