@@ -153,21 +153,7 @@ body { font-family: 'Pretendard', -apple-system, sans-serif; background: #F5F5F7
 .cta-options.active { display: flex; }
 .cta-color-row { display: flex; align-items: center; gap: 10px; }
 .cta-color-row label { font-size: 13px; font-weight: 500; color: #555; white-space: nowrap; }
-.cta-style-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.cta-style-card {
-  border: 2px solid #E5E7EB; border-radius: 8px; padding: 12px 8px;
-  cursor: pointer; transition: all 0.2s; background: #FFF; text-align: center;
-}
-.cta-style-card:hover { border-color: #93B4F5; }
-.cta-style-card.selected { border-color: #2563EB; background: #F0F4FF; }
-.cta-style-card .cta-style-label { font-size: 11px; color: #888; margin-bottom: 6px; }
-.cta-style-card .cta-style-demo { display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; color: #FFF; background: #333; }
-.cta-style-card .cta-style-demo.cta1 { width: 100%; padding: 6px 0; border-radius: 4px; }
-.cta-style-card .cta-style-demo.cta2 { padding: 6px 18px; border-radius: 50px; }
-.cta-auto-badge {
-  display: inline-block; font-size: 10px; color: #2563EB; background: #EFF6FF;
-  padding: 2px 8px; border-radius: 4px; margin-left: 6px; font-weight: 500;
-}
+/* CTA 프리뷰 */
 .cta-preview-chip {
   display: inline-flex; align-items: center; justify-content: center;
   font-size: 12px; font-weight: 600;
@@ -402,19 +388,9 @@ body { font-family: 'Pretendard', -apple-system, sans-serif; background: #F5F5F7
           <div class="char-count"><span id="ctaCount">0</span>/15 · 화살표(›) 자동 추가</div>
         </div>
         <div>
-          <label style="font-size:13px;font-weight:500;color:#555;display:block;margin-bottom:6px;">버튼 스타일 <span class="cta-auto-badge" id="ctaAutoBadge">자동</span></label>
-          <div class="cta-style-grid">
-            <div class="cta-style-card" data-style="cta1" onclick="selectCtaStyle(this)">
-              <div class="cta-style-label">CTA_1 풀너비</div>
-              <div class="cta-style-demo cta1">텍스트 ›</div>
-            </div>
-            <div class="cta-style-card" data-style="cta2" onclick="selectCtaStyle(this)">
-              <div class="cta-style-label">CTA_2 pill형</div>
-              <div class="cta-style-demo cta2">텍스트 ›</div>
-            </div>
-          </div>
-          <div style="margin-top:4px;">
-            <span class="cta-auto-reset" id="ctaAutoReset" onclick="resetCtaAuto()" style="font-size:11px;color:#2563EB;cursor:pointer;display:none;">↺ 자동 매칭으로 되돌리기</span>
+          <label style="font-size:13px;font-weight:500;color:#555;display:block;margin-bottom:6px;">버튼 스타일</label>
+          <div style="padding:10px 12px;border:1px solid #E5E7EB;border-radius:8px;background:#F9FAFB;font-size:12px;color:#666;">
+            CTA_1 풀너비 (고정)
           </div>
         </div>
         <div class="cta-color-row">
@@ -508,7 +484,7 @@ if (!CanvasRenderingContext2D.prototype.roundRect) {
 // SSoT: config/banners/*.json (config/banners/_index.json 으로 로드).
 // 이 객체는 fetch 결과로 채워집니다 — 직접 수정 금지.
 // 로컬 실행 주의: file:// 로 열면 fetch가 막힙니다. http 서버 필수.
-//   예) cd banner_maker && python3 -m http.server 8080  →  http://localhost:8080/prototype.html
+//   예) cd banner_maker && python3 server.py  →  http://localhost:8080/prototype.html
 const PRESETS = {};
 
 // 자간 표기 변환: JSON의 "-2%" 문자열 → Canvas/CSS용 -0.02 숫자
@@ -640,8 +616,11 @@ const FONT_SYSTEM = {
   }
 };
 
+// 이벤트 리스너 일괄 해제용 AbortController (updatePreview마다 교체)
+let _previewAbort = null;
+
 let state = {
-  selectedSizes: ["pc_main_top"],
+  selectedSizes: ["pc_main_curtain"],
   bgColor: "#4A90D9",
   mainText: "",
   subText: "",
@@ -655,11 +634,12 @@ let state = {
   ctaText: "",
   ctaColor: "#1A1A1A",
   ctaTextColor: "#FFFFFF",
-  ctaManualStyle: null,
   // 카피 배치 변형 (배너의 structure_variants 중 사용자가 선택한 id). null이면 첫 번째 사용.
   structureChoice: null,
   // 이미지 맞춤 모드: 'contain' (전체 표시) / 'crop' (콘텐츠 바운딩 박스 기준 크롭)
   imageFitMode: 'contain',
+  // getContentBounds 결과 캐시 (이미지 변경 시에만 재계산)
+  contentBoundsCache: null,
   // 배너별 학습 보정값 캐시. { [bannerId]: { scale_delta, offset_y_delta, offset_x_delta } }
   calibrationCache: {},
   // crop 자동 배치 시 계산된 기본값 저장 (다운로드 시 delta 계산용). { [sizeId]: { autoScale, autoOffsetY } }
@@ -768,6 +748,7 @@ function loadImageFile(file) {
   const reader = new FileReader();
   reader.onload = (ev) => {
     state.imageUrl = ev.target.result;
+    state.contentBoundsCache = null; // 이미지 변경 시 바운딩 박스 캐시 초기화
     checkTransparency(ev.target.result);
     showUploadedImage(ev.target.result);
     showImageControls();
@@ -786,6 +767,7 @@ function removeImage(e) {
   e.stopPropagation();
   state.imageUrl = null;
   state.imageIsTransparent = false;
+  state.contentBoundsCache = null;
   document.getElementById('imageControls').style.display = 'none';
   document.getElementById("fileInput").value = "";
   const area = document.getElementById("uploadArea");
@@ -1059,38 +1041,9 @@ function updateCtaAvailability() {
   }
 }
 
-function selectCtaStyle(el) {
-  document.querySelectorAll(".cta-style-card").forEach(c => c.classList.remove("selected"));
-  el.classList.add("selected");
-  state.ctaManualStyle = el.dataset.style;
-  document.getElementById("ctaAutoBadge").textContent = "수동";
-  document.getElementById("ctaAutoBadge").style.color = "#888";
-  document.getElementById("ctaAutoBadge").style.background = "#F3F4F6";
-  document.getElementById("ctaAutoReset").style.display = "inline";
-  updateCtaChip();
-  updatePreview();
-}
-
-function resetCtaAuto() {
-  state.ctaManualStyle = null;
-  document.querySelectorAll(".cta-style-card").forEach(c => c.classList.remove("selected"));
-  document.getElementById("ctaAutoBadge").textContent = "자동";
-  document.getElementById("ctaAutoBadge").style.color = "#2563EB";
-  document.getElementById("ctaAutoBadge").style.background = "#EFF6FF";
-  document.getElementById("ctaAutoReset").style.display = "none";
-  updateCtaChip();
-  updatePreview();
-}
-
-// 레이아웃에 따라 최적 CTA 스타일 자동 결정
-function getAutoCtaStyle(preset) {
-  if (preset.layout === "horizontal") return "cta2"; // 가로형 → pill
-  return "cta1"; // 세로형/정방형 → 풀너비
-}
-
+// CTA는 풀너비(cta1) 고정 — getCtaStyleForPreset은 항상 "cta1" 반환
 function getCtaStyleForPreset(preset) {
-  if (state.ctaManualStyle) return state.ctaManualStyle;
-  return getAutoCtaStyle(preset);
+  return "cta1";
 }
 
 function updateCtaChip() {
@@ -1098,20 +1051,8 @@ function updateCtaChip() {
   chip.style.background = state.ctaColor;
   chip.style.color = state.ctaTextColor;
   chip.textContent = (state.ctaText || "지원하기") + " ›";
-  // 자동 모드면 첫 번째 선택된 배너 기준으로 스타일 결정
-  let style;
-  if (state.ctaManualStyle) {
-    style = state.ctaManualStyle;
-  } else if (state.selectedSizes.length > 0) {
-    style = getAutoCtaStyle(PRESETS[state.selectedSizes[0]]);
-  } else {
-    style = "cta1";
-  }
-  if (style === "cta1") {
-    chip.style.width = "100%"; chip.style.padding = "6px 0"; chip.style.borderRadius = "4px";
-  } else {
-    chip.style.width = "auto"; chip.style.padding = "6px 20px"; chip.style.borderRadius = "50px";
-  }
+  // CTA는 풀너비(cta1) 고정
+  chip.style.width = "100%"; chip.style.padding = "6px 0"; chip.style.borderRadius = "4px";
 }
 
 function setBgColor(color) {
@@ -1153,6 +1094,10 @@ function updatePreview() {
   const emptyState = document.getElementById("emptyState");
   const previewList = document.getElementById("previewList");
   const downloadBtn = document.getElementById("downloadBtn");
+
+  // 이전 미리보기의 window 이벤트 리스너 일괄 해제
+  if (_previewAbort) _previewAbort.abort();
+  _previewAbort = new AbortController();
 
   emptyState.style.display = hasContent ? "none" : "block";
   previewList.style.display = hasContent ? "flex" : "none";
@@ -1245,6 +1190,13 @@ function renderToCanvas(presetId, preset, callback) {
     return Math.max(preset.minFont || 12, scaled);
   }
 
+  // 텍스트+이미지 그룹에서 이미지를 그리는 헬퍼 (중복 제거)
+  function drawGroupedImg(gi, imgX) {
+    if (!gi) return;
+    const imgY = gi.isCrop ? (gi.oy || 0) : ((preset.h - gi.h) / 2 + (gi.oy || 0));
+    ctx.drawImage(gi.img, imgX + (gi.ox || 0), imgY, gi.w, gi.h);
+  }
+
   const drawContent = () => {
     // 3. 텍스트 (자간 반영)
     ctx.fillStyle = textColor;
@@ -1272,14 +1224,11 @@ function renderToCanvas(presetId, preset, callback) {
         const baselineY = cy + fittedMain * 0.38;
 
         if (gi) {
-          // 텍스트+이미지 그룹 중앙 배치 (수동 offset 반영)
+          // 텍스트+이미지 그룹 중앙 배치
           const totalGroupW = mainW + IMG_GAP + imgGroupW;
           const startX = cx - totalGroupW / 2;
           drawTextWithSpacing(ctx, state.mainText, startX, baselineY, sp, "left");
-          const imgX = startX + mainW + IMG_GAP + (gi.ox || 0);
-          // crop: 무게중심 오프셋이 oy에 포함됨 / contain: 세로 중앙
-          const imgY = gi.isCrop ? (gi.oy || 0) : ((preset.h - gi.h) / 2 + (gi.oy || 0));
-          ctx.drawImage(gi.img, imgX, imgY, gi.w, gi.h);
+          drawGroupedImg(gi, startX + mainW + IMG_GAP);
         } else {
           drawTextWithSpacing(ctx, state.mainText, cx, baselineY, sp, textAlign);
         }
@@ -1373,10 +1322,7 @@ function renderToCanvas(presetId, preset, callback) {
 
         // 이미지 그리기 (텍스트 우측에 GAP 간격으로)
         if (gi) {
-          const imgX = startX + textTotalW + IMG_GAP + (gi.ox || 0);
-          // crop: 무게중심 오프셋이 oy에 포함됨 / contain: 세로 중앙
-          const imgY = gi.isCrop ? (gi.oy || 0) : ((preset.h - gi.h) / 2 + (gi.oy || 0));
-          ctx.drawImage(gi.img, imgX, imgY, gi.w, gi.h);
+          drawGroupedImg(gi, startX + textTotalW + IMG_GAP);
         }
       }
 
@@ -1403,35 +1349,17 @@ function renderToCanvas(presetId, preset, callback) {
 
     // 4. CTA 버튼 (가이드: ctaSupported === false면 그리지 않음)
     if (state.ctaEnabled && state.ctaText && preset.ctaSupported !== false) {
-      const ctaStyle = getCtaStyleForPreset(preset);
       const ctaFS = Math.min(preset.fonts.sub.size * 0.7, 24);
       const ctaLabel = state.ctaText + " ›";
       ctx.font = "700 " + ctaFS + "px " + state.mainFont.css;
-
-      if (ctaStyle === "cta1") {
-        const ctaBarH = Math.max(preset.h * 0.17, 30);
-        const ctaY = preset.h - ctaBarH;
-        ctx.fillStyle = state.ctaColor;
-        ctx.fillRect(0, ctaY, preset.w, ctaBarH);
-        ctx.fillStyle = state.ctaTextColor;
-        ctx.textAlign = "center";
-        ctx.fillText(ctaLabel, preset.w / 2, ctaY + ctaBarH / 2 + ctaFS * 0.35);
-      } else {
-        const ctaPadX = ctaFS * 2;
-        const ctaPadY = ctaFS * 0.7;
-        const ctaW = ctx.measureText(ctaLabel).width + ctaPadX * 2;
-        const ctaH = ctaFS + ctaPadY * 2;
-        const ctaX = textX - ctaW / 2;
-        const ctaY = centerY + preset.fonts.main.size * 0.5 + preset.fonts.main.size * 0.5;
-        const ctaR = ctaH / 2;
-        ctx.fillStyle = state.ctaColor;
-        ctx.beginPath();
-        ctx.roundRect(ctaX, ctaY, ctaW, ctaH, ctaR);
-        ctx.fill();
-        ctx.fillStyle = state.ctaTextColor;
-        ctx.textAlign = "center";
-        ctx.fillText(ctaLabel, ctaX + ctaW / 2, ctaY + ctaPadY + ctaFS * 0.35);
-      }
+      // CTA: 풀너비(cta1) 고정
+      const ctaBarH = Math.max(preset.h * 0.17, 30);
+      const ctaY = preset.h - ctaBarH;
+      ctx.fillStyle = state.ctaColor;
+      ctx.fillRect(0, ctaY, preset.w, ctaBarH);
+      ctx.fillStyle = state.ctaTextColor;
+      ctx.textAlign = "center";
+      ctx.fillText(ctaLabel, preset.w / 2, ctaY + ctaBarH / 2 + ctaFS * 0.35);
     }
 
     // drawContent 끝 (callback은 외부에서 클립 해제 후 호출)
@@ -1458,8 +1386,9 @@ function renderToCanvas(presetId, preset, callback) {
             const oy = t.mode === 'manual' ? t.offset.y : 0;
 
             if (state.imageFitMode === 'crop') {
-              // crop 모드: 콘텐츠 바운딩 박스 기준 + 학습 보정값 적용
-              const bounds = getContentBounds(img);
+              // crop 모드: 콘텐츠 바운딩 박스 기준 + 학습 보정값 적용 (캐시 활용)
+              if (!state.contentBoundsCache) state.contentBoundsCache = getContentBounds(img);
+              const bounds = state.contentBoundsCache;
               const cal = state.calibrationCache[presetId] || {};
               // 기본 스케일: 콘텐츠 높이가 배너의 1.15배 + 학습 보정
               const availH = preset.h - vPad;
@@ -1496,28 +1425,66 @@ function renderToCanvas(presetId, preset, callback) {
             callback(canvas);
             return; // 아래 drawContent 중복 호출 방지
           } else {
-            // 기존 로직: right_center 등 anchor 기반 배치
+            // anchor 기반 배치 (right_center, left_center 등) — contain/crop 지원
             const t = getImageTransform(presetId);
             const userScale = (t.mode === 'manual') ? t.scale : 1.0;
-
-            const zoneW = preset.w * (box.width_ratio || preset.imgRatio) * userScale;
-            const zoneH = (preset.h * (box.height_ratio || 0.85) - (box.v_padding || 0) * 2) * userScale;
-            const s = Math.min(zoneW / img.width, zoneH / img.height);
-            const dw = img.width * s, dh = img.height * s;
-
-            const pos = anchorToXY(box.anchor, preset, dw, dh, box.v_padding || 0);
+            const vPad = box.v_padding || 0;
             const ox = t.mode === 'manual' ? t.offset.x : 0;
             const oy = t.mode === 'manual' ? t.offset.y : 0;
-            ctx.drawImage(img, pos.x + ox, pos.y + oy, dw, dh);
+
+            if (state.imageFitMode === 'crop') {
+              // crop 모드: 콘텐츠 바운딩 박스 기준 크롭 + 학습 보정
+              if (!state.contentBoundsCache) state.contentBoundsCache = getContentBounds(img);
+              const bounds = state.contentBoundsCache;
+              const cal = state.calibrationCache[presetId] || {};
+              const zoneH = preset.h * (box.height_ratio || 0.85) - vPad * 2;
+              const baseCropScale = (zoneH * 1.15) / bounds.contentH;
+              const calScale = 1.0 + (cal.scale_delta || 0);
+              const cropScale = baseCropScale * calScale;
+              const finalScale = cropScale * userScale;
+              const scaledW = img.width * finalScale;
+              const scaledH = img.height * finalScale;
+              // 콘텐츠 상단 기준 배치
+              const contentTopY = bounds.top * finalScale;
+              const topOffset = vPad - contentTopY + (cal.offset_y_delta || 0);
+              state.cropAutoValues[presetId] = { autoScale: cropScale, autoOffsetY: topOffset };
+              // 앵커 X 좌표 계산 (크롭 스케일된 이미지 기준)
+              const pos = anchorToXY(box.anchor, preset, scaledW, scaledH, vPad);
+              ctx.drawImage(img, pos.x + ox + (cal.offset_x_delta || 0), topOffset + oy, scaledW, scaledH);
+            } else {
+              // contain 모드: 기존 방식 — 존 안에 전체 표시
+              const zoneW = preset.w * (box.width_ratio || preset.imgRatio) * userScale;
+              const zoneH = (preset.h * (box.height_ratio || 0.85) - vPad * 2) * userScale;
+              const s = Math.min(zoneW / img.width, zoneH / img.height);
+              const dw = img.width * s, dh = img.height * s;
+              const pos = anchorToXY(box.anchor, preset, dw, dh, vPad);
+              ctx.drawImage(img, pos.x + ox, pos.y + oy, dw, dh);
+            }
           }
         } else {
-          // 비율 유지 크롭 (cover 모드)
-          const coverScale = Math.max(preset.w / img.width, preset.h / img.height);
-          const dw = img.width * coverScale;
-          const dh = img.height * coverScale;
-          const dx = (preset.w - dw) / 2;
-          const dy = (preset.h - dh) / 2;
-          ctx.drawImage(img, dx, dy, dw, dh);
+          // 비투명 이미지: contain/crop 지원
+          const t = getImageTransform(presetId);
+          const userScale = (t.mode === 'manual') ? t.scale : 1.0;
+          const ox = t.mode === 'manual' ? t.offset.x : 0;
+          const oy = t.mode === 'manual' ? t.offset.y : 0;
+
+          if (state.imageFitMode === 'crop') {
+            // crop: cover 방식 (배너 전체 덮기) + 수동 조정
+            const coverScale = Math.max(preset.w / img.width, preset.h / img.height) * userScale;
+            const dw = img.width * coverScale;
+            const dh = img.height * coverScale;
+            const dx = (preset.w - dw) / 2 + ox;
+            const dy = (preset.h - dh) / 2 + oy;
+            ctx.drawImage(img, dx, dy, dw, dh);
+          } else {
+            // contain: 비율 유지, 배너 안에 전체 표시
+            const containScale = Math.min(preset.w / img.width, preset.h / img.height) * userScale;
+            const dw = img.width * containScale;
+            const dh = img.height * containScale;
+            const dx = (preset.w - dw) / 2 + ox;
+            const dy = (preset.h - dh) / 2 + oy;
+            ctx.drawImage(img, dx, dy, dw, dh);
+          }
         }
         drawContent();
         ctx.restore();
@@ -1610,14 +1577,15 @@ function renderPreviewItem(container, presetId, preset, scale) {
 }
 
 // 미리보기 캔버스에 드래그·휠 인터랙션 부착 (배너별 transform 독립 조작)
+// _previewAbort의 signal을 사용하여 updatePreview 시 이전 리스너 자동 해제
 function attachImageInteractions(canvas, displayScale, presetId) {
   let dragging = false;
   let startX = 0, startY = 0, startOffsetX = 0, startOffsetY = 0;
+  const signal = _previewAbort ? _previewAbort.signal : undefined;
 
   canvas.addEventListener('mousedown', (e) => {
     if (e.button !== 0) return;
     const t = getImageTransform(presetId);
-    // 자동 모드면 이 배너만 수동으로 전환 (좌측 토글 시각도 동기화)
     if (t.mode === 'auto') { t.mode = 'manual'; syncImageModeUI('manual'); }
     dragging = true;
     startX = e.clientX;
@@ -1626,10 +1594,11 @@ function attachImageInteractions(canvas, displayScale, presetId) {
     startOffsetY = t.offset.y;
     canvas.style.cursor = 'grabbing';
     e.preventDefault();
-  });
+  }, { signal });
+  // window의 mousemove/mouseup은 signal 없이 등록 — 드래그 중 updatePreview()가
+  // abort()해도 드래그가 끊기지 않음. dragging 플래그 체크로 보호되어 쌓여도 무해.
   window.addEventListener('mousemove', (e) => {
     if (!dragging) return;
-    // 화면 픽셀 → 캔버스 좌표 (displayScale 역산)
     const dx = (e.clientX - startX) / displayScale;
     const dy = (e.clientY - startY) / displayScale;
     getImageTransform(presetId).offset = { x: startOffsetX + dx, y: startOffsetY + dy };
@@ -1642,7 +1611,6 @@ function attachImageInteractions(canvas, displayScale, presetId) {
     canvas.style.cursor = t.mode === 'manual' ? 'grab' : 'pointer';
   });
 
-  // 휠 = 등비율 줌 (80% ~ 150%)
   canvas.addEventListener('wheel', (e) => {
     const t = getImageTransform(presetId);
     if (t.mode === 'auto') { t.mode = 'manual'; syncImageModeUI('manual'); }
@@ -1650,7 +1618,7 @@ function attachImageInteractions(canvas, displayScale, presetId) {
     const delta = e.deltaY > 0 ? -0.03 : 0.03;
     t.scale = Math.max(0.8, Math.min(1.5, t.scale + delta));
     updatePreview();
-  }, { passive: false });
+  }, { passive: false, signal });
 }
 
 // 앵커 ID → 캔버스 좌표 (이미지 좌상단 dx, dy)
