@@ -373,9 +373,36 @@ body { font-family: 'Pretendard', -apple-system, sans-serif; background: #F5F5F7
       <div class="color-help">HEX 컬러값을 직접 입력하거나 컬러 피커를 사용하세요</div>
     </div>
 
-    <!-- 6. CTA 버튼 -->
+    <!-- 6. 텍스트 컬러 -->
     <div>
-      <div class="section-title">6. CTA 버튼</div>
+      <div class="section-title">6. 텍스트 컬러</div>
+      <!-- 기본 텍스트 컬러 -->
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="font-size:13px;font-weight:500;color:#555;">기본 컬러</span>
+        <div style="margin-left:auto;display:flex;gap:4px;">
+          <button id="txtColorAuto" onclick="setTextColorMode('auto')" style="padding:4px 10px;border:1px solid #2563EB;background:#2563EB;color:#FFF;border-radius:6px;cursor:pointer;font-size:11px;">자동</button>
+          <button id="txtColorBlack" onclick="setTextColorMode('black')" style="padding:4px 10px;border:1px solid #E5E7EB;background:#FFF;color:#666;border-radius:6px;cursor:pointer;font-size:11px;">Black</button>
+          <button id="txtColorWhite" onclick="setTextColorMode('white')" style="padding:4px 10px;border:1px solid #E5E7EB;background:#FFF;color:#666;border-radius:6px;cursor:pointer;font-size:11px;">White</button>
+        </div>
+      </div>
+      <div id="txtColorHint" style="font-size:11px;color:#888;margin-top:4px;">자동: 배경 밝기 기반 자동 판단</div>
+      <!-- 강조 컬러 -->
+      <div style="margin-top:14px;display:flex;align-items:center;gap:8px;">
+        <span style="font-size:13px;font-weight:500;color:#555;">강조 컬러</span>
+        <div class="color-input-wrap" style="margin-left:auto;flex:unset;">
+          <input type="color" id="emphColorPicker" value="#FF3B30">
+          <input type="text" id="emphColorText" value="#FF3B30" style="width:80px;">
+        </div>
+      </div>
+      <div style="font-size:11px;color:#888;margin-top:4px;line-height:1.5;">
+        카피 입력 시 <strong style="color:#555;">{강조할 단어}</strong> 로 감싸면 해당 부분만 강조 컬러가 적용됩니다<br>
+        예: 퇴근 길 <strong style="color:#555;">{치킨}</strong> 드세요 → "치킨"만 강조
+      </div>
+    </div>
+
+    <!-- 7. CTA 버튼 -->
+    <div>
+      <div class="section-title">7. CTA 버튼</div>
       <div class="cta-toggle-row">
         <div class="toggle-switch" id="ctaToggle" onclick="toggleCta()"></div>
         <div class="cta-toggle-label">CTA 버튼 사용</div>
@@ -630,6 +657,10 @@ let state = {
   fontEnabled: false,
   mainFont: { ...FONT_SYSTEM.main.default },
   subFont: { ...FONT_SYSTEM.sub.default },
+  // 텍스트 컬러 모드: 'auto' (배경 밝기 기반) / 'black' / 'white'
+  textColorMode: 'auto',
+  // 강조 컬러: {} 중괄호로 감싼 텍스트에 적용되는 색상
+  emphColor: '#FF3B30',
   ctaEnabled: false,
   ctaText: "",
   ctaColor: "#1A1A1A",
@@ -694,10 +725,18 @@ async function init() {
   renderSizeGrid(visibleIds);
 
   document.getElementById("fileInput").addEventListener("change", handleFileUpload);
-  document.getElementById("mainText").addEventListener("input", e => { state.mainText = e.target.value; document.getElementById("mainCount").textContent = e.target.value.length; updatePreview(); });
-  document.getElementById("subText").addEventListener("input", e => { state.subText = e.target.value; document.getElementById("subCount").textContent = e.target.value.length; updatePreview(); });
+  document.getElementById("mainText").addEventListener("input", e => { state.mainText = e.target.value; document.getElementById("mainCount").textContent = e.target.value.replace(/[{}]/g, '').length; updatePreview(); });
+  document.getElementById("subText").addEventListener("input", e => { state.subText = e.target.value; document.getElementById("subCount").textContent = e.target.value.replace(/[{}]/g, '').length; updatePreview(); });
   document.getElementById("bgColorPicker").addEventListener("input", e => setBgColor(e.target.value));
-  document.getElementById("bgColorText").addEventListener("change", e => { if (/^#[0-9A-Fa-f]{6}$/.test(e.target.value)) setBgColor(e.target.value); });
+  const bgTextInput = document.getElementById("bgColorText");
+  bgTextInput.addEventListener("input", e => { if (!e.target.value.startsWith('#')) e.target.value = '#' + e.target.value.replace(/#/g, ''); });
+  bgTextInput.addEventListener("change", e => { const v = e.target.value; if (/^#[0-9A-Fa-f]{6}$/.test(v)) setBgColor(v); else e.target.value = state.bgColor; });
+
+  // 강조 컬러 이벤트
+  document.getElementById("emphColorPicker").addEventListener("input", e => { state.emphColor = e.target.value; document.getElementById("emphColorText").value = e.target.value; updatePreview(); });
+  const emphTextInput = document.getElementById("emphColorText");
+  emphTextInput.addEventListener("input", e => { if (!e.target.value.startsWith('#')) e.target.value = '#' + e.target.value.replace(/#/g, ''); });
+  emphTextInput.addEventListener("change", e => { const v = e.target.value; if (/^#[0-9A-Fa-f]{6}$/.test(v)) { state.emphColor = v; document.getElementById("emphColorPicker").value = v; updatePreview(); } else { e.target.value = state.emphColor; }});
 
   // CTA 이벤트
   document.getElementById("ctaText").addEventListener("input", e => {
@@ -1055,6 +1094,25 @@ function updateCtaChip() {
   chip.style.width = "100%"; chip.style.padding = "6px 0"; chip.style.borderRadius = "4px";
 }
 
+// ===== 텍스트 컬러 강제 선택 =====
+function setTextColorMode(mode) {
+  state.textColorMode = mode;
+  const onStyle  = 'padding:4px 10px;border:1px solid #2563EB;background:#2563EB;color:#FFF;border-radius:6px;cursor:pointer;font-size:11px;';
+  const offStyle = 'padding:4px 10px;border:1px solid #E5E7EB;background:#FFF;color:#666;border-radius:6px;cursor:pointer;font-size:11px;';
+  document.getElementById('txtColorAuto').style.cssText  = mode === 'auto'  ? onStyle : offStyle;
+  document.getElementById('txtColorBlack').style.cssText = mode === 'black' ? onStyle : offStyle;
+  document.getElementById('txtColorWhite').style.cssText = mode === 'white' ? onStyle : offStyle;
+  const hints = { auto: '자동: 배경 밝기 기반 자동 판단', black: '강제: #171717 (어두운 텍스트)', white: '강제: #FFFFFF (밝은 텍스트)' };
+  document.getElementById('txtColorHint').textContent = hints[mode];
+  updatePreview();
+}
+
+function getTextColor() {
+  if (state.textColorMode === 'black') return '#171717';
+  if (state.textColorMode === 'white') return '#FFFFFF';
+  return getContrastColor(state.bgColor);
+}
+
 function setBgColor(color) {
   state.bgColor = color;
   document.getElementById("bgColorPicker").value = color;
@@ -1174,7 +1232,7 @@ function renderToCanvas(presetId, preset, callback) {
     ? Math.max(0, preset.w * preset.textRatio - m.left - 8)
     : Math.max(0, preset.w - m.left - m.right);
   const centerY = preset.h / 2;
-  const textColor = getContrastColor(state.bgColor);
+  const textColor = getTextColor();
 
   // 텍스트가 영역을 넘으면 폰트 자동 축소 (minFont까지)
   // 단, preset.fontSizeStrict === true면 가이드 사이즈 고정 (축소 X)
@@ -1507,8 +1565,8 @@ function getCompositionDecision(presetId, mainText, subText) {
 
   // pc_main_curtain: 글자수 기반 자동 결정 (6개 사례 기반 룰, 28자 기준)
   if (presetId === 'pc_main_curtain') {
-    const mainLen = (mainText || '').length;
-    const subLen = (subText || '').length;
+    const mainLen = stripEmphasis(mainText).length;
+    const subLen = stripEmphasis(subText).length;
     const totalLen = mainLen + subLen;
     if (!subText || subLen === 0) return { type: 'single_main', mainSize: 72, subSize: 0 };
     if (totalLen <= 28) return { type: 'horizontal_sub_main', mainSize: 72, subSize: 72 };
@@ -1526,22 +1584,79 @@ function getCompositionDecision(presetId, mainText, subText) {
   return null;
 }
 
+// {} 중괄호 마크업 파싱 → [{text, isEmphasis}, ...] 세그먼트 배열
+// 예: "퇴근 길 {치킨} 드세요" → [{text:"퇴근 길 ",em:false},{text:"치킨",em:true},{text:" 드세요",em:false}]
+function parseEmphasis(text) {
+  if (!text || text.indexOf('{') === -1) return [{ text: text || '', em: false }];
+  const segments = [];
+  let i = 0;
+  while (i < text.length) {
+    const open = text.indexOf('{', i);
+    if (open === -1) { segments.push({ text: text.slice(i), em: false }); break; }
+    if (open > i) segments.push({ text: text.slice(i, open), em: false });
+    const close = text.indexOf('}', open + 1);
+    if (close === -1) { segments.push({ text: text.slice(open), em: false }); break; }
+    segments.push({ text: text.slice(open + 1, close), em: true });
+    i = close + 1;
+  }
+  return segments.filter(s => s.text.length > 0);
+}
+
+// {} 를 제거한 순수 텍스트 반환 (폭 측정용)
+function stripEmphasis(text) {
+  return (text || '').replace(/[{}]/g, '');
+}
+
 // 자간 포함 텍스트 폭 측정 (네이티브 letterSpacing 활용)
+// {} 마크업이 포함된 텍스트도 자동으로 strip 후 측정
 function measureTextWithSpacing(ctx, text, spacing) {
+  const clean = stripEmphasis(text);
   const prev = ctx.letterSpacing;
   ctx.letterSpacing = spacing + "px";
-  const w = ctx.measureText(text).width;
+  const w = ctx.measureText(clean).width;
   ctx.letterSpacing = prev || "0px";
   return w;
 }
 
-// 자간을 적용한 텍스트 렌더링 (네이티브 letterSpacing — 커닝 유지, 깨끗한 렌더링)
+// 자간을 적용한 텍스트 렌더링 (강조 컬러 지원)
+// {} 마크업이 있으면 세그먼트별로 나눠 그리고, 없으면 기존처럼 한번에 그림
 function drawTextWithSpacing(ctx, text, x, y, spacing, align) {
-  ctx.textAlign = align;
-  const prev = ctx.letterSpacing;
+  const segments = parseEmphasis(text);
+  const hasEmphasis = segments.some(s => s.em);
+
+  if (!hasEmphasis) {
+    // 강조 없음 → 기존 방식 그대로
+    ctx.textAlign = align;
+    const prev = ctx.letterSpacing;
+    ctx.letterSpacing = (spacing || 0) + "px";
+    ctx.fillText(text, x, y);
+    ctx.letterSpacing = prev || "0px";
+    return;
+  }
+
+  // 강조 세그먼트 존재 → 세그먼트별로 개별 렌더링
+  const prevLS = ctx.letterSpacing;
   ctx.letterSpacing = (spacing || 0) + "px";
-  ctx.fillText(text, x, y);
-  ctx.letterSpacing = prev || "0px";
+  const prevAlign = ctx.textAlign;
+  const prevFill = ctx.fillStyle;
+
+  // 전체 텍스트 폭 계산 (정렬 오프셋 산정)
+  const totalW = ctx.measureText(segments.map(s => s.text).join('')).width;
+  let startX = x;
+  if (align === 'center') startX = x - totalW / 2;
+  else if (align === 'right') startX = x - totalW;
+
+  ctx.textAlign = 'left';
+  let curX = startX;
+  for (const seg of segments) {
+    ctx.fillStyle = seg.em ? state.emphColor : prevFill;
+    ctx.fillText(seg.text, curX, y);
+    curX += ctx.measureText(seg.text).width;
+  }
+
+  ctx.fillStyle = prevFill;
+  ctx.textAlign = prevAlign;
+  ctx.letterSpacing = prevLS;
 }
 
 // 미리보기용: Canvas를 축소해서 표시 + 마진 오버레이
