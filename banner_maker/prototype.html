@@ -290,8 +290,18 @@ body { font-family: 'Pretendard', -apple-system, sans-serif; background: #F5F5F7
       <input type="file" id="fileInput" accept="image/*" style="display:none">
       <!-- 이미지 조정 (이미지가 업로드되었을 때만 노출) -->
       <div id="imageControls" style="display:none;margin-top:12px;padding:12px;background:#F9FAFB;border-radius:8px;font-size:12px;">
+        <!-- 이미지 맞춤 모드 (contain / crop) -->
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-          <span style="font-weight:500;color:#555;">이미지 조정</span>
+          <span style="font-weight:500;color:#555;">이미지 맞춤</span>
+          <div style="margin-left:auto;display:flex;gap:4px;">
+            <button id="imgFitContain" onclick="setImageFitMode('contain')" style="padding:4px 10px;border:1px solid #2563EB;background:#2563EB;color:#FFF;border-radius:6px;cursor:pointer;font-size:11px;">contain</button>
+            <button id="imgFitCrop" onclick="setImageFitMode('crop')" style="padding:4px 10px;border:1px solid #E5E7EB;background:#FFF;color:#666;border-radius:6px;cursor:pointer;font-size:11px;">crop</button>
+          </div>
+        </div>
+        <div id="imgFitHint" style="color:#888;font-size:11px;margin-bottom:8px;">contain: 이미지 전체 표시 · crop: 무게중심 기준 크롭</div>
+        <!-- 수동 조정 (자동/수동) -->
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+          <span style="font-weight:500;color:#555;">위치 조정</span>
           <div style="margin-left:auto;display:flex;gap:4px;">
             <button id="imgModeAuto" onclick="setImageMode('auto')" style="padding:4px 10px;border:1px solid #2563EB;background:#2563EB;color:#FFF;border-radius:6px;cursor:pointer;font-size:11px;">자동</button>
             <button id="imgModeManual" onclick="setImageMode('manual')" style="padding:4px 10px;border:1px solid #E5E7EB;background:#FFF;color:#666;border-radius:6px;cursor:pointer;font-size:11px;">수동</button>
@@ -550,6 +560,7 @@ function adaptBanner(json) {
          : 'center',
     composition: json.copy?.structure || null,            // "서브 1줄 + 메인 1줄" 등
     verticalLineGap: json.copy?.line_gap_px ?? null,      // 가이드 명시 시 그 값, 없으면 폰트 비례
+    textGap: json.copy?.text_gap_px ?? 24,                 // 가로 1줄 서브-메인 간격 (기본 24px)
     structureVariants: json.structure_variants || null,   // [{id, description, examples}] — 빌더에서 토글 노출
     imageBox: json.image_box || null,                     // {width_ratio, height_ratio, anchor, v_padding}
     ctaSupported: json.builder_io?.cta?.supported !== false, // false 명시 시만 차단
@@ -647,6 +658,12 @@ let state = {
   ctaManualStyle: null,
   // 카피 배치 변형 (배너의 structure_variants 중 사용자가 선택한 id). null이면 첫 번째 사용.
   structureChoice: null,
+  // 이미지 맞춤 모드: 'contain' (전체 표시) / 'crop' (콘텐츠 바운딩 박스 기준 크롭)
+  imageFitMode: 'contain',
+  // 배너별 학습 보정값 캐시. { [bannerId]: { scale_delta, offset_y_delta, offset_x_delta } }
+  calibrationCache: {},
+  // crop 자동 배치 시 계산된 기본값 저장 (다운로드 시 delta 계산용). { [sizeId]: { autoScale, autoOffsetY } }
+  cropAutoValues: {},
   // 배너별 이미지 transform — 각 배너 독립 조정. { [sizeId]: { mode: 'auto'|'manual', scale, offset:{x,y} } }
   // 자동 모드: 가이드 image_box / 수동 모드: 드래그(offset)·휠(scale, 등비율)
   imageTransforms: {}
@@ -688,6 +705,12 @@ async function init() {
   if (!PRESETS[state.selectedSizes[0]]) {
     state.selectedSizes = [visibleIds[0]];
   }
+
+  // 배너별 학습 보정값 로드
+  for (const id of visibleIds) {
+    await loadCalibration(id);
+  }
+
   renderSizeGrid(visibleIds);
 
   document.getElementById("fileInput").addEventListener("change", handleFileUpload);
@@ -869,7 +892,9 @@ function updateStructureSelector() {
                         ";border-radius:8px;cursor:pointer;background:" + (selected ? "#EFF6FF" : "#FFF") +
                         ";font-size:12px;line-height:1.4;color:#333;";
     const label = v.id === "main_top_sub_bottom" ? "메인 위 / 서브 아래" :
-                  v.id === "sub_top_main_bottom" ? "서브 위 / 메인 아래" : v.id;
+                  v.id === "sub_top_main_bottom" ? "서브 위 / 메인 아래" :
+                  v.id === "sub_left_main_right" ? "서브(좌) → 메인(우)" :
+                  v.id === "main_left_sub_right" ? "메인(좌) → 서브(우)" : v.id;
     card.innerHTML = '<div style="font-weight:600;margin-bottom:2px;">' + label + '</div><div style="color:#888;font-size:11px;">' + (v.description || '') + '</div>';
     card.onclick = function() { selectStructure(v.id); };
     options.appendChild(card);
@@ -883,9 +908,112 @@ function selectStructure(id) {
   updatePreview();
 }
 
+// ===== 이미지 맞춤 모드 (contain / crop) =====
+function setImageFitMode(mode) {
+  state.imageFitMode = mode;
+  syncImageFitUI(mode);
+  // 모드 변경 시 수동 offset 초기화
+  state.selectedSizes.forEach(id => {
+    const t = getImageTransform(id);
+    t.offset = { x: 0, y: 0 };
+    t.scale = 1.0;
+    t.mode = 'auto';
+  });
+  syncImageModeUI('auto');
+  updatePreview();
+}
+
+function syncImageFitUI(mode) {
+  const onStyle  = 'padding:4px 10px;border:1px solid #2563EB;background:#2563EB;color:#FFF;border-radius:6px;cursor:pointer;font-size:11px;';
+  const offStyle = 'padding:4px 10px;border:1px solid #E5E7EB;background:#FFF;color:#666;border-radius:6px;cursor:pointer;font-size:11px;';
+  document.getElementById('imgFitContain').style.cssText = mode === 'contain' ? onStyle : offStyle;
+  document.getElementById('imgFitCrop').style.cssText    = mode === 'crop'    ? onStyle : offStyle;
+}
+
+// 투명 PNG의 콘텐츠 바운딩 박스 계산 (실제 픽셀이 있는 영역의 상하좌우 경계)
+function getContentBounds(img) {
+  const tmpCanvas = document.createElement('canvas');
+  tmpCanvas.width = img.width;
+  tmpCanvas.height = img.height;
+  const tmpCtx = tmpCanvas.getContext('2d');
+  tmpCtx.drawImage(img, 0, 0);
+  const data = tmpCtx.getImageData(0, 0, img.width, img.height).data;
+
+  let top = img.height, bottom = 0, left = img.width, right = 0;
+  const step = 2; // 성능을 위해 2px 간격 샘플링
+  for (let y = 0; y < img.height; y += step) {
+    for (let x = 0; x < img.width; x += step) {
+      const a = data[(y * img.width + x) * 4 + 3];
+      if (a > 10) {
+        if (y < top) top = y;
+        if (y > bottom) bottom = y;
+        if (x < left) left = x;
+        if (x > right) right = x;
+      }
+    }
+  }
+
+  if (top >= bottom) return { top: 0, bottom: img.height, left: 0, right: img.width, contentH: img.height, contentW: img.width };
+  return { top, bottom, left, right, contentH: bottom - top, contentW: right - left };
+}
+
+// ===== 학습 데이터 (calibration) =====
+// 배너별 학습 보정값 로드 (서버에서 JSON 파일 읽기)
+async function loadCalibration(bannerId) {
+  try {
+    const res = await fetch('config/banners/' + bannerId + '_calibration.json');
+    if (!res.ok) return null;
+    const data = await res.json();
+    state.calibrationCache[bannerId] = data.average || {};
+    return data.average || {};
+  } catch (e) {
+    return null;
+  }
+}
+
+// 다운로드 시 학습 데이터 저장 (서버에 POST)
+async function saveCalibration(bannerId) {
+  if (!state.imageUrl) return; // 이미지 없으면 저장 불필요
+  const autoVals = state.cropAutoValues[bannerId] || { autoScale: 1.0, autoOffsetY: 0 };
+
+  const t = getImageTransform(bannerId);
+  const finalScale = (t.mode === 'manual') ? t.scale : 1.0;
+  const finalOffsetY = (t.mode === 'manual') ? t.offset.y : 0;
+  const finalOffsetX = (t.mode === 'manual') ? t.offset.x : 0;
+
+  const sample = {
+    date: new Date().toISOString().split('T')[0],
+    fit_mode: state.imageFitMode,
+    auto_scale: autoVals.autoScale,
+    final_scale: finalScale,
+    auto_offset_y: Math.round(autoVals.autoOffsetY),
+    final_offset_y: Math.round(finalOffsetY + autoVals.autoOffsetY),
+    scale_delta: Math.round((finalScale - 1.0) * 10000) / 10000,
+    offset_y_delta: Math.round(finalOffsetY),
+    offset_x_delta: Math.round(finalOffsetX)
+  };
+
+  try {
+    const res = await fetch('/api/calibration', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ banner_id: bannerId, sample })
+    });
+    const result = await res.json();
+    if (result.ok) {
+      // 캐시 즉시 갱신
+      state.calibrationCache[bannerId] = result.average;
+      console.log('[calibration] 학습 저장 완료:', bannerId, result.average);
+    }
+  } catch (e) {
+    console.warn('[calibration] 저장 실패 (서버 미실행?):', e.message);
+  }
+}
+
 // ===== 이미지 조정 (드래그 + 휠 줌, 등비율 유지) =====
 function showImageControls() {
   document.getElementById('imageControls').style.display = state.imageUrl ? 'block' : 'none';
+  syncImageFitUI(state.imageFitMode);
 }
 
 // 좌측 패널 버튼 → 선택된 모든 배너에 일괄 적용 (각 배너 독립 transform이라 명시적 일괄 처리 필요)
@@ -1091,8 +1219,8 @@ function renderToCanvas(presetId, preset, callback) {
 
   const m = preset.margins;
   const isObjLayout = state.imageIsTransparent && preset.layout === "horizontal";
-  // 가이드의 layout_pattern.default_template 우선. 없으면 이미지 투명 여부 기반.
-  const useLeftAlign = preset.align === 'left' || isObjLayout;
+  // 가이드의 layout_pattern.default_template 우선 — center 명시 시 이미지 투명 여부와 무관하게 중앙정렬 유지
+  const useLeftAlign = preset.align === 'left' || (isObjLayout && preset.align !== 'center');
   // 좌측 정렬: 좌측 마진 직후부터 시작. 중앙 정렬: 캔버스 중심.
   const textX = useLeftAlign ? m.left : preset.w / 2;
   const textAlign = useLeftAlign ? "left" : "center";
@@ -1127,14 +1255,34 @@ function renderToCanvas(presetId, preset, callback) {
       // ===== 자동 구성 기반 렌더링 (textX/textAlign 기준 — 좌측정렬 또는 중앙) =====
       const cx = textX;
       const cy = preset.h / 2;
-      const GAP = 24; // 피그마 레퍼런스 기준 서브-메인 간격
+      const GAP = preset.textGap || 24; // JSON copy.text_gap_px 우선, 없으면 24px
 
       if (decision.type === 'single_main' && state.mainText) {
         const fittedMain = fitFontSize(state.mainText, decision.mainSize, state.mainFont.css, state.mainFont.weight, preset.fonts.main.spacing);
+        const sp = preset.fonts.main.spacing * fittedMain;
+
+        // 이미지+텍스트 그룹 중앙정렬 (center_grouped)
+        const gi = state._groupedImg || null;
+        const imgGroupW = gi ? gi.w : 0;
+        const IMG_GAP = preset.imageBox?.image_gap ?? (preset.textGap || 24);
+
         ctx.save();
         ctx.font = state.mainFont.weight + " " + fittedMain + "px " + state.mainFont.css;
-        const sp = preset.fonts.main.spacing * fittedMain;
-        drawTextWithSpacing(ctx, state.mainText, cx, cy + fittedMain * 0.35, sp, textAlign);
+        const mainW = measureTextWithSpacing(ctx, state.mainText, sp);
+        const baselineY = cy + fittedMain * 0.38;
+
+        if (gi) {
+          // 텍스트+이미지 그룹 중앙 배치 (수동 offset 반영)
+          const totalGroupW = mainW + IMG_GAP + imgGroupW;
+          const startX = cx - totalGroupW / 2;
+          drawTextWithSpacing(ctx, state.mainText, startX, baselineY, sp, "left");
+          const imgX = startX + mainW + IMG_GAP + (gi.ox || 0);
+          // crop: 무게중심 오프셋이 oy에 포함됨 / contain: 세로 중앙
+          const imgY = gi.isCrop ? (gi.oy || 0) : ((preset.h - gi.h) / 2 + (gi.oy || 0));
+          ctx.drawImage(gi.img, imgX, imgY, gi.w, gi.h);
+        } else {
+          drawTextWithSpacing(ctx, state.mainText, cx, baselineY, sp, textAlign);
+        }
         ctx.restore();
 
       } else if (decision.type === 'vertical_sub_main') {
@@ -1172,33 +1320,63 @@ function renderToCanvas(presetId, preset, callback) {
         else         { drawSub(topY);  drawMain(botY); }
 
       } else if (decision.type === 'horizontal_sub_main') {
-        // 가로 1줄: 중앙 기준 서브(좌) + 메인(우)
-        const subSp = preset.fonts.sub.spacing * decision.subSize;
-        const mainSp = preset.fonts.main.spacing * decision.mainSize;
+        // 가로 1줄: structureChoice에 따라 좌우 순서 결정
+        // 기본(sub_left_main_right): 서브(좌) + 메인(우)
+        // 반전(main_left_sub_right): 메인(좌) + 서브(우)
+        const swapped = state.structureChoice === 'main_left_sub_right';
+        const leftText  = swapped ? state.mainText : state.subText;
+        const rightText = swapped ? state.subText  : state.mainText;
+        const leftSize  = swapped ? decision.mainSize : decision.subSize;
+        const rightSize = swapped ? decision.subSize  : decision.mainSize;
+        const leftFont  = swapped ? state.mainFont : state.subFont;
+        const rightFont = swapped ? state.subFont  : state.mainFont;
+        const leftSpRatio  = swapped ? preset.fonts.main.spacing : preset.fonts.sub.spacing;
+        const rightSpRatio = swapped ? preset.fonts.sub.spacing  : preset.fonts.main.spacing;
+
+        const leftSp  = leftSpRatio * leftSize;
+        const rightSp = rightSpRatio * rightSize;
 
         // 텍스트 폭 측정
-        ctx.font = state.subFont.weight + " " + decision.subSize + "px " + state.subFont.css;
-        const subW = state.subText ? measureTextWithSpacing(ctx, state.subText, subSp) : 0;
-        ctx.font = state.mainFont.weight + " " + decision.mainSize + "px " + state.mainFont.css;
-        const mainW = state.mainText ? measureTextWithSpacing(ctx, state.mainText, mainSp) : 0;
+        ctx.font = leftFont.weight + " " + leftSize + "px " + leftFont.css;
+        const leftW = leftText ? measureTextWithSpacing(ctx, leftText, leftSp) : 0;
+        ctx.font = rightFont.weight + " " + rightSize + "px " + rightFont.css;
+        const rightW = rightText ? measureTextWithSpacing(ctx, rightText, rightSp) : 0;
 
-        const totalW = subW + GAP + mainW;
-        const startX = cx - totalW / 2;
-        const textY = cy + decision.mainSize * 0.35;
+        const textTotalW = (leftW > 0 && rightW > 0) ? leftW + GAP + rightW : leftW + rightW;
 
-        if (state.subText) {
+        // 이미지+텍스트 그룹 중앙정렬 (center_grouped) — state._groupedImg 활용
+        const gi = state._groupedImg || null;
+        const imgGroupW = gi ? gi.w : 0;
+        const IMG_GAP = preset.imageBox?.image_gap ?? GAP;
+        const totalGroupW = textTotalW + (imgGroupW > 0 ? IMG_GAP + imgGroupW : 0);
+        const startX = cx - totalGroupW / 2;
+
+        const textStartX = startX;
+
+        const textY = cy + decision.mainSize * 0.38;
+
+        if (leftText) {
           ctx.save();
-          ctx.font = state.subFont.weight + " " + decision.subSize + "px " + state.subFont.css;
+          ctx.font = leftFont.weight + " " + leftSize + "px " + leftFont.css;
           ctx.fillStyle = textColor;
-          drawTextWithSpacing(ctx, state.subText, startX, textY, subSp, "left");
+          drawTextWithSpacing(ctx, leftText, textStartX, textY, leftSp, "left");
           ctx.restore();
         }
-        if (state.mainText) {
+        if (rightText) {
           ctx.save();
-          ctx.font = state.mainFont.weight + " " + decision.mainSize + "px " + state.mainFont.css;
+          ctx.font = rightFont.weight + " " + rightSize + "px " + rightFont.css;
           ctx.fillStyle = textColor;
-          drawTextWithSpacing(ctx, state.mainText, startX + subW + GAP, textY, mainSp, "left");
+          const rightStartX = leftW > 0 ? textStartX + leftW + GAP : textStartX;
+          drawTextWithSpacing(ctx, rightText, rightStartX, textY, rightSp, "left");
           ctx.restore();
+        }
+
+        // 이미지 그리기 (텍스트 우측에 GAP 간격으로)
+        if (gi) {
+          const imgX = startX + textTotalW + IMG_GAP + (gi.ox || 0);
+          // crop: 무게중심 오프셋이 oy에 포함됨 / contain: 세로 중앙
+          const imgY = gi.isCrop ? (gi.oy || 0) : ((preset.h - gi.h) / 2 + (gi.oy || 0));
+          ctx.drawImage(gi.img, imgX, imgY, gi.w, gi.h);
         }
       }
 
@@ -1268,22 +1446,70 @@ function renderToCanvas(presetId, preset, callback) {
       img.crossOrigin = "anonymous";
       img.onload = () => {
         if (state.imageIsTransparent) {
-          // 가이드 image_box 자동 → 수동 모드면 사용자 scale + offset 반영 (등비율 유지)
           const box = preset.imageBox || { width_ratio: preset.imgRatio, height_ratio: 0.85, anchor: "right_center", v_padding: 8 };
-          const t = getImageTransform(presetId);
-          const userScale = (t.mode === 'manual') ? t.scale : 1.0;
 
-          const zoneW = preset.w * box.width_ratio * userScale;
-          const zoneH = (preset.h * box.height_ratio - (box.v_padding || 0) * 2) * userScale;
-          // 등비율 스케일 (Math.min으로 가로·세로 한 쪽 기준 — 비율 보존)
-          const s = Math.min(zoneW / img.width, zoneH / img.height);
-          const dw = img.width * s, dh = img.height * s;
+          if (box.anchor === 'center_grouped') {
+            // center_grouped: drawContent에서 텍스트+이미지를 함께 그림 — 여기서는 이미지 정보만 저장
+            const vPad = box.v_padding || 8;
+            const maxImgH = preset.h - vPad * 2;
+            const t = getImageTransform(presetId);
+            const userScale = (t.mode === 'manual') ? t.scale : 1.0;
+            const ox = t.mode === 'manual' ? t.offset.x : 0;
+            const oy = t.mode === 'manual' ? t.offset.y : 0;
 
-          // 자동 anchor 위치 → 수동 모드면 offset 누적
-          const pos = anchorToXY(box.anchor, preset, dw, dh, box.v_padding || 0);
-          const ox = t.mode === 'manual' ? t.offset.x : 0;
-          const oy = t.mode === 'manual' ? t.offset.y : 0;
-          ctx.drawImage(img, pos.x + ox, pos.y + oy, dw, dh);
+            if (state.imageFitMode === 'crop') {
+              // crop 모드: 콘텐츠 바운딩 박스 기준 + 학습 보정값 적용
+              const bounds = getContentBounds(img);
+              const cal = state.calibrationCache[presetId] || {};
+              // 기본 스케일: 콘텐츠 높이가 배너의 1.15배 + 학습 보정
+              const availH = preset.h - vPad;
+              const baseCropScale = (availH * 1.15) / bounds.contentH;
+              const calScale = 1.0 + (cal.scale_delta || 0); // 학습된 스케일 보정
+              const cropScale = baseCropScale * calScale;
+              const finalScale = cropScale * userScale;
+              const scaledW = img.width * finalScale;
+              const scaledH = img.height * finalScale;
+              // 콘텐츠 상단 정렬 + 학습된 Y 보정
+              const contentTopY = bounds.top * finalScale;
+              const topOffset = vPad - contentTopY + (cal.offset_y_delta || 0);
+              // 자동 배치 기본값 저장 (다운로드 시 delta 계산용)
+              state.cropAutoValues[presetId] = { autoScale: cropScale, autoOffsetY: topOffset };
+              state._groupedImg = {
+                img, w: scaledW, h: scaledH, vPad, isCrop: true,
+                gap: box.image_gap ?? (preset.textGap || 24),
+                ox: ox + (cal.offset_x_delta || 0), oy: oy + topOffset
+              };
+            } else {
+              // contain 모드: 기존 방식 — 패딩 안에 전체 표시
+              const baseScale = Math.min(maxImgH / img.height, 1);
+              const finalScale = baseScale * userScale;
+              state._groupedImg = {
+                img, w: img.width * finalScale, h: img.height * finalScale, vPad, isCrop: false,
+                gap: box.image_gap ?? (preset.textGap || 24),
+                ox, oy
+              };
+            }
+
+            drawContent();
+            delete state._groupedImg;
+            ctx.restore();
+            callback(canvas);
+            return; // 아래 drawContent 중복 호출 방지
+          } else {
+            // 기존 로직: right_center 등 anchor 기반 배치
+            const t = getImageTransform(presetId);
+            const userScale = (t.mode === 'manual') ? t.scale : 1.0;
+
+            const zoneW = preset.w * (box.width_ratio || preset.imgRatio) * userScale;
+            const zoneH = (preset.h * (box.height_ratio || 0.85) - (box.v_padding || 0) * 2) * userScale;
+            const s = Math.min(zoneW / img.width, zoneH / img.height);
+            const dw = img.width * s, dh = img.height * s;
+
+            const pos = anchorToXY(box.anchor, preset, dw, dh, box.v_padding || 0);
+            const ox = t.mode === 'manual' ? t.offset.x : 0;
+            const oy = t.mode === 'manual' ? t.offset.y : 0;
+            ctx.drawImage(img, pos.x + ox, pos.y + oy, dw, dh);
+          }
         } else {
           // 비율 유지 크롭 (cover 모드)
           const coverScale = Math.max(preset.w / img.width, preset.h / img.height);
@@ -1312,13 +1538,13 @@ function getCompositionDecision(presetId, mainText, subText) {
   const preset = PRESETS[presetId];
   if (!preset) return null;
 
-  // pc_main_curtain: 글자수 기반 자동 결정 (Figma 5개 사례 기반 룰)
+  // pc_main_curtain: 글자수 기반 자동 결정 (6개 사례 기반 룰, 28자 기준)
   if (presetId === 'pc_main_curtain') {
     const mainLen = (mainText || '').length;
     const subLen = (subText || '').length;
     const totalLen = mainLen + subLen;
     if (!subText || subLen === 0) return { type: 'single_main', mainSize: 72, subSize: 0 };
-    if (totalLen <= 24) return { type: 'horizontal_sub_main', mainSize: 72, subSize: 72 };
+    if (totalLen <= 28) return { type: 'horizontal_sub_main', mainSize: 72, subSize: 72 };
     return { type: 'horizontal_sub_main', mainSize: 64, subSize: 64 };
   }
 
@@ -1493,6 +1719,8 @@ function downloadBanner(sizeId) {
     link.download = "banner_" + preset.w + "x" + preset.h + "_" + state.bgColor.slice(1) + ".png";
     link.href = canvas.toDataURL("image/png");
     link.click();
+    // 다운로드 시 학습 데이터 저장
+    saveCalibration(sizeId);
   });
 }
 

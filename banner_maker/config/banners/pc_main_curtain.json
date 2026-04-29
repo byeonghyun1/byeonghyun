@@ -1,7 +1,7 @@
 {
   "id": "pc_main_curtain",
   "name": "메인 커튼 배너",
-  "last_updated": "2026-04-28",
+  "last_updated": "2026-04-29",
   "location": "PC > 메인 최 상단",
   "source": "Figma Agent-Test > PC Main Curtain Banner",
 
@@ -10,14 +10,6 @@
   "layout": "horizontal",
   "textRatio": 1,
   "imgRatio": 0,
-  "minFont": 20,
-
-  "file": {
-    "max_size_kb": 30,
-    "extensions": ["jpg", "jpeg", "gif", "png"],
-    "rounding": false,
-    "border": false
-  },
 
   "margins": {
     "left": 20,
@@ -26,103 +18,243 @@
     "bottom": 40
   },
 
-  "source_label": {
-    "size_px": 8,
-    "position": "top_right",
-    "review_margin_px": 26
+  "safe_zone": {
+    "description": "좌우 20px은 세이프존 (콘텐츠 배치 금지). 텍스트는 상단 40px ~ 하단 40px 범위 내 중앙정렬 배치."
   },
 
-  "safe_zone": {
-    "description": "좌우 20px 내 콘텐츠 배치 금지"
+  "source_label": {
+    "family": "Gmarket Sans",
+    "weight": "Medium",
+    "size_px": 24,
+    "position": "top_right",
+    "color": "#FFFFFF"
+  },
+
+  "image_box": {
+    "usage": "optional",
+    "description": "텍스트와 이미지가 묶여서 중앙에 정렬되는 구조. 이미지는 텍스트 좌측 또는 우측에 배치 가능.",
+    "v_padding": 8,
+    "image_gap": 24,
+    "anchor": "center_grouped",
+    "_note": "이미지 상하 패딩 8px. 텍스트-이미지 간격 24px. 텍스트+이미지 그룹이 배너 중앙에 정렬됨."
   },
 
   "fonts": {
-    "fixed": {
-      "family": "Gmarket Sans",
-      "letter_spacing": "-2%"
-    },
-    "main": { "weight": "Bold", "size_px": 72 },
-    "sub": { "weight": "Medium", "size_px": 40 },
-    "review": {
-      "family": "Pretendard",
-      "weight": "Light",
-      "size_px": 20,
-      "letter_spacing": "-1.5%",
-      "color": "#787878"
+    "main": { "family": "Paperlogy", "weight": "7Bold", "size_px": 72, "letter_spacing": "-2%", "line_height": 1.2, "box_h_px": 88 },
+    "sub": { "family": "Paperlogy", "weight": "5Medium", "size_px": 72, "letter_spacing": "-2%", "line_height": 1.2, "box_h_px": 88 },
+    "main_shrink": { "size_px": 64, "box_h_px": 76 },
+    "sub_shrink": { "size_px": 64, "box_h_px": 76 }
+  },
+  "minFont": 64,
+  "font_size_strict": false,
+
+  "file": {
+    "max_size_kb": 30,
+    "extensions": ["jpg", "jpeg", "gif", "png"],
+    "rounding": false,
+    "border": false
+  },
+
+  "color_rules": {
+    "page_bg": "#FFFFFF",
+    "banned_bg": ["검정"],
+    "required": "파일명에 배경 컬러코드 기입 필수",
+    "reason": "BI와 인접한 위치이므로 검정 배경 금지"
+  },
+
+  "audience": {
+    "targets": ["구직자", "사장님"],
+    "description": "알바몬 메인 방문자는 구직자(알바생)와 사장님(자영업자)을 모두 포함. 광고 컨텍스트에 맞춰 두 청자 중 하나 또는 양쪽을 향하도록 카피·비주얼을 잡는다.",
+    "case_distribution": {
+      "구직자": ["case_1_ssul", "case_3_conference"],
+      "사장님": ["case_2_chicken", "case_5_watermelon"],
+      "구직자+사장님": ["case_4_ax_report", "case_6_eagles"]
     }
+  },
+
+  "copy": {
+    "structure": "메인 단독 1줄 또는 서브+메인 가로 1줄 조합",
+    "text_gap_px": 24,
+    "total_chars_threshold": 28,
+    "font_shrink_rule": "서브+메인 합계 28자 초과 시 72px → 64px 축소",
+    "main_line_break_allowed": false,
+    "tone": {
+      "sub": "맥락·이벤트명·캠페인 소개",
+      "main": "행동 유도·핵심 메시지·임팩트"
+    }
+  },
+
+  "text_color_rule": {
+    "method": "luminance_based",
+    "threshold": 0.5,
+    "dark_bg_text": "#FFFFFF",
+    "light_bg_text": "#171717",
+    "max_text_colors": 3,
+    "emphasis_allowed": true,
+    "emphasis_note": "메인 카피 일부 단어에 강조색 사용 가능 (case_1: 빨강, case_2: 노랑, case_3: 보라)"
   },
 
   "text_rules": {
     "align": "center",
-    "origin": "배너 중앙 (width/2, height/2) 기준, 좌우/상하로 뻗어나가는 구조",
-    "composition": "메인 카피 1줄 중앙정렬 / 서브+메인 1줄 중앙정렬",
+    "origin": "배너 중앙 (width/2, height/2) 기준, 좌우로 뻗어나가는 구조",
+    "safe_zone": "상 40px ~ 하 40px 내 중앙정렬 고정",
+    "grouping": "텍스트와 이미지가 하나의 그룹으로 묶여 중앙 정렬",
     "text_position": {
       "single_main": "중앙 기준, 메인 카피 좌우 균등 배치",
-      "horizontal_sub_main": "중앙 기준, 서브(좌로) + 메인(우로) 뻗어나감",
-      "vertical_sub_main": "중앙 기준, 서브(위로) + 메인(아래로) 뻗어나감"
+      "horizontal_sub_main": "중앙 기준, 서브(좌) + 메인(우) 또는 맥락에 따라 위치 변경 가능"
     }
   },
 
-  "color_rules": {
-    "banned_bg": ["붉은계열", "검정"],
-    "required": "배경 컬러코드 필수 제출",
-    "reason": "BI와 인접한 위치이므로 붉은계열 및 검정 배경 금지"
+  "layout_pattern": {
+    "default_template": "center_align",
+    "text_area": "중앙 정렬 (텍스트+이미지 그룹)",
+    "visual_area": "이미지는 텍스트와 묶여 좌측 또는 우측에 배치 (선택사항)"
+  },
+
+  "character_policy": {
+    "subject": "알바몬 마스코트 (MONI) 등 캐릭터",
+    "usage": "conditional",
+    "conditions": [
+      "카피 컨셉에 맞을 때 (의상·소품 변형)",
+      "광고주 자산(제품·로고)과 캐릭터 결합형",
+      "이벤트·캠페인 분위기 강화용"
+    ],
+    "prohibited": "조건과 무관한 단순 장식 사용 지양"
+  },
+
+  "few_shot_refs": [
+    {
+      "id": "case_1_ssul",
+      "advertiser": "잡코리아 자체",
+      "audience": "구직자",
+      "bg_tone": "어두운 네이비 + 컬러 라인 장식",
+      "text_color": "#FFFFFF",
+      "emphasis_color": "빨강 (\"이야기\" 강조)",
+      "structure": "horizontal_sub_main",
+      "sub_copy": "합격 썰 공모전",
+      "main_copy": "취업/이직에 성공한 이야기를 들려주세요",
+      "visual": "컬러 라인 그래픽 (좌우 장식)",
+      "source_label": "worxphere",
+      "has_image": true
+    },
+    {
+      "id": "case_2_chicken",
+      "advertiser": "자체 이벤트",
+      "audience": "사장님",
+      "bg_tone": "어두운 텍스처 (석판 느낌)",
+      "text_color": "#FFFFFF",
+      "emphasis_color": "#FFE600 (\"사장님!\", \"치킨\" 노랑 강조)",
+      "structure": "horizontal_sub_main",
+      "sub_copy": "기업회원 응원 이벤트",
+      "main_copy": "사장님! 퇴근 길 치킨 드세요",
+      "visual": "치킨 이미지(좌) + MONI 캐릭터(우)",
+      "character_basis": "이벤트 분위기 강화용",
+      "has_image": true
+    },
+    {
+      "id": "case_3_conference",
+      "advertiser": "잡코리아 자체",
+      "audience": "구직자",
+      "bg_tone": "연보라~핑크 그라데이션",
+      "text_color": "#171717",
+      "emphasis_color": "보라 (\"커리어 컨퍼런스\" 강조)",
+      "structure": "single_main",
+      "main_copy": "3월, 커리어 컨퍼런스 듣고 이직 도전하세요!",
+      "visual": "인물 사진 4명(우측) + JOBKOREA 로고",
+      "source_label": "JOBKOREA",
+      "has_image": true
+    },
+    {
+      "id": "case_4_ax_report",
+      "advertiser": "자체 콘텐츠",
+      "audience": "인담자",
+      "bg_tone": "블루~네이비 그라데이션",
+      "text_color": "#FFFFFF",
+      "structure": "horizontal_sub_main",
+      "sub_copy": "AI가 채용 담당자를 대체할까요?",
+      "main_copy": "AX 채용 리포트 무료 배포",
+      "visual": "없음 (텍스트 전용)",
+      "has_image": false
+    },
+    {
+      "id": "case_5_watermelon",
+      "advertiser": "이디야커피 (협업)",
+      "audience": "인담자",
+      "bg_tone": "빨강 단색",
+      "text_color": "#FFFFFF",
+      "emphasis_color": "강조 없음 (전체 흰색+굵기 차이로 구분)",
+      "structure": "horizontal_sub_main",
+      "sub_copy": "기업회원 감사 이벤트",
+      "main_copy": "인담자님! 시원한 수박주스 드세요!",
+      "visual": "캐릭터+수박+음료(우측)",
+      "character_basis": "협업 캠페인 — 캐릭터+광고주 제품 결합형",
+      "has_image": true,
+      "_note": "맥락에 따라 서브/메인 좌우 위치 변경 가능한 사례"
+    },
+    {
+      "id": "case_6_eagles",
+      "advertiser": "알바몬 × 한화 이글스 (협업)",
+      "audience": "구직자+사장님",
+      "bg_tone": "주황 단색",
+      "text_color": "#FFFFFF",
+      "structure": "horizontal_sub_main",
+      "sub_copy": "일급 100만원, 유니폼 증정 이벤트!",
+      "main_copy": "가을야구 응원요정 알바몬 모집",
+      "visual": "이글스 유니폼(좌) + MONI 캐릭터(우)",
+      "character_basis": "협업 캠페인 — 광고주(이글스) 의상 결합형",
+      "has_image": true
+    }
+  ],
+
+  "structure_variants": [
+    {
+      "id": "sub_left_main_right",
+      "description": "서브(좌) + 메인(우). 기본 순서. 서브카피로 맥락을 먼저 제시한 뒤 메인카피로 임팩트.",
+      "examples": ["case_1_ssul", "case_2_chicken", "case_4_ax_report"]
+    },
+    {
+      "id": "main_left_sub_right",
+      "description": "메인(좌) + 서브(우). 메인카피를 먼저 던져 시선을 잡고, 서브카피로 부연.",
+      "examples": ["case_5_watermelon", "case_6_eagles"]
+    }
+  ],
+
+  "auto_decision_rules": {
+    "composition_rule": [
+      { "if": "서브카피 없음", "then": "single_main (메인 단독 1줄, 72px Bold)" },
+      { "if": "서브카피 있음 && 합계 ≤ 28자", "then": "horizontal_sub_main (가로 1줄, 둘 다 72px)" },
+      { "if": "서브카피 있음 && 합계 > 28자", "then": "horizontal_sub_main (가로 1줄, 둘 다 64px)" }
+    ],
+    "font_weight_rule": { "main": "Bold (항상)", "sub": "Medium (항상)" },
+    "position_rule": "맥락에 따라 메인/서브 좌우 위치 변경 가능"
+  },
+
+  "builder_io": {
+    "input_mapping": {
+      "UserInput.texts.headline": "text_placements[0] (slot=headline)",
+      "UserInput.texts.subhead": "text_placements[1] (slot=subhead)",
+      "UserInput.image": "image_placement (텍스트와 그룹으로 중앙 정렬)",
+      "UserInput.bg_color": "배경색 직접 입력"
+    },
+    "cta": {
+      "supported": false,
+      "reason": "커튼 배너는 카피 자체가 행동 유도이므로 별도 CTA 버튼 비권장"
+    }
   },
 
   "rules": [
     { "type": "필수", "text": "파일명에 배경 컬러코드 기입 필수" },
-    { "type": "필수", "text": "출처 표기 8px (우측상단 지향)" },
+    { "type": "필수", "text": "출처 표기 24px (우측상단, Gmarket Sans Medium)" },
+    { "type": "필수", "text": "자간 -2% 고정" },
+    { "type": "필수", "text": "텍스트+이미지 그룹 중앙정렬" },
+    { "type": "필수", "text": "이미지 상하 패딩 8px" },
     { "type": "금지", "text": "BG 블랙 컬러 사용 불가" },
-    { "type": "금지", "text": "좌우 20px내 패턴이나 이미지 노출 금지" }
+    { "type": "금지", "text": "좌우 20px 세이프존 내 콘텐츠 배치 금지" },
+    { "type": "필수", "text": "텍스트는 상단 40px ~ 하단 40px 범위 내 중앙정렬 배치" }
   ],
 
-  "reference_analysis": {
-    "source": "Figma node 73:1746 (7개 사례, 고유 5개)",
-    "examples": [
-      {
-        "name": "1",
-        "composition": "vertical_sub_main",
-        "label": "서브+메인 세로 2줄",
-        "main": { "content": "엽떡 먹고 퇴근 지원금 받자", "char_count": 14, "weight": "Bold", "size": 72 },
-        "sub": { "content": "잡코리아 단독! HOT한 공채 소식", "char_count": 17, "weight": "Medium", "size": 40 }
-      },
-      {
-        "name": "2",
-        "composition": "single_main",
-        "label": "메인 단독 1줄",
-        "main": { "content": "3월, 커리어 컨퍼런스 듣고 이직 도전하세요!", "char_count": 22, "weight": "Bold", "size": 72 }
-      },
-      {
-        "name": "3",
-        "composition": "horizontal_sub_main",
-        "label": "서브+메인 가로 1줄",
-        "sub": { "content": "일급 100만원, 유니폼 증정 이벤트!", "char_count": 17, "weight": "Medium", "size": 64 },
-        "main": { "content": "가을야구 응원요정 알바몬 모집", "char_count": 14, "weight": "Bold", "size": 64 }
-      },
-      {
-        "name": "4",
-        "composition": "horizontal_sub_main",
-        "label": "서브+메인 가로 1줄",
-        "sub": { "content": "기업회원 응원 이벤트", "char_count": 10, "weight": "Medium", "size": 72 },
-        "main": { "content": "사장님! 퇴근 길 치킨 드세요", "char_count": 14, "weight": "Bold", "size": 72 }
-      },
-      {
-        "name": "5",
-        "composition": "horizontal_sub_main",
-        "label": "서브+메인 가로 1줄",
-        "sub": { "content": "기업회원 감사 이벤트", "char_count": 10, "weight": "Medium", "size": 64 },
-        "main": { "content": "인담자님! 시원한 수박주스 드세요!", "char_count": 16, "weight": "Bold", "size": 64 }
-      }
-    ],
-
-    "auto_decision_rules": {
-      "composition_rule": [
-        { "if": "서브카피 없음", "then": "single_main (메인 단독 1줄, 72px Bold)" },
-        { "if": "서브카피 있음 && 서브 ≤ 12자 && 메인 ≤ 15자", "then": "vertical_sub_main (세로 2줄, 메인 72px / 서브 40px)" },
-        { "if": "서브카피 있음 && 합계 ≤ 24자", "then": "horizontal_sub_main (가로 1줄, 둘 다 72px)" },
-        { "if": "서브카피 있음 && 합계 > 24자", "then": "horizontal_sub_main (가로 1줄, 둘 다 64px)" }
-      ],
-      "font_weight_rule": { "main": "Bold (항상)", "sub": "Medium (항상)" }
-    }
-  }
+  "tbd": [
+    "광고 심의 금지 워딩 사전 (자료 확보 시 추가)",
+    "강조색 사용 가이드라인 구체화"
+  ]
 }
