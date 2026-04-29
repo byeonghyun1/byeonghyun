@@ -1,0 +1,1451 @@
+From e56c01e1fab5e7daaffa1a25b078d3044d3d3503 Mon Sep 17 00:00:00 2001
+From: "worx.designer" <worx.design2026@gmail.com>
+Date: Wed, 29 Apr 2026 17:19:11 +0900
+Subject: [PATCH] =?UTF-8?q?=EC=BB=A4=ED=8A=BC=EB=B0=B0=EB=84=88=20?=
+ =?UTF-8?q?=EA=B7=9C=EC=A0=95=20=EC=99=84=EC=84=B1=20+=20=EC=9D=B4?=
+ =?UTF-8?q?=EB=AF=B8=EC=A7=80=20contain/crop=20=EB=AA=A8=EB=93=9C=20+=20?=
+ =?UTF-8?q?=ED=95=99=EC=8A=B5=20=EC=BA=98=EB=A6=AC=EB=B8=8C=EB=A0=88?=
+ =?UTF-8?q?=EC=9D=B4=EC=85=98=20=EC=8B=9C=EC=8A=A4=ED=85=9C?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+- pc_main_curtain.json: 규정 전면 업데이트 (Paperlogy 폰트, 28자 기준 축소, 카피 좌우 순서 토글, minFont 64px)
+- pc_main_curtain_guide.md / pc_main_top_guide.md: 가이드 MD 파일 생성
+- prototype.html: 커튼배너 중앙정렬 렌더링, 이미지+텍스트 그룹 배치, contain/crop 모드 토글, 콘텐츠 바운딩박스 기반 자동 크롭
+- server.py: 학습 데이터 저장이 가능한 로컬 서버 (POST /api/calibration)
+- 다운로드 시 이미지 배치 보정값을 calibration JSON에 자동 누적, 다음 이미지에 학습값 반영
+
+Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>
+---
+ .../config/banners/pc_main_curtain.json       | 300 ++++++++++++-----
+ .../config/banners/pc_main_curtain_guide.md   | 307 +++++++++++++++++
+ .../config/banners/pc_main_top_guide.md       | 237 ++++++++++++++
+ banner_maker/prototype.html                   | 308 +++++++++++++++---
+ banner_maker/server.py                        |  86 +++++
+ 5 files changed, 1114 insertions(+), 124 deletions(-)
+ create mode 100644 banner_maker/config/banners/pc_main_curtain_guide.md
+ create mode 100644 banner_maker/config/banners/pc_main_top_guide.md
+ create mode 100644 banner_maker/server.py
+
+diff --git a/banner_maker/config/banners/pc_main_curtain.json b/banner_maker/config/banners/pc_main_curtain.json
+index 368f4f1..8ca2412 100644
+--- a/banner_maker/config/banners/pc_main_curtain.json
++++ b/banner_maker/config/banners/pc_main_curtain.json
+@@ -1,7 +1,7 @@
+ {
+   "id": "pc_main_curtain",
+   "name": "메인 커튼 배너",
+-  "last_updated": "2026-04-28",
++  "last_updated": "2026-04-29",
+   "location": "PC > 메인 최 상단",
+   "source": "Figma Agent-Test > PC Main Curtain Banner",
+ 
+@@ -10,14 +10,6 @@
+   "layout": "horizontal",
+   "textRatio": 1,
+   "imgRatio": 0,
+-  "minFont": 20,
+-
+-  "file": {
+-    "max_size_kb": 30,
+-    "extensions": ["jpg", "jpeg", "gif", "png"],
+-    "rounding": false,
+-    "border": false
+-  },
+ 
+   "margins": {
+     "left": 20,
+@@ -26,103 +18,243 @@
+     "bottom": 40
+   },
+ 
++  "safe_zone": {
++    "description": "좌우 20px은 세이프존 (콘텐츠 배치 금지). 텍스트는 상단 40px ~ 하단 40px 범위 내 중앙정렬 배치."
++  },
++
+   "source_label": {
+-    "size_px": 8,
++    "family": "Gmarket Sans",
++    "weight": "Medium",
++    "size_px": 24,
+     "position": "top_right",
+-    "review_margin_px": 26
++    "color": "#FFFFFF"
+   },
+ 
+-  "safe_zone": {
+-    "description": "좌우 20px 내 콘텐츠 배치 금지"
++  "image_box": {
++    "usage": "optional",
++    "description": "텍스트와 이미지가 묶여서 중앙에 정렬되는 구조. 이미지는 텍스트 좌측 또는 우측에 배치 가능.",
++    "v_padding": 8,
++    "image_gap": 24,
++    "anchor": "center_grouped",
++    "_note": "이미지 상하 패딩 8px. 텍스트-이미지 간격 24px. 텍스트+이미지 그룹이 배너 중앙에 정렬됨."
+   },
+ 
+   "fonts": {
+-    "fixed": {
+-      "family": "Gmarket Sans",
+-      "letter_spacing": "-2%"
+-    },
+-    "main": { "weight": "Bold", "size_px": 72 },
+-    "sub": { "weight": "Medium", "size_px": 40 },
+-    "review": {
+-      "family": "Pretendard",
+-      "weight": "Light",
+-      "size_px": 20,
+-      "letter_spacing": "-1.5%",
+-      "color": "#787878"
++    "main": { "family": "Paperlogy", "weight": "7Bold", "size_px": 72, "letter_spacing": "-2%", "line_height": 1.2, "box_h_px": 88 },
++    "sub": { "family": "Paperlogy", "weight": "5Medium", "size_px": 72, "letter_spacing": "-2%", "line_height": 1.2, "box_h_px": 88 },
++    "main_shrink": { "size_px": 64, "box_h_px": 76 },
++    "sub_shrink": { "size_px": 64, "box_h_px": 76 }
++  },
++  "minFont": 64,
++  "font_size_strict": false,
++
++  "file": {
++    "max_size_kb": 30,
++    "extensions": ["jpg", "jpeg", "gif", "png"],
++    "rounding": false,
++    "border": false
++  },
++
++  "color_rules": {
++    "page_bg": "#FFFFFF",
++    "banned_bg": ["검정"],
++    "required": "파일명에 배경 컬러코드 기입 필수",
++    "reason": "BI와 인접한 위치이므로 검정 배경 금지"
++  },
++
++  "audience": {
++    "targets": ["구직자", "사장님"],
++    "description": "알바몬 메인 방문자는 구직자(알바생)와 사장님(자영업자)을 모두 포함. 광고 컨텍스트에 맞춰 두 청자 중 하나 또는 양쪽을 향하도록 카피·비주얼을 잡는다.",
++    "case_distribution": {
++      "구직자": ["case_1_ssul", "case_3_conference"],
++      "사장님": ["case_2_chicken", "case_5_watermelon"],
++      "구직자+사장님": ["case_4_ax_report", "case_6_eagles"]
+     }
+   },
+ 
++  "copy": {
++    "structure": "메인 단독 1줄 또는 서브+메인 가로 1줄 조합",
++    "text_gap_px": 24,
++    "total_chars_threshold": 28,
++    "font_shrink_rule": "서브+메인 합계 28자 초과 시 72px → 64px 축소",
++    "main_line_break_allowed": false,
++    "tone": {
++      "sub": "맥락·이벤트명·캠페인 소개",
++      "main": "행동 유도·핵심 메시지·임팩트"
++    }
++  },
++
++  "text_color_rule": {
++    "method": "luminance_based",
++    "threshold": 0.5,
++    "dark_bg_text": "#FFFFFF",
++    "light_bg_text": "#171717",
++    "max_text_colors": 3,
++    "emphasis_allowed": true,
++    "emphasis_note": "메인 카피 일부 단어에 강조색 사용 가능 (case_1: 빨강, case_2: 노랑, case_3: 보라)"
++  },
++
+   "text_rules": {
+     "align": "center",
+-    "origin": "배너 중앙 (width/2, height/2) 기준, 좌우/상하로 뻗어나가는 구조",
+-    "composition": "메인 카피 1줄 중앙정렬 / 서브+메인 1줄 중앙정렬",
++    "origin": "배너 중앙 (width/2, height/2) 기준, 좌우로 뻗어나가는 구조",
++    "safe_zone": "상 40px ~ 하 40px 내 중앙정렬 고정",
++    "grouping": "텍스트와 이미지가 하나의 그룹으로 묶여 중앙 정렬",
+     "text_position": {
+       "single_main": "중앙 기준, 메인 카피 좌우 균등 배치",
+-      "horizontal_sub_main": "중앙 기준, 서브(좌로) + 메인(우로) 뻗어나감",
+-      "vertical_sub_main": "중앙 기준, 서브(위로) + 메인(아래로) 뻗어나감"
++      "horizontal_sub_main": "중앙 기준, 서브(좌) + 메인(우) 또는 맥락에 따라 위치 변경 가능"
+     }
+   },
+ 
+-  "color_rules": {
+-    "banned_bg": ["붉은계열", "검정"],
+-    "required": "배경 컬러코드 필수 제출",
+-    "reason": "BI와 인접한 위치이므로 붉은계열 및 검정 배경 금지"
++  "layout_pattern": {
++    "default_template": "center_align",
++    "text_area": "중앙 정렬 (텍스트+이미지 그룹)",
++    "visual_area": "이미지는 텍스트와 묶여 좌측 또는 우측에 배치 (선택사항)"
+   },
+ 
+-  "rules": [
+-    { "type": "필수", "text": "파일명에 배경 컬러코드 기입 필수" },
+-    { "type": "필수", "text": "출처 표기 8px (우측상단 지향)" },
+-    { "type": "금지", "text": "BG 블랙 컬러 사용 불가" },
+-    { "type": "금지", "text": "좌우 20px내 패턴이나 이미지 노출 금지" }
++  "character_policy": {
++    "subject": "알바몬 마스코트 (MONI) 등 캐릭터",
++    "usage": "conditional",
++    "conditions": [
++      "카피 컨셉에 맞을 때 (의상·소품 변형)",
++      "광고주 자산(제품·로고)과 캐릭터 결합형",
++      "이벤트·캠페인 분위기 강화용"
++    ],
++    "prohibited": "조건과 무관한 단순 장식 사용 지양"
++  },
++
++  "few_shot_refs": [
++    {
++      "id": "case_1_ssul",
++      "advertiser": "잡코리아 자체",
++      "audience": "구직자",
++      "bg_tone": "어두운 네이비 + 컬러 라인 장식",
++      "text_color": "#FFFFFF",
++      "emphasis_color": "빨강 (\"이야기\" 강조)",
++      "structure": "horizontal_sub_main",
++      "sub_copy": "합격 썰 공모전",
++      "main_copy": "취업/이직에 성공한 이야기를 들려주세요",
++      "visual": "컬러 라인 그래픽 (좌우 장식)",
++      "source_label": "worxphere",
++      "has_image": true
++    },
++    {
++      "id": "case_2_chicken",
++      "advertiser": "자체 이벤트",
++      "audience": "사장님",
++      "bg_tone": "어두운 텍스처 (석판 느낌)",
++      "text_color": "#FFFFFF",
++      "emphasis_color": "#FFE600 (\"사장님!\", \"치킨\" 노랑 강조)",
++      "structure": "horizontal_sub_main",
++      "sub_copy": "기업회원 응원 이벤트",
++      "main_copy": "사장님! 퇴근 길 치킨 드세요",
++      "visual": "치킨 이미지(좌) + MONI 캐릭터(우)",
++      "character_basis": "이벤트 분위기 강화용",
++      "has_image": true
++    },
++    {
++      "id": "case_3_conference",
++      "advertiser": "잡코리아 자체",
++      "audience": "구직자",
++      "bg_tone": "연보라~핑크 그라데이션",
++      "text_color": "#171717",
++      "emphasis_color": "보라 (\"커리어 컨퍼런스\" 강조)",
++      "structure": "single_main",
++      "main_copy": "3월, 커리어 컨퍼런스 듣고 이직 도전하세요!",
++      "visual": "인물 사진 4명(우측) + JOBKOREA 로고",
++      "source_label": "JOBKOREA",
++      "has_image": true
++    },
++    {
++      "id": "case_4_ax_report",
++      "advertiser": "자체 콘텐츠",
++      "audience": "인담자",
++      "bg_tone": "블루~네이비 그라데이션",
++      "text_color": "#FFFFFF",
++      "structure": "horizontal_sub_main",
++      "sub_copy": "AI가 채용 담당자를 대체할까요?",
++      "main_copy": "AX 채용 리포트 무료 배포",
++      "visual": "없음 (텍스트 전용)",
++      "has_image": false
++    },
++    {
++      "id": "case_5_watermelon",
++      "advertiser": "이디야커피 (협업)",
++      "audience": "인담자",
++      "bg_tone": "빨강 단색",
++      "text_color": "#FFFFFF",
++      "emphasis_color": "강조 없음 (전체 흰색+굵기 차이로 구분)",
++      "structure": "horizontal_sub_main",
++      "sub_copy": "기업회원 감사 이벤트",
++      "main_copy": "인담자님! 시원한 수박주스 드세요!",
++      "visual": "캐릭터+수박+음료(우측)",
++      "character_basis": "협업 캠페인 — 캐릭터+광고주 제품 결합형",
++      "has_image": true,
++      "_note": "맥락에 따라 서브/메인 좌우 위치 변경 가능한 사례"
++    },
++    {
++      "id": "case_6_eagles",
++      "advertiser": "알바몬 × 한화 이글스 (협업)",
++      "audience": "구직자+사장님",
++      "bg_tone": "주황 단색",
++      "text_color": "#FFFFFF",
++      "structure": "horizontal_sub_main",
++      "sub_copy": "일급 100만원, 유니폼 증정 이벤트!",
++      "main_copy": "가을야구 응원요정 알바몬 모집",
++      "visual": "이글스 유니폼(좌) + MONI 캐릭터(우)",
++      "character_basis": "협업 캠페인 — 광고주(이글스) 의상 결합형",
++      "has_image": true
++    }
+   ],
+ 
+-  "reference_analysis": {
+-    "source": "Figma node 73:1746 (7개 사례, 고유 5개)",
+-    "examples": [
+-      {
+-        "name": "1",
+-        "composition": "vertical_sub_main",
+-        "label": "서브+메인 세로 2줄",
+-        "main": { "content": "엽떡 먹고 퇴근 지원금 받자", "char_count": 14, "weight": "Bold", "size": 72 },
+-        "sub": { "content": "잡코리아 단독! HOT한 공채 소식", "char_count": 17, "weight": "Medium", "size": 40 }
+-      },
+-      {
+-        "name": "2",
+-        "composition": "single_main",
+-        "label": "메인 단독 1줄",
+-        "main": { "content": "3월, 커리어 컨퍼런스 듣고 이직 도전하세요!", "char_count": 22, "weight": "Bold", "size": 72 }
+-      },
+-      {
+-        "name": "3",
+-        "composition": "horizontal_sub_main",
+-        "label": "서브+메인 가로 1줄",
+-        "sub": { "content": "일급 100만원, 유니폼 증정 이벤트!", "char_count": 17, "weight": "Medium", "size": 64 },
+-        "main": { "content": "가을야구 응원요정 알바몬 모집", "char_count": 14, "weight": "Bold", "size": 64 }
+-      },
+-      {
+-        "name": "4",
+-        "composition": "horizontal_sub_main",
+-        "label": "서브+메인 가로 1줄",
+-        "sub": { "content": "기업회원 응원 이벤트", "char_count": 10, "weight": "Medium", "size": 72 },
+-        "main": { "content": "사장님! 퇴근 길 치킨 드세요", "char_count": 14, "weight": "Bold", "size": 72 }
+-      },
+-      {
+-        "name": "5",
+-        "composition": "horizontal_sub_main",
+-        "label": "서브+메인 가로 1줄",
+-        "sub": { "content": "기업회원 감사 이벤트", "char_count": 10, "weight": "Medium", "size": 64 },
+-        "main": { "content": "인담자님! 시원한 수박주스 드세요!", "char_count": 16, "weight": "Bold", "size": 64 }
+-      }
++  "structure_variants": [
++    {
++      "id": "sub_left_main_right",
++      "description": "서브(좌) + 메인(우). 기본 순서. 서브카피로 맥락을 먼저 제시한 뒤 메인카피로 임팩트.",
++      "examples": ["case_1_ssul", "case_2_chicken", "case_4_ax_report"]
++    },
++    {
++      "id": "main_left_sub_right",
++      "description": "메인(좌) + 서브(우). 메인카피를 먼저 던져 시선을 잡고, 서브카피로 부연.",
++      "examples": ["case_5_watermelon", "case_6_eagles"]
++    }
++  ],
++
++  "auto_decision_rules": {
++    "composition_rule": [
++      { "if": "서브카피 없음", "then": "single_main (메인 단독 1줄, 72px Bold)" },
++      { "if": "서브카피 있음 && 합계 ≤ 28자", "then": "horizontal_sub_main (가로 1줄, 둘 다 72px)" },
++      { "if": "서브카피 있음 && 합계 > 28자", "then": "horizontal_sub_main (가로 1줄, 둘 다 64px)" }
+     ],
++    "font_weight_rule": { "main": "Bold (항상)", "sub": "Medium (항상)" },
++    "position_rule": "맥락에 따라 메인/서브 좌우 위치 변경 가능"
++  },
+ 
+-    "auto_decision_rules": {
+-      "composition_rule": [
+-        { "if": "서브카피 없음", "then": "single_main (메인 단독 1줄, 72px Bold)" },
+-        { "if": "서브카피 있음 && 서브 ≤ 12자 && 메인 ≤ 15자", "then": "vertical_sub_main (세로 2줄, 메인 72px / 서브 40px)" },
+-        { "if": "서브카피 있음 && 합계 ≤ 24자", "then": "horizontal_sub_main (가로 1줄, 둘 다 72px)" },
+-        { "if": "서브카피 있음 && 합계 > 24자", "then": "horizontal_sub_main (가로 1줄, 둘 다 64px)" }
+-      ],
+-      "font_weight_rule": { "main": "Bold (항상)", "sub": "Medium (항상)" }
++  "builder_io": {
++    "input_mapping": {
++      "UserInput.texts.headline": "text_placements[0] (slot=headline)",
++      "UserInput.texts.subhead": "text_placements[1] (slot=subhead)",
++      "UserInput.image": "image_placement (텍스트와 그룹으로 중앙 정렬)",
++      "UserInput.bg_color": "배경색 직접 입력"
++    },
++    "cta": {
++      "supported": false,
++      "reason": "커튼 배너는 카피 자체가 행동 유도이므로 별도 CTA 버튼 비권장"
+     }
+-  }
++  },
++
++  "rules": [
++    { "type": "필수", "text": "파일명에 배경 컬러코드 기입 필수" },
++    { "type": "필수", "text": "출처 표기 24px (우측상단, Gmarket Sans Medium)" },
++    { "type": "필수", "text": "자간 -2% 고정" },
++    { "type": "필수", "text": "텍스트+이미지 그룹 중앙정렬" },
++    { "type": "필수", "text": "이미지 상하 패딩 8px" },
++    { "type": "금지", "text": "BG 블랙 컬러 사용 불가" },
++    { "type": "금지", "text": "좌우 20px 세이프존 내 콘텐츠 배치 금지" },
++    { "type": "필수", "text": "텍스트는 상단 40px ~ 하단 40px 범위 내 중앙정렬 배치" }
++  ],
++
++  "tbd": [
++    "광고 심의 금지 워딩 사전 (자료 확보 시 추가)",
++    "강조색 사용 가이드라인 구체화"
++  ]
+ }
+diff --git a/banner_maker/config/banners/pc_main_curtain_guide.md b/banner_maker/config/banners/pc_main_curtain_guide.md
+new file mode 100644
+index 0000000..6c3b60b
+--- /dev/null
++++ b/banner_maker/config/banners/pc_main_curtain_guide.md
+@@ -0,0 +1,307 @@
++# 메인 커튼 배너 (pc_main_curtain) 규정
++
++> 최종 수정: 2026-04-29
++
++---
++
++## 기본 정보
++
++- **위치:** PC > 메인 최 상단
++- **제작 사이즈:** 2160 × 160 px
++- **노출 사이즈:** 1080 × 80 px (2배율)
++- **레이아웃:** 가로형 (horizontal)
++- **텍스트 비율:** 100%
++- **이미지 비율:** 0% (이미지는 선택사항, 텍스트와 그룹으로 중앙 정렬)
++- **출처:** Figma Agent-Test > PC Main Curtain Banner
++
++---
++
++## 여백 / 세이프존
++
++- 좌: 20px / 우: 20px / 상: 40px / 하: 40px
++- 좌우 20px은 세이프존 (콘텐츠 배치 금지)
++- 텍스트는 상단 40px ~ 하단 40px 범위 내 중앙정렬 배치
++
++---
++
++## 출처 라벨
++
++- 폰트: Gmarket Sans Medium
++- 크기: 24px
++- 위치: 우측 상단
++- 색상: #FFFFFF
++
++---
++
++## 폰트
++
++### 기본 (합계 28자 이하)
++
++| 구분 | 폰트 | 굵기 | 크기 | 자간 | 행간 | 박스 높이 |
++|------|------|------|------|------|------|-----------|
++| 메인 | Paperlogy | 7Bold | 72px | -2% | 1.2 | 88px |
++| 서브 | Paperlogy | 5Medium | 72px | -2% | 1.2 | 88px |
++
++### 축소 (합계 28자 초과)
++
++| 구분 | 크기 | 박스 높이 |
++|------|------|-----------|
++| 메인 | 64px | 76px |
++| 서브 | 64px | 76px |
++
++- **최소 폰트:** 64px
++- **자간:** -2% 고정
++- **폰트 사이즈 고정:** 아님 (28자 초과 시 축소)
++
++---
++
++## 파일 규격
++
++- 최대 용량: 30KB
++- 허용 확장자: jpg, jpeg, gif, png
++- 라운딩: 불가
++- 테두리: 불가
++
++---
++
++## 이미지 박스
++
++- **사용:** 선택사항 (텍스트 전용도 가능)
++- 텍스트와 이미지가 묶여서 중앙에 정렬되는 구조
++- 이미지는 텍스트 좌측 또는 우측에 배치 가능
++- **이미지 상하 패딩:** 8px
++
++---
++
++## 색상 규칙
++
++- 페이지 배경: #FFFFFF (흰색)
++- **금지 배경색:** 검정
++- **필수:** 파일명에 배경 컬러코드 기입 필수
++- 사유: BI와 인접한 위치이므로 검정 배경 금지
++
++### 텍스트 색상 판단
++
++- 방식: 배경 밝기(luminance) 기반 자동 판단
++- 기준값: 0.5
++- 어두운 배경 → 흰색 텍스트 (#FFFFFF)
++- 밝은 배경 → 검정 텍스트 (#171717)
++- 최대 텍스트 색상 수: 3가지
++- **강조색 사용 가능:** 메인 카피 일부 단어에 강조색 적용 가능
++
++---
++
++## 타겟 오디언스
++
++- **대상:** 구직자, 사장님
++- 알바몬 메인 방문자는 구직자(알바생)와 사장님(자영업자)을 모두 포함
++- 광고 컨텍스트에 맞춰 두 청자 중 하나 또는 양쪽을 향하도록 카피·비주얼을 잡는다
++
++---
++
++## 카피 규정
++
++- **구조:** 메인 단독 1줄 또는 서브+메인 가로 1줄 조합
++- **텍스트 갭:** 24px (서브-메인 사이)
++- **글자수 기준:** 합계 28자 초과 시 72px → 64px 축소
++- **메인 줄바꿈:** 불가
++
++### 카피 톤
++
++- **서브:** 맥락·이벤트명·캠페인 소개
++- **메인:** 행동 유도·핵심 메시지·임팩트
++
++---
++
++## 텍스트 규칙
++
++- **정렬:** 중앙 정렬
++- **기준점:** 배너 중앙 (width/2, height/2) 기준, 좌우로 뻗어나가는 구조
++- **세이프존:** 상 40px ~ 하 40px 내 중앙정렬 고정
++- **그룹핑:** 텍스트와 이미지가 하나의 그룹으로 묶여 중앙 정렬
++
++### 텍스트 배치
++
++- **single_main:** 중앙 기준, 메인 카피 좌우 균등 배치
++- **horizontal_sub_main:** 중앙 기준, 서브(좌) + 메인(우) 또는 맥락에 따라 위치 변경 가능
++
++---
++
++## 레이아웃 패턴
++
++- **기본:** 중앙 정렬
++- **텍스트 영역:** 중앙 정렬 (텍스트+이미지 그룹)
++- **이미지 영역:** 텍스트와 묶여 좌측 또는 우측에 배치 (선택사항)
++
++---
++
++## 캐릭터 정책
++
++- **캐릭터:** 알바몬 마스코트 (MONI) 등 캐릭터
++- **사용 방식:** 조건부 사용
++
++### 사용 가능 조건
++
++1. 카피 컨셉에 맞을 때 (의상·소품 변형)
++2. 광고주 자산(제품·로고)과 캐릭터 결합형
++3. 이벤트·캠페인 분위기 강화용
++
++### 금지
++
++- 조건과 무관한 단순 장식 사용 지양
++
++---
++
++## 자동 구성 결정 규칙
++
++| 조건 | 결과 |
++|------|------|
++| 서브카피 없음 | single_main (메인 단독 1줄, 72px Bold) |
++| 서브카피 있음 + 합계 ≤ 28자 | horizontal_sub_main (가로 1줄, 둘 다 72px) |
++| 서브카피 있음 + 합계 > 28자 | horizontal_sub_main (가로 1줄, 둘 다 64px) |
++
++- **메인 굵기:** Bold (항상)
++- **서브 굵기:** Medium (항상)
++- **위치:** 맥락에 따라 메인/서브 좌우 위치 변경 가능
++
++---
++
++## 카피 배치 (좌우 순서 토글)
++
++서브카피가 있을 때, 가로 1줄 안에서 좌우 순서를 선택할 수 있다.
++서브카피가 없으면 자동으로 메인 단독(single_main, 72px Bold)이 적용된다.
++
++### 1. sub_left_main_right — 서브(좌) + 메인(우) (기본)
++
++- 서브카피로 맥락을 먼저 제시한 뒤 메인카피로 임팩트.
++- 합계 28자 이하 72px, 초과 시 64px.
++- 사례: case_1, case_2, case_4
++
++### 2. main_left_sub_right — 메인(좌) + 서브(우)
++
++- 메인카피를 먼저 던져 시선을 잡고, 서브카피로 부연.
++- 합계 28자 이하 72px, 초과 시 64px.
++- 사례: case_5, case_6
++
++---
++
++## 제작 사례 (Few-shot References)
++
++### Case 1 — 합격 썰 공모전
++
++- **광고주:** 잡코리아 자체
++- **타겟:** 구직자
++- **배경:** 어두운 네이비 + 컬러 라인 장식
++- **텍스트 색상:** #FFFFFF
++- **강조 색상:** 빨강 ("이야기" 강조)
++- **구조:** horizontal_sub_main
++- **서브 카피:** 합격 썰 공모전
++- **메인 카피:** 취업/이직에 성공한 이야기를 들려주세요
++- **비주얼:** 컬러 라인 그래픽 (좌우 장식)
++- **출처:** worxphere
++
++### Case 2 — 기업회원 응원 (치킨)
++
++- **광고주:** 자체 이벤트
++- **타겟:** 사장님
++- **배경:** 어두운 텍스처 (석판 느낌)
++- **텍스트 색상:** #FFFFFF
++- **강조 색상:** #FFE600 ("사장님!", "치킨" 노랑 강조)
++- **구조:** horizontal_sub_main
++- **서브 카피:** 기업회원 응원 이벤트
++- **메인 카피:** 사장님! 퇴근 길 치킨 드세요
++- **비주얼:** 치킨 이미지(좌) + MONI 캐릭터(우)
++- **캐릭터 근거:** 이벤트 분위기 강화용
++
++### Case 3 — 커리어 컨퍼런스
++
++- **광고주:** 잡코리아 자체
++- **타겟:** 구직자
++- **배경:** 연보라~핑크 그라데이션
++- **텍스트 색상:** #171717
++- **강조 색상:** 보라 ("커리어 컨퍼런스" 강조)
++- **구조:** single_main
++- **메인 카피:** 3월, 커리어 컨퍼런스 듣고 이직 도전하세요!
++- **비주얼:** 인물 사진 4명(우측) + JOBKOREA 로고
++- **출처:** JOBKOREA
++
++### Case 4 — AX 채용 리포트
++
++- **광고주:** 자체 콘텐츠
++- **타겟:** 인담자
++- **배경:** 블루~네이비 그라데이션
++- **텍스트 색상:** #FFFFFF
++- **구조:** horizontal_sub_main
++- **서브 카피:** AI가 채용 담당자를 대체할까요?
++- **메인 카피:** AX 채용 리포트 무료 배포
++- **비주얼:** 없음 (텍스트 전용)
++
++### Case 5 — 기업회원 감사 (수박주스)
++
++- **광고주:** 이디야커피 (협업)
++- **타겟:** 인담자
++- **배경:** 빨강 단색
++- **텍스트 색상:** #FFFFFF
++- **강조 색상:** 없음 (전체 흰색 + 굵기 차이로 구분)
++- **구조:** horizontal_sub_main
++- **서브 카피:** 기업회원 감사 이벤트
++- **메인 카피:** 인담자님! 시원한 수박주스 드세요!
++- **비주얼:** 캐릭터+수박+음료(우측)
++- **캐릭터 근거:** 협업 캠페인 — 캐릭터+광고주 제품 결합형
++- **참고:** 맥락에 따라 서브/메인 좌우 위치 변경 가능한 사례
++
++### Case 6 — 한화 이글스 (가을야구)
++
++- **광고주:** 알바몬 × 한화 이글스 (협업)
++- **타겟:** 구직자+사장님
++- **배경:** 주황 단색
++- **텍스트 색상:** #FFFFFF
++- **구조:** horizontal_sub_main
++- **서브 카피:** 일급 100만원, 유니폼 증정 이벤트!
++- **메인 카피:** 가을야구 응원요정 알바몬 모집
++- **비주얼:** 이글스 유니폼(좌) + MONI 캐릭터(우)
++- **캐릭터 근거:** 협업 캠페인 — 광고주(이글스) 의상 결합형
++
++---
++
++## 빌더 연동
++
++### 입력 매핑
++
++- headline → text_placements[0]
++- subhead → text_placements[1]
++- 이미지 → 텍스트와 그룹으로 중앙 정렬
++- 배경색 → 직접 입력
++
++### CTA
++
++- **지원 안 함**
++- 사유: 커튼 배너는 카피 자체가 행동 유도이므로 별도 CTA 버튼 비권장
++
++---
++
++## 규칙 요약
++
++### 필수
++
++1. 파일명에 배경 컬러코드 기입 필수
++2. 출처 표기 24px (우측상단, Gmarket Sans Medium)
++3. 자간 -2% 고정
++4. 텍스트+이미지 그룹 중앙정렬
++5. 이미지 상하 패딩 8px
++
++### 금지
++
++1. BG 블랙 컬러 사용 불가
++2. 좌우 20px 세이프존 내 콘텐츠 배치 금지
++
++### 필수 (추가)
++
++6. 텍스트는 상단 40px ~ 하단 40px 범위 내 중앙정렬 배치
++
++---
++
++## 미정 항목 (TBD)
++
++- 광고 심의 금지 워딩 사전 (자료 확보 시 추가)
++- 강조색 사용 가이드라인 구체화
+diff --git a/banner_maker/config/banners/pc_main_top_guide.md b/banner_maker/config/banners/pc_main_top_guide.md
+new file mode 100644
+index 0000000..3ff333d
+--- /dev/null
++++ b/banner_maker/config/banners/pc_main_top_guide.md
+@@ -0,0 +1,237 @@
++# 메인 탑 배너 (pc_main_top) 규정
++
++> 최종 수정: 2026-04-28
++
++---
++
++## 기본 정보
++
++- **위치:** PC > 알바몬 메인 좌측
++- **제작 사이즈:** 1556 × 232 px
++- **노출 사이즈:** 778 × 116 px (2배율)
++- **레이아웃:** 가로형 (horizontal)
++
++---
++
++## 레이아웃 구조
++
++- **텍스트 영역:** 좌측 55%
++- **이미지 영역:** 우측 45%
++- **여백:** 좌 80 / 우 80 / 상 52 / 하 52 px
++- **출처 라벨:** 16px, 우측 상단
++
++### 이미지 박스
++
++- 너비 비율: 40%
++- 높이 비율: 95%
++- 위치: 우측 중앙 (right_center)
++- 상하 패딩: 8px
++- 빌더 UI에서 imageScale·anchor로 미세 조정 가능
++
++---
++
++## 폰트
++
++| 구분 | 폰트 | 굵기 | 크기 | 자간 | 행간 | 박스 높이 |
++|------|------|------|------|------|------|-----------|
++| 메인 | Paperlogy | 7Bold | 60px | -2% | 1.2 | 72px |
++| 서브 | Paperlogy | 4 Regular | 36px | -2% | 1.2 | 44px |
++
++- **최소 폰트:** 26px
++- **폰트 사이즈 고정:** 자동 축소 불가 (font_size_strict: true)
++
++---
++
++## 파일 규격
++
++- 최대 용량: 50KB
++- 허용 확장자: jpg, jpeg, gif, png
++- 라운딩: 불가
++- 테두리: 불가
++
++---
++
++## 색상 규칙
++
++- 페이지 배경: #FFFFFF (흰색)
++- **필수:** 메인 페이지(흰 #FFFFFF)와 구분되는 배경색 사용
++
++### 텍스트 색상 판단
++
++- 방식: 배경 밝기(luminance) 기반 자동 판단
++- 기준값: 0.5
++- 어두운 배경 → 흰색 텍스트 (#FFFFFF)
++- 밝은 배경 → 검정 텍스트 (#171717)
++- 최대 텍스트 색상 수: 2가지
++
++---
++
++## 타겟 오디언스
++
++- **대상:** 구직자, 사장님
++- 알바몬 메인 방문자는 구직자(알바생)와 사장님(자영업자)을 모두 포함
++- 광고 컨텍스트에 맞춰 두 청자 중 하나 또는 양쪽을 향하도록 카피·비주얼을 잡는다
++
++---
++
++## 카피 규정
++
++- **구조:** 서브 1줄 + 메인 1줄
++- **줄 간격:** 12px
++- **메인 줄바꿈:** 불가
++
++| 구분 | 최대 글자수 | 권장 글자수 |
++|------|-------------|-------------|
++| 메인 | 17자 | 13~17자 |
++| 서브 | 14자 | 8~13자 |
++
++### 카피 톤
++
++- **서브:** 맥락·후크·인용·캠페인명
++- **메인:** 행동 유도·핵심 메시지
++
++---
++
++## 캐릭터 정책
++
++- **캐릭터:** 알바몬 마스코트 (MONI)
++- **사용 방식:** 조건부 사용
++
++### 사용 가능 조건
++
++1. 카피 컨셉에 맞을 때 (의상·소품 변형)
++2. 광고주 자산(제품·로고)을 캐릭터가 들고 있는 결합형
++3. 알바몬 자체 캠페인 광고
++
++### 금지
++
++- 조건과 무관한 단순 장식 사용 지양
++
++---
++
++## 구조 변형
++
++### 1. 서브(위) + 메인(아래) — 기본 구조
++
++- 카피 컨셉이 "맥락 → 결론" 흐름일 때
++- 사례: case_1, case_2, case_3, case_4, case_6
++
++### 2. 메인(위) + 서브(아래)
++
++- 메인 카피를 후크로 먼저 던지고, 서브로 부연 설명할 때
++- 사례: case_5
++
++---
++
++## 제작 사례 (Few-shot References)
++
++### Case 1 — 찐 알바생
++
++- **광고주:** 알바몬 자체
++- **타겟:** 구직자
++- **배경:** 보라 단색
++- **텍스트 색상:** #FFFFFF
++- **서브 카피:** 이 친구 찐입니다
++- **메인 카피:** 일 잘한 찐 알바생 추천하기
++- **비주얼:** MONI 카드 + 거품 효과
++- **캐릭터 근거:** 자사 캠페인 단독 사용
++
++### Case 2 — K뱅크
++
++- **광고주:** K뱅크
++- **타겟:** 사장님
++- **배경:** 파랑 단색
++- **텍스트 색상:** #FFFFFF
++- **서브 카피:** 사장님들을 위한 특별 혜택!
++- **메인 카피:** 사장님통장 만들면 최대 3백만원!
++- **비주얼:** MONI + Kbank 카드
++- **캐릭터 근거:** 광고주 자산(Kbank 카드) 결합형
++
++### Case 3 — 원정대
++
++- **광고주:** 알바몬 자체
++- **타겟:** 구직자
++- **배경:** 주황 단색
++- **텍스트 색상:** #FFFFFF
++- **서브 카피:** 알바몬 원정대 이벤트
++- **메인 카피:** 퀴즈 풀고 선물 받을 알바몬 구함
++- **비주얼:** MONI(원정대 의상) + 알바몬 로고 가방
++- **캐릭터 근거:** 카피 컨셉(원정대) 의상 변형
++
++### Case 4 — 알바투어
++
++- **광고주:** 알바몬 자체
++- **타겟:** 구직자
++- **배경:** 하늘 그라데이션 + 일러스트
++- **텍스트 색상:** #FFFFFF
++- **서브 카피:** 알바투어 大모집 중!
++- **메인 카피:** 알바와 여행을 한 번에! 알바몬 알바투어
++- **비주얼:** MONI(원정대, KTX 탑승) + 부산/통영/경주 표지판
++- **캐릭터 근거:** 카피 컨셉(여행) 의상·배경 변형
++
++### Case 5 — 한화 이글스 (시타 알바)
++
++- **광고주:** 알바몬 × 한화 이글스 (협업)
++- **타겟:** 구직자
++- **배경:** 주황 단색 + 야구공 일러스트
++- **텍스트 색상:** #FFFFFF
++- **강조 색상:** #FFE600 ("100만원?" 부분)
++- **구조:** 메인(위) + 서브(아래)
++- **메인 카피:** 헛스윙 날려도 100만원?
++- **서브 카피:** 야구 팬이면 누구나 지원 가능! 시타 알바 지원하기
++- **비주얼:** MONI(이글스 유니폼) + 정보박스(시타 체험 일급 1,000,000원) + ALBAMON × Eagles 로고
++- **캐릭터 근거:** 협업 캠페인 — 광고주(이글스) 의상 결합형
++- **레퍼런스 이미지:** assets/few_shot_refs/pc_main_top/case_5_eagles_million.png
++
++### Case 6 — 한화 이글스 (티켓팅)
++
++- **광고주:** 알바몬 × 한화 이글스 (협업)
++- **타겟:** 구직자
++- **배경:** 어두운 야구장 사진
++- **텍스트 색상:** #FFFFFF
++- **강조 색상:** #F37721 ("실패" 부분)
++- **구조:** 서브(위) + 메인(아래)
++- **서브 카피:** 2026 프로야구 시즌 알바몬 단독!
++- **메인 카피:** 티켓팅 실패한 야구 팬 찾습니다
++- **비주얼:** MONI 2명 + TICKET 표지(시타체험/응원세트) + ALBAMON × Eagles 로고
++- **캐릭터 근거:** 협업 캠페인 — 캐릭터 다중 등장
++- **레퍼런스 이미지:** assets/few_shot_refs/pc_main_top/case_6_eagles_ticketing.png
++
++---
++
++## 빌더 연동
++
++### 입력 매핑
++
++- headline → text_placements[0]
++- subhead → text_placements[1]
++- 이미지 → 우측 비주얼 영역
++- 배경색 → 이미지 dominant_colors 추출 (미입력 시)
++
++### CTA
++
++- **지원 안 함**
++- 사유: 메인 탑 배너는 카피 자체가 행동 유도이므로 별도 CTA 버튼 비권장
++
++---
++
++## 규칙 요약
++
++### 필수
++
++1. 메인 페이지(흰 #FFFFFF)와 구분되는 BG Color 사용
++2. 이미지 외곽에 테두리 삽입 불가
++3. 최종파일 라운딩 없이 전달
++
++### 권장
++
++1. 서브 1줄 + 메인 1줄 권장
++2. 메인 13~17자 / 서브 8~13자 (한글 기준)
++3. 최소 폰트: 26px
++
++---
++
++## 미정 항목 (TBD)
++
++- 광고 심의 금지 워딩 사전 (자료 확보 시 추가)
++- 청자별(구직자/사장님) 카피 톤·시각 모티프 분기 규칙
+diff --git a/banner_maker/prototype.html b/banner_maker/prototype.html
+index 279a749..fa03119 100644
+--- a/banner_maker/prototype.html
++++ b/banner_maker/prototype.html
+@@ -290,8 +290,18 @@ body { font-family: 'Pretendard', -apple-system, sans-serif; background: #F5F5F7
+       <input type="file" id="fileInput" accept="image/*" style="display:none">
+       <!-- 이미지 조정 (이미지가 업로드되었을 때만 노출) -->
+       <div id="imageControls" style="display:none;margin-top:12px;padding:12px;background:#F9FAFB;border-radius:8px;font-size:12px;">
++        <!-- 이미지 맞춤 모드 (contain / crop) -->
+         <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+-          <span style="font-weight:500;color:#555;">이미지 조정</span>
++          <span style="font-weight:500;color:#555;">이미지 맞춤</span>
++          <div style="margin-left:auto;display:flex;gap:4px;">
++            <button id="imgFitContain" onclick="setImageFitMode('contain')" style="padding:4px 10px;border:1px solid #2563EB;background:#2563EB;color:#FFF;border-radius:6px;cursor:pointer;font-size:11px;">contain</button>
++            <button id="imgFitCrop" onclick="setImageFitMode('crop')" style="padding:4px 10px;border:1px solid #E5E7EB;background:#FFF;color:#666;border-radius:6px;cursor:pointer;font-size:11px;">crop</button>
++          </div>
++        </div>
++        <div id="imgFitHint" style="color:#888;font-size:11px;margin-bottom:8px;">contain: 이미지 전체 표시 · crop: 무게중심 기준 크롭</div>
++        <!-- 수동 조정 (자동/수동) -->
++        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
++          <span style="font-weight:500;color:#555;">위치 조정</span>
+           <div style="margin-left:auto;display:flex;gap:4px;">
+             <button id="imgModeAuto" onclick="setImageMode('auto')" style="padding:4px 10px;border:1px solid #2563EB;background:#2563EB;color:#FFF;border-radius:6px;cursor:pointer;font-size:11px;">자동</button>
+             <button id="imgModeManual" onclick="setImageMode('manual')" style="padding:4px 10px;border:1px solid #E5E7EB;background:#FFF;color:#666;border-radius:6px;cursor:pointer;font-size:11px;">수동</button>
+@@ -550,6 +560,7 @@ function adaptBanner(json) {
+          : 'center',
+     composition: json.copy?.structure || null,            // "서브 1줄 + 메인 1줄" 등
+     verticalLineGap: json.copy?.line_gap_px ?? null,      // 가이드 명시 시 그 값, 없으면 폰트 비례
++    textGap: json.copy?.text_gap_px ?? 24,                 // 가로 1줄 서브-메인 간격 (기본 24px)
+     structureVariants: json.structure_variants || null,   // [{id, description, examples}] — 빌더에서 토글 노출
+     imageBox: json.image_box || null,                     // {width_ratio, height_ratio, anchor, v_padding}
+     ctaSupported: json.builder_io?.cta?.supported !== false, // false 명시 시만 차단
+@@ -647,6 +658,12 @@ let state = {
+   ctaManualStyle: null,
+   // 카피 배치 변형 (배너의 structure_variants 중 사용자가 선택한 id). null이면 첫 번째 사용.
+   structureChoice: null,
++  // 이미지 맞춤 모드: 'contain' (전체 표시) / 'crop' (콘텐츠 바운딩 박스 기준 크롭)
++  imageFitMode: 'contain',
++  // 배너별 학습 보정값 캐시. { [bannerId]: { scale_delta, offset_y_delta, offset_x_delta } }
++  calibrationCache: {},
++  // crop 자동 배치 시 계산된 기본값 저장 (다운로드 시 delta 계산용). { [sizeId]: { autoScale, autoOffsetY } }
++  cropAutoValues: {},
+   // 배너별 이미지 transform — 각 배너 독립 조정. { [sizeId]: { mode: 'auto'|'manual', scale, offset:{x,y} } }
+   // 자동 모드: 가이드 image_box / 수동 모드: 드래그(offset)·휠(scale, 등비율)
+   imageTransforms: {}
+@@ -688,6 +705,12 @@ async function init() {
+   if (!PRESETS[state.selectedSizes[0]]) {
+     state.selectedSizes = [visibleIds[0]];
+   }
++
++  // 배너별 학습 보정값 로드
++  for (const id of visibleIds) {
++    await loadCalibration(id);
++  }
++
+   renderSizeGrid(visibleIds);
+ 
+   document.getElementById("fileInput").addEventListener("change", handleFileUpload);
+@@ -869,7 +892,9 @@ function updateStructureSelector() {
+                         ";border-radius:8px;cursor:pointer;background:" + (selected ? "#EFF6FF" : "#FFF") +
+                         ";font-size:12px;line-height:1.4;color:#333;";
+     const label = v.id === "main_top_sub_bottom" ? "메인 위 / 서브 아래" :
+-                  v.id === "sub_top_main_bottom" ? "서브 위 / 메인 아래" : v.id;
++                  v.id === "sub_top_main_bottom" ? "서브 위 / 메인 아래" :
++                  v.id === "sub_left_main_right" ? "서브(좌) → 메인(우)" :
++                  v.id === "main_left_sub_right" ? "메인(좌) → 서브(우)" : v.id;
+     card.innerHTML = '<div style="font-weight:600;margin-bottom:2px;">' + label + '</div><div style="color:#888;font-size:11px;">' + (v.description || '') + '</div>';
+     card.onclick = function() { selectStructure(v.id); };
+     options.appendChild(card);
+@@ -883,9 +908,112 @@ function selectStructure(id) {
+   updatePreview();
+ }
+ 
++// ===== 이미지 맞춤 모드 (contain / crop) =====
++function setImageFitMode(mode) {
++  state.imageFitMode = mode;
++  syncImageFitUI(mode);
++  // 모드 변경 시 수동 offset 초기화
++  state.selectedSizes.forEach(id => {
++    const t = getImageTransform(id);
++    t.offset = { x: 0, y: 0 };
++    t.scale = 1.0;
++    t.mode = 'auto';
++  });
++  syncImageModeUI('auto');
++  updatePreview();
++}
++
++function syncImageFitUI(mode) {
++  const onStyle  = 'padding:4px 10px;border:1px solid #2563EB;background:#2563EB;color:#FFF;border-radius:6px;cursor:pointer;font-size:11px;';
++  const offStyle = 'padding:4px 10px;border:1px solid #E5E7EB;background:#FFF;color:#666;border-radius:6px;cursor:pointer;font-size:11px;';
++  document.getElementById('imgFitContain').style.cssText = mode === 'contain' ? onStyle : offStyle;
++  document.getElementById('imgFitCrop').style.cssText    = mode === 'crop'    ? onStyle : offStyle;
++}
++
++// 투명 PNG의 콘텐츠 바운딩 박스 계산 (실제 픽셀이 있는 영역의 상하좌우 경계)
++function getContentBounds(img) {
++  const tmpCanvas = document.createElement('canvas');
++  tmpCanvas.width = img.width;
++  tmpCanvas.height = img.height;
++  const tmpCtx = tmpCanvas.getContext('2d');
++  tmpCtx.drawImage(img, 0, 0);
++  const data = tmpCtx.getImageData(0, 0, img.width, img.height).data;
++
++  let top = img.height, bottom = 0, left = img.width, right = 0;
++  const step = 2; // 성능을 위해 2px 간격 샘플링
++  for (let y = 0; y < img.height; y += step) {
++    for (let x = 0; x < img.width; x += step) {
++      const a = data[(y * img.width + x) * 4 + 3];
++      if (a > 10) {
++        if (y < top) top = y;
++        if (y > bottom) bottom = y;
++        if (x < left) left = x;
++        if (x > right) right = x;
++      }
++    }
++  }
++
++  if (top >= bottom) return { top: 0, bottom: img.height, left: 0, right: img.width, contentH: img.height, contentW: img.width };
++  return { top, bottom, left, right, contentH: bottom - top, contentW: right - left };
++}
++
++// ===== 학습 데이터 (calibration) =====
++// 배너별 학습 보정값 로드 (서버에서 JSON 파일 읽기)
++async function loadCalibration(bannerId) {
++  try {
++    const res = await fetch('config/banners/' + bannerId + '_calibration.json');
++    if (!res.ok) return null;
++    const data = await res.json();
++    state.calibrationCache[bannerId] = data.average || {};
++    return data.average || {};
++  } catch (e) {
++    return null;
++  }
++}
++
++// 다운로드 시 학습 데이터 저장 (서버에 POST)
++async function saveCalibration(bannerId) {
++  if (!state.imageUrl) return; // 이미지 없으면 저장 불필요
++  const autoVals = state.cropAutoValues[bannerId] || { autoScale: 1.0, autoOffsetY: 0 };
++
++  const t = getImageTransform(bannerId);
++  const finalScale = (t.mode === 'manual') ? t.scale : 1.0;
++  const finalOffsetY = (t.mode === 'manual') ? t.offset.y : 0;
++  const finalOffsetX = (t.mode === 'manual') ? t.offset.x : 0;
++
++  const sample = {
++    date: new Date().toISOString().split('T')[0],
++    fit_mode: state.imageFitMode,
++    auto_scale: autoVals.autoScale,
++    final_scale: finalScale,
++    auto_offset_y: Math.round(autoVals.autoOffsetY),
++    final_offset_y: Math.round(finalOffsetY + autoVals.autoOffsetY),
++    scale_delta: Math.round((finalScale - 1.0) * 10000) / 10000,
++    offset_y_delta: Math.round(finalOffsetY),
++    offset_x_delta: Math.round(finalOffsetX)
++  };
++
++  try {
++    const res = await fetch('/api/calibration', {
++      method: 'POST',
++      headers: { 'Content-Type': 'application/json' },
++      body: JSON.stringify({ banner_id: bannerId, sample })
++    });
++    const result = await res.json();
++    if (result.ok) {
++      // 캐시 즉시 갱신
++      state.calibrationCache[bannerId] = result.average;
++      console.log('[calibration] 학습 저장 완료:', bannerId, result.average);
++    }
++  } catch (e) {
++    console.warn('[calibration] 저장 실패 (서버 미실행?):', e.message);
++  }
++}
++
+ // ===== 이미지 조정 (드래그 + 휠 줌, 등비율 유지) =====
+ function showImageControls() {
+   document.getElementById('imageControls').style.display = state.imageUrl ? 'block' : 'none';
++  syncImageFitUI(state.imageFitMode);
+ }
+ 
+ // 좌측 패널 버튼 → 선택된 모든 배너에 일괄 적용 (각 배너 독립 transform이라 명시적 일괄 처리 필요)
+@@ -1091,8 +1219,8 @@ function renderToCanvas(presetId, preset, callback) {
+ 
+   const m = preset.margins;
+   const isObjLayout = state.imageIsTransparent && preset.layout === "horizontal";
+-  // 가이드의 layout_pattern.default_template 우선. 없으면 이미지 투명 여부 기반.
+-  const useLeftAlign = preset.align === 'left' || isObjLayout;
++  // 가이드의 layout_pattern.default_template 우선 — center 명시 시 이미지 투명 여부와 무관하게 중앙정렬 유지
++  const useLeftAlign = preset.align === 'left' || (isObjLayout && preset.align !== 'center');
+   // 좌측 정렬: 좌측 마진 직후부터 시작. 중앙 정렬: 캔버스 중심.
+   const textX = useLeftAlign ? m.left : preset.w / 2;
+   const textAlign = useLeftAlign ? "left" : "center";
+@@ -1127,14 +1255,34 @@ function renderToCanvas(presetId, preset, callback) {
+       // ===== 자동 구성 기반 렌더링 (textX/textAlign 기준 — 좌측정렬 또는 중앙) =====
+       const cx = textX;
+       const cy = preset.h / 2;
+-      const GAP = 24; // 피그마 레퍼런스 기준 서브-메인 간격
++      const GAP = preset.textGap || 24; // JSON copy.text_gap_px 우선, 없으면 24px
+ 
+       if (decision.type === 'single_main' && state.mainText) {
+         const fittedMain = fitFontSize(state.mainText, decision.mainSize, state.mainFont.css, state.mainFont.weight, preset.fonts.main.spacing);
++        const sp = preset.fonts.main.spacing * fittedMain;
++
++        // 이미지+텍스트 그룹 중앙정렬 (center_grouped)
++        const gi = state._groupedImg || null;
++        const imgGroupW = gi ? gi.w : 0;
++        const IMG_GAP = preset.imageBox?.image_gap ?? (preset.textGap || 24);
++
+         ctx.save();
+         ctx.font = state.mainFont.weight + " " + fittedMain + "px " + state.mainFont.css;
+-        const sp = preset.fonts.main.spacing * fittedMain;
+-        drawTextWithSpacing(ctx, state.mainText, cx, cy + fittedMain * 0.35, sp, textAlign);
++        const mainW = measureTextWithSpacing(ctx, state.mainText, sp);
++        const baselineY = cy + fittedMain * 0.38;
++
++        if (gi) {
++          // 텍스트+이미지 그룹 중앙 배치 (수동 offset 반영)
++          const totalGroupW = mainW + IMG_GAP + imgGroupW;
++          const startX = cx - totalGroupW / 2;
++          drawTextWithSpacing(ctx, state.mainText, startX, baselineY, sp, "left");
++          const imgX = startX + mainW + IMG_GAP + (gi.ox || 0);
++          // crop: 무게중심 오프셋이 oy에 포함됨 / contain: 세로 중앙
++          const imgY = gi.isCrop ? (gi.oy || 0) : ((preset.h - gi.h) / 2 + (gi.oy || 0));
++          ctx.drawImage(gi.img, imgX, imgY, gi.w, gi.h);
++        } else {
++          drawTextWithSpacing(ctx, state.mainText, cx, baselineY, sp, textAlign);
++        }
+         ctx.restore();
+ 
+       } else if (decision.type === 'vertical_sub_main') {
+@@ -1172,34 +1320,64 @@ function renderToCanvas(presetId, preset, callback) {
+         else         { drawSub(topY);  drawMain(botY); }
+ 
+       } else if (decision.type === 'horizontal_sub_main') {
+-        // 가로 1줄: 중앙 기준 서브(좌) + 메인(우)
+-        const subSp = preset.fonts.sub.spacing * decision.subSize;
+-        const mainSp = preset.fonts.main.spacing * decision.mainSize;
++        // 가로 1줄: structureChoice에 따라 좌우 순서 결정
++        // 기본(sub_left_main_right): 서브(좌) + 메인(우)
++        // 반전(main_left_sub_right): 메인(좌) + 서브(우)
++        const swapped = state.structureChoice === 'main_left_sub_right';
++        const leftText  = swapped ? state.mainText : state.subText;
++        const rightText = swapped ? state.subText  : state.mainText;
++        const leftSize  = swapped ? decision.mainSize : decision.subSize;
++        const rightSize = swapped ? decision.subSize  : decision.mainSize;
++        const leftFont  = swapped ? state.mainFont : state.subFont;
++        const rightFont = swapped ? state.subFont  : state.mainFont;
++        const leftSpRatio  = swapped ? preset.fonts.main.spacing : preset.fonts.sub.spacing;
++        const rightSpRatio = swapped ? preset.fonts.sub.spacing  : preset.fonts.main.spacing;
++
++        const leftSp  = leftSpRatio * leftSize;
++        const rightSp = rightSpRatio * rightSize;
+ 
+         // 텍스트 폭 측정
+-        ctx.font = state.subFont.weight + " " + decision.subSize + "px " + state.subFont.css;
+-        const subW = state.subText ? measureTextWithSpacing(ctx, state.subText, subSp) : 0;
+-        ctx.font = state.mainFont.weight + " " + decision.mainSize + "px " + state.mainFont.css;
+-        const mainW = state.mainText ? measureTextWithSpacing(ctx, state.mainText, mainSp) : 0;
++        ctx.font = leftFont.weight + " " + leftSize + "px " + leftFont.css;
++        const leftW = leftText ? measureTextWithSpacing(ctx, leftText, leftSp) : 0;
++        ctx.font = rightFont.weight + " " + rightSize + "px " + rightFont.css;
++        const rightW = rightText ? measureTextWithSpacing(ctx, rightText, rightSp) : 0;
+ 
+-        const totalW = subW + GAP + mainW;
+-        const startX = cx - totalW / 2;
+-        const textY = cy + decision.mainSize * 0.35;
++        const textTotalW = (leftW > 0 && rightW > 0) ? leftW + GAP + rightW : leftW + rightW;
+ 
+-        if (state.subText) {
++        // 이미지+텍스트 그룹 중앙정렬 (center_grouped) — state._groupedImg 활용
++        const gi = state._groupedImg || null;
++        const imgGroupW = gi ? gi.w : 0;
++        const IMG_GAP = preset.imageBox?.image_gap ?? GAP;
++        const totalGroupW = textTotalW + (imgGroupW > 0 ? IMG_GAP + imgGroupW : 0);
++        const startX = cx - totalGroupW / 2;
++
++        const textStartX = startX;
++
++        const textY = cy + decision.mainSize * 0.38;
++
++        if (leftText) {
+           ctx.save();
+-          ctx.font = state.subFont.weight + " " + decision.subSize + "px " + state.subFont.css;
++          ctx.font = leftFont.weight + " " + leftSize + "px " + leftFont.css;
+           ctx.fillStyle = textColor;
+-          drawTextWithSpacing(ctx, state.subText, startX, textY, subSp, "left");
++          drawTextWithSpacing(ctx, leftText, textStartX, textY, leftSp, "left");
+           ctx.restore();
+         }
+-        if (state.mainText) {
++        if (rightText) {
+           ctx.save();
+-          ctx.font = state.mainFont.weight + " " + decision.mainSize + "px " + state.mainFont.css;
++          ctx.font = rightFont.weight + " " + rightSize + "px " + rightFont.css;
+           ctx.fillStyle = textColor;
+-          drawTextWithSpacing(ctx, state.mainText, startX + subW + GAP, textY, mainSp, "left");
++          const rightStartX = leftW > 0 ? textStartX + leftW + GAP : textStartX;
++          drawTextWithSpacing(ctx, rightText, rightStartX, textY, rightSp, "left");
+           ctx.restore();
+         }
++
++        // 이미지 그리기 (텍스트 우측에 GAP 간격으로)
++        if (gi) {
++          const imgX = startX + textTotalW + IMG_GAP + (gi.ox || 0);
++          // crop: 무게중심 오프셋이 oy에 포함됨 / contain: 세로 중앙
++          const imgY = gi.isCrop ? (gi.oy || 0) : ((preset.h - gi.h) / 2 + (gi.oy || 0));
++          ctx.drawImage(gi.img, imgX, imgY, gi.w, gi.h);
++        }
+       }
+ 
+     } else {
+@@ -1268,22 +1446,70 @@ function renderToCanvas(presetId, preset, callback) {
+       img.crossOrigin = "anonymous";
+       img.onload = () => {
+         if (state.imageIsTransparent) {
+-          // 가이드 image_box 자동 → 수동 모드면 사용자 scale + offset 반영 (등비율 유지)
+           const box = preset.imageBox || { width_ratio: preset.imgRatio, height_ratio: 0.85, anchor: "right_center", v_padding: 8 };
+-          const t = getImageTransform(presetId);
+-          const userScale = (t.mode === 'manual') ? t.scale : 1.0;
+-
+-          const zoneW = preset.w * box.width_ratio * userScale;
+-          const zoneH = (preset.h * box.height_ratio - (box.v_padding || 0) * 2) * userScale;
+-          // 등비율 스케일 (Math.min으로 가로·세로 한 쪽 기준 — 비율 보존)
+-          const s = Math.min(zoneW / img.width, zoneH / img.height);
+-          const dw = img.width * s, dh = img.height * s;
+-
+-          // 자동 anchor 위치 → 수동 모드면 offset 누적
+-          const pos = anchorToXY(box.anchor, preset, dw, dh, box.v_padding || 0);
+-          const ox = t.mode === 'manual' ? t.offset.x : 0;
+-          const oy = t.mode === 'manual' ? t.offset.y : 0;
+-          ctx.drawImage(img, pos.x + ox, pos.y + oy, dw, dh);
++
++          if (box.anchor === 'center_grouped') {
++            // center_grouped: drawContent에서 텍스트+이미지를 함께 그림 — 여기서는 이미지 정보만 저장
++            const vPad = box.v_padding || 8;
++            const maxImgH = preset.h - vPad * 2;
++            const t = getImageTransform(presetId);
++            const userScale = (t.mode === 'manual') ? t.scale : 1.0;
++            const ox = t.mode === 'manual' ? t.offset.x : 0;
++            const oy = t.mode === 'manual' ? t.offset.y : 0;
++
++            if (state.imageFitMode === 'crop') {
++              // crop 모드: 콘텐츠 바운딩 박스 기준 + 학습 보정값 적용
++              const bounds = getContentBounds(img);
++              const cal = state.calibrationCache[presetId] || {};
++              // 기본 스케일: 콘텐츠 높이가 배너의 1.15배 + 학습 보정
++              const availH = preset.h - vPad;
++              const baseCropScale = (availH * 1.15) / bounds.contentH;
++              const calScale = 1.0 + (cal.scale_delta || 0); // 학습된 스케일 보정
++              const cropScale = baseCropScale * calScale;
++              const finalScale = cropScale * userScale;
++              const scaledW = img.width * finalScale;
++              const scaledH = img.height * finalScale;
++              // 콘텐츠 상단 정렬 + 학습된 Y 보정
++              const contentTopY = bounds.top * finalScale;
++              const topOffset = vPad - contentTopY + (cal.offset_y_delta || 0);
++              // 자동 배치 기본값 저장 (다운로드 시 delta 계산용)
++              state.cropAutoValues[presetId] = { autoScale: cropScale, autoOffsetY: topOffset };
++              state._groupedImg = {
++                img, w: scaledW, h: scaledH, vPad, isCrop: true,
++                gap: box.image_gap ?? (preset.textGap || 24),
++                ox: ox + (cal.offset_x_delta || 0), oy: oy + topOffset
++              };
++            } else {
++              // contain 모드: 기존 방식 — 패딩 안에 전체 표시
++              const baseScale = Math.min(maxImgH / img.height, 1);
++              const finalScale = baseScale * userScale;
++              state._groupedImg = {
++                img, w: img.width * finalScale, h: img.height * finalScale, vPad, isCrop: false,
++                gap: box.image_gap ?? (preset.textGap || 24),
++                ox, oy
++              };
++            }
++
++            drawContent();
++            delete state._groupedImg;
++            ctx.restore();
++            callback(canvas);
++            return; // 아래 drawContent 중복 호출 방지
++          } else {
++            // 기존 로직: right_center 등 anchor 기반 배치
++            const t = getImageTransform(presetId);
++            const userScale = (t.mode === 'manual') ? t.scale : 1.0;
++
++            const zoneW = preset.w * (box.width_ratio || preset.imgRatio) * userScale;
++            const zoneH = (preset.h * (box.height_ratio || 0.85) - (box.v_padding || 0) * 2) * userScale;
++            const s = Math.min(zoneW / img.width, zoneH / img.height);
++            const dw = img.width * s, dh = img.height * s;
++
++            const pos = anchorToXY(box.anchor, preset, dw, dh, box.v_padding || 0);
++            const ox = t.mode === 'manual' ? t.offset.x : 0;
++            const oy = t.mode === 'manual' ? t.offset.y : 0;
++            ctx.drawImage(img, pos.x + ox, pos.y + oy, dw, dh);
++          }
+         } else {
+           // 비율 유지 크롭 (cover 모드)
+           const coverScale = Math.max(preset.w / img.width, preset.h / img.height);
+@@ -1312,13 +1538,13 @@ function getCompositionDecision(presetId, mainText, subText) {
+   const preset = PRESETS[presetId];
+   if (!preset) return null;
+ 
+-  // pc_main_curtain: 글자수 기반 자동 결정 (Figma 5개 사례 기반 룰)
++  // pc_main_curtain: 글자수 기반 자동 결정 (6개 사례 기반 룰, 28자 기준)
+   if (presetId === 'pc_main_curtain') {
+     const mainLen = (mainText || '').length;
+     const subLen = (subText || '').length;
+     const totalLen = mainLen + subLen;
+     if (!subText || subLen === 0) return { type: 'single_main', mainSize: 72, subSize: 0 };
+-    if (totalLen <= 24) return { type: 'horizontal_sub_main', mainSize: 72, subSize: 72 };
++    if (totalLen <= 28) return { type: 'horizontal_sub_main', mainSize: 72, subSize: 72 };
+     return { type: 'horizontal_sub_main', mainSize: 64, subSize: 64 };
+   }
+ 
+@@ -1493,6 +1719,8 @@ function downloadBanner(sizeId) {
+     link.download = "banner_" + preset.w + "x" + preset.h + "_" + state.bgColor.slice(1) + ".png";
+     link.href = canvas.toDataURL("image/png");
+     link.click();
++    // 다운로드 시 학습 데이터 저장
++    saveCalibration(sizeId);
+   });
+ }
+ 
+diff --git a/banner_maker/server.py b/banner_maker/server.py
+new file mode 100644
+index 0000000..ea1d14a
+--- /dev/null
++++ b/banner_maker/server.py
+@@ -0,0 +1,86 @@
++#!/usr/bin/env python3
++"""
++Banner Maker 로컬 서버
++- 정적 파일 서빙 (기존 python3 -m http.server 대체)
++- POST /api/calibration 으로 학습 데이터 JSON 파일 저장
++사용법: cd banner_maker && python3 server.py
++"""
++
++import http.server
++import json
++import os
++
++PORT = 8080
++BASE_DIR = os.path.dirname(os.path.abspath(__file__))
++
++class BannerHandler(http.server.SimpleHTTPRequestHandler):
++    def __init__(self, *args, **kwargs):
++        super().__init__(*args, directory=BASE_DIR, **kwargs)
++
++    def do_POST(self):
++        if self.path == '/api/calibration':
++            length = int(self.headers.get('Content-Length', 0))
++            body = self.rfile.read(length)
++            try:
++                data = json.loads(body)
++                banner_id = data.get('banner_id')
++                if not banner_id:
++                    self._respond(400, {'error': 'banner_id 필수'})
++                    return
++
++                filepath = os.path.join(BASE_DIR, 'config', 'banners', f'{banner_id}_calibration.json')
++
++                # 기존 파일이 있으면 읽어서 samples에 추가
++                existing = {'banner_id': banner_id, 'samples': [], 'average': {}}
++                if os.path.exists(filepath):
++                    with open(filepath, 'r', encoding='utf-8') as f:
++                        existing = json.load(f)
++
++                # 새 샘플 추가
++                sample = data.get('sample', {})
++                existing['samples'].append(sample)
++
++                # 평균 재계산
++                samples = existing['samples']
++                if samples:
++                    avg_scale_delta = sum(s.get('scale_delta', 0) for s in samples) / len(samples)
++                    avg_offset_y_delta = sum(s.get('offset_y_delta', 0) for s in samples) / len(samples)
++                    avg_offset_x_delta = sum(s.get('offset_x_delta', 0) for s in samples) / len(samples)
++                    existing['average'] = {
++                        'scale_delta': round(avg_scale_delta, 4),
++                        'offset_y_delta': round(avg_offset_y_delta, 2),
++                        'offset_x_delta': round(avg_offset_x_delta, 2),
++                        'sample_count': len(samples)
++                    }
++
++                # 파일 저장
++                with open(filepath, 'w', encoding='utf-8') as f:
++                    json.dump(existing, f, ensure_ascii=False, indent=2)
++
++                self._respond(200, {'ok': True, 'sample_count': len(samples), 'average': existing['average']})
++
++            except json.JSONDecodeError:
++                self._respond(400, {'error': 'JSON 파싱 실패'})
++        else:
++            self._respond(404, {'error': 'Not found'})
++
++    def _respond(self, code, data):
++        self.send_response(code)
++        self.send_header('Content-Type', 'application/json; charset=utf-8')
++        self.send_header('Access-Control-Allow-Origin', '*')
++        self.end_headers()
++        self.wfile.write(json.dumps(data, ensure_ascii=False).encode('utf-8'))
++
++    def do_OPTIONS(self):
++        self.send_response(200)
++        self.send_header('Access-Control-Allow-Origin', '*')
++        self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
++        self.send_header('Access-Control-Allow-Headers', 'Content-Type')
++        self.end_headers()
++
++if __name__ == '__main__':
++    print(f'Banner Maker 서버 시작: http://localhost:{PORT}/')
++    print(f'베이스 디렉토리: {BASE_DIR}')
++    print('종료: Ctrl+C')
++    server = http.server.HTTPServer(('', PORT), BannerHandler)
++    server.serve_forever()
+-- 
+2.34.1
+
