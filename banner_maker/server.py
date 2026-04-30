@@ -36,17 +36,26 @@ class BannerHandler(http.server.SimpleHTTPRequestHandler):
                     with open(filepath, 'r', encoding='utf-8') as f:
                         existing = json.load(f)
 
+                # slot: 듀얼 이미지용 ("left" / "right"), 없으면 단일 이미지 (기존 호환)
+                slot = data.get('slot')  # None, "left", "right"
+                samples_key = f'samples_{slot}' if slot else 'samples'
+                average_key = f'average_{slot}' if slot else 'average'
+
+                # 해당 slot의 samples 배열이 없으면 초기화
+                if samples_key not in existing:
+                    existing[samples_key] = []
+
                 # 새 샘플 추가
                 sample = data.get('sample', {})
-                existing['samples'].append(sample)
+                existing[samples_key].append(sample)
 
                 # 평균 재계산
-                samples = existing['samples']
+                samples = existing[samples_key]
                 if samples:
                     avg_scale_delta = sum(s.get('scale_delta', 0) for s in samples) / len(samples)
                     avg_offset_y_delta = sum(s.get('offset_y_delta', 0) for s in samples) / len(samples)
                     avg_offset_x_delta = sum(s.get('offset_x_delta', 0) for s in samples) / len(samples)
-                    existing['average'] = {
+                    existing[average_key] = {
                         'scale_delta': round(avg_scale_delta, 4),
                         'offset_y_delta': round(avg_offset_y_delta, 2),
                         'offset_x_delta': round(avg_offset_x_delta, 2),
@@ -57,7 +66,7 @@ class BannerHandler(http.server.SimpleHTTPRequestHandler):
                 with open(filepath, 'w', encoding='utf-8') as f:
                     json.dump(existing, f, ensure_ascii=False, indent=2)
 
-                self._respond(200, {'ok': True, 'sample_count': len(samples), 'average': existing['average']})
+                self._respond(200, {'ok': True, 'slot': slot, 'sample_count': len(samples), 'average': existing[average_key]})
 
             except json.JSONDecodeError:
                 self._respond(400, {'error': 'JSON 파싱 실패'})

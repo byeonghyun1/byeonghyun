@@ -27,7 +27,14 @@
     "weight": "Medium",
     "size_px": 24,
     "position": "top_right",
-    "color": "#FFFFFF"
+    "color": "#FFFFFF",
+    "image_mode": {
+      "enabled": true,
+      "width": 148,
+      "top": 20,
+      "right": 28,
+      "_note": "출처 표기를 이미지로 대체. 피그마=캔버스 동일 좌표계(2160x160). 가로 148px 고정, 위 20px, 우측 28px."
+    }
   },
 
   "image_box": {
@@ -36,7 +43,15 @@
     "v_padding": 8,
     "image_gap": 24,
     "anchor": "center_grouped",
-    "_note": "이미지 상하 패딩 8px. 텍스트-이미지 간격 24px. 텍스트+이미지 그룹이 배너 중앙에 정렬됨."
+    "dual_image": true,
+    "_note": "이미지 상하 패딩 8px. 텍스트-이미지 간격 24px. 텍스트+이미지 그룹이 배너 중앙에 정렬됨. dual_image: 좌/우 이미지 2개 배치 가능."
+  },
+
+  "logo_box": {
+    "maxHeight": 20,
+    "gap": 20,
+    "align": "text_left",
+    "_note": "로고 이미지 업로드 시 텍스트 위에 배치. maxHeight: 로고 최대 높이(px), gap: 로고-텍스트 간격(px), align: text_left=텍스트 좌측 끝 정렬, center=배너 중앙, left/right=마진 기준. logoBox가 없는 배너는 로고 기능 비활성화."
   },
 
   "fonts": {
@@ -72,9 +87,19 @@
     }
   },
 
+  "composition_rules": {
+    "default_type": "horizontal_sub_main",
+    "char_threshold": 28,
+    "sizes": {
+      "below": { "mainSize": 72, "subSize": 72 },
+      "above": { "mainSize": 64, "subSize": 64 }
+    }
+  },
+
   "copy": {
     "structure": "메인 단독 1줄 또는 서브+메인 가로 1줄 조합",
     "text_gap_px": 24,
+    "total_max_chars": 35,
     "total_chars_threshold": 28,
     "font_shrink_rule": "서브+메인 합계 28자 초과 시 72px → 64px 축소",
     "main_line_break_allowed": false,

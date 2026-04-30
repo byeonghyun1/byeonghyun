@@ -237,6 +237,7 @@ body { font-family: 'Pretendard', -apple-system, sans-serif; background: #F5F5F7
   transition: left 0.2s;
 }
 .toggle-switch.on::after { left: 20px; }
+.logo-invert-wrap { margin-top: 4px; align-items: center; gap: 6px; }
 
 /* 빈 상태 */
 .empty-state {
@@ -274,6 +275,55 @@ body { font-family: 'Pretendard', -apple-system, sans-serif; background: #F5F5F7
         <div class="upload-hint">PNG, JPG 권장 · 투명 배경 PNG 자동 감지</div>
       </div>
       <input type="file" id="fileInput" accept="image/*" style="display:none">
+      <!-- 듀얼 이미지: 좌측 이미지 추가 토글 (커튼배너 전용) -->
+      <div id="dualToggleWrap" style="display:none;margin-top:10px;">
+        <button id="dualToggleBtn" onclick="toggleDualImage()" style="padding:6px 14px;border:1px solid #D1D5DB;background:#FFF;color:#555;border-radius:8px;cursor:pointer;font-size:12px;font-weight:500;width:100%;text-align:center;transition:all 0.2s;">＋ 좌측 이미지 추가</button>
+        <div id="dualUploadInner" style="display:none;margin-top:10px;">
+          <div style="font-size:12px;font-weight:600;color:#555;margin-bottom:6px;">좌측 이미지</div>
+          <div class="upload-area" id="uploadArea2" onclick="handleUploadClick(event,'sub')">
+            <div class="upload-icon">+</div>
+            <div class="upload-text"><strong>클릭 또는 드래그</strong>하여 좌측 이미지를 업로드하세요</div>
+            <div class="upload-hint">PNG, JPG 권장 · 투명 배경 PNG 자동 감지</div>
+          </div>
+          <input type="file" id="fileInput2" accept="image/*" style="display:none">
+        </div>
+      </div>
+      <!-- 로고 이미지 섹션 (토글, 모든 배너에서 UI 표시. config가 없는 배너에서는 렌더링에만 미반영) -->
+      <div id="logoSectionWrap" style="display:none;margin-top:20px;">
+        <div class="section-title">로고 이미지</div>
+        <div class="font-toggle-row">
+          <div class="toggle-switch" id="logoToggle" onclick="toggleLogoSection()"></div>
+          <div class="font-toggle-label">로고 이미지 사용</div>
+        </div>
+        <div id="logoSectionContent" style="display:none;">
+          <!-- 출처 표기 (우측 상단 이미지) -->
+          <div id="sourceLogoUploadWrap" style="display:none;margin-top:6px;">
+            <div style="font-size:11px;font-weight:600;color:#555;margin-bottom:4px;">출처 표기 (우측 상단)</div>
+            <div class="upload-area" id="uploadAreaSourceLogo" onclick="handleUploadClick(event,'sourceLogo')" style="min-height:40px;padding:8px;">
+              <div class="upload-text" style="font-size:11px;"><strong>클릭 또는 드래그</strong>하여 출처 로고를 업로드하세요</div>
+              <div class="upload-hint" style="font-size:10px;">PNG 권장 · 브랜드 로고</div>
+            </div>
+            <input type="file" id="fileInputSourceLogo" accept="image/*" style="display:none">
+            <div id="sourceLogoInvertWrap" class="logo-invert-wrap" style="display:none;">
+              <div class="toggle-switch" id="sourceLogoInvertToggle" onclick="toggleLogoInvert('source')" style="transform:scale(0.8);"></div>
+              <span style="font-size:11px;color:#555;">컬러 반전</span>
+            </div>
+          </div>
+          <!-- 콜라보 로고 (텍스트 위 배치) -->
+          <div id="logoUploadWrap" style="display:none;margin-top:6px;">
+            <div style="font-size:11px;font-weight:600;color:#555;margin-bottom:4px;">콜라보 로고 (텍스트 위 배치)</div>
+            <div class="upload-area" id="uploadAreaLogo" onclick="handleUploadClick(event,'logo')" style="min-height:40px;padding:8px;">
+              <div class="upload-text" style="font-size:11px;"><strong>클릭 또는 드래그</strong>하여 콜라보 로고를 업로드하세요</div>
+              <div class="upload-hint" style="font-size:10px;">PNG 권장 · 콜라보/협업 로고</div>
+            </div>
+            <input type="file" id="fileInputLogo" accept="image/*" style="display:none">
+            <div id="collabLogoInvertWrap" class="logo-invert-wrap" style="display:none;">
+              <div class="toggle-switch" id="collabLogoInvertToggle" onclick="toggleLogoInvert('collab')" style="transform:scale(0.8);"></div>
+              <span style="font-size:11px;color:#555;">컬러 반전</span>
+            </div>
+          </div>
+        </div>
+      </div>
       <!-- 이미지 조정 (이미지가 업로드되었을 때만 노출) -->
       <div id="imageControls" style="display:none;margin-top:12px;padding:12px;background:#F9FAFB;border-radius:8px;font-size:12px;">
         <!-- 이미지 맞춤 모드 (contain / crop) -->
@@ -307,14 +357,15 @@ body { font-family: 'Pretendard', -apple-system, sans-serif; background: #F5F5F7
       <div class="section-title">2. 텍스트 입력</div>
       <div class="input-group">
         <label>메인 카피</label>
-        <input type="text" id="mainText" placeholder="예: 지금 바로 알바몬에 광고하세요" maxlength="30">
-        <div class="char-count"><span id="mainCount">0</span>/30</div>
+        <input type="text" id="mainText" placeholder="예: 지금 바로 알바몬에 광고하세요">
+        <div class="char-count"><span id="mainCount">0</span></div>
       </div>
       <div class="input-group">
         <label>서브 카피</label>
-        <input type="text" id="subText" placeholder="예: 광고 노출할 곳을 찾는다면?" maxlength="50">
-        <div class="char-count"><span id="subCount">0</span>/50</div>
+        <input type="text" id="subText" placeholder="예: 광고 노출할 곳을 찾는다면?">
+        <div class="char-count"><span id="subCount">0</span></div>
       </div>
+      <div id="totalCharCount" style="font-size:12px;color:#888;text-align:right;margin-top:-4px;">합계 <span id="totalCount">0</span>/35</div>
       <!-- 카피 배치 (structure_variants가 2개 이상인 배너에서만 노출) -->
       <div id="structureSelector" style="display:none;margin-top:12px;">
         <label style="font-size:13px;font-weight:500;color:#555;display:block;margin-bottom:6px;">카피 배치</label>
@@ -479,11 +530,17 @@ body { font-family: 'Pretendard', -apple-system, sans-serif; background: #F5F5F7
  * PRESETS / loadPresets / adapt  : config/banners/*.json 동적 로드 (직접 하드코딩 금지)
  * FONT_SYSTEM                    : 폰트 옵션 (default = Paperlogy)
  * state                          : 앱 상태
+ * IMG_SLOTS / setupUploadArea    : 이미지 업로드 슬롯 기반 통합 (main/sub)
  * async init()                   : 비동기 초기화 — loadPresets() → renderSizeGrid()
- * renderToCanvas()               : 메인 렌더링 (Canvas) — textX/align은 PRESETS.align 따라감
+ * computeCropTransform()         : crop 모드 공통 스케일/오프셋 계산 헬퍼
+ * loadImg()                      : 이미지 로딩 Promise 래퍼
+ * drawAnchorImage()              : anchor 기반 투명 이미지 배치
+ * drawFullImage()                : 비투명 이미지 cover/contain 배치
+ * drawText(…, gi)                : 텍스트 렌더링 (gi = grouped images 파라미터 전달)
+ * renderToCanvas()               : 메인 렌더링 (Promise 통합, state 오염 없음)
  * fitFontSize()                  : 텍스트 영역 초과 시 폰트 자동 축소 (font_size_strict면 비활성)
  * updateStructureSelector()      : 배너의 structure_variants 2개 이상이면 카피 배치 토글 노출
- * getCompositionDecision()       : composition 룰 분기 — pc_main_curtain 글자수 룰 + composition 일반화
+ * getCompositionDecision()       : composition 룰 분기 — JSON compositionRules 기반 + composition 일반화
  * getContrastColor()             : 배경 명도 기반 텍스트색 자동
  * getImageTransform(sizeId)      : 배너별 이미지 transform — { mode, scale, offset } (lazy 생성)
  * attachImageInteractions()      : 미리보기 드래그(=offset) + 휠(=scale 등비율). 배너별 독립. 자동→수동 자동 전환
@@ -565,7 +622,11 @@ function adaptBanner(json) {
     verticalLineGap: json.copy?.line_gap_px ?? null,      // 가이드 명시 시 그 값, 없으면 폰트 비례
     textGap: json.copy?.text_gap_px ?? 24,                 // 가로 1줄 서브-메인 간격 (기본 24px)
     structureVariants: json.structure_variants || null,   // [{id, description, examples}] — 빌더에서 토글 노출
+    compositionRules: json.composition_rules || null,      // {default_type, char_threshold, sizes: {below, above}}
     imageBox: json.image_box || null,                     // {width_ratio, height_ratio, anchor, v_padding}
+    dualImage: !!(json.image_box && json.image_box.dual_image), // 듀얼 이미지 지원 여부 (커튼배너 전용)
+    logoBox: json.logo_box || null, // 콜라보 로고 이미지 배치 설정 { maxHeight, gap, align }
+    sourceLabelImage: json.source_label?.image_mode || null, // 출처 표기 이미지 모드 { enabled, width, top, right }
     ctaSupported: json.builder_io?.cta?.supported !== false, // false 명시 시만 차단
     ctaUnsupportedReason: json.builder_io?.cta?.reason || null,
     copyConstraints: json.copy || null,
@@ -578,12 +639,13 @@ function adaptBanner(json) {
 
 // config/banners/_index.json 읽고, ui_visible에 있는 배너만 모두 fetch
 async function loadPresets() {
-  const indexRes = await fetch('./config/banners/_index.json');
+  const cacheBust = '?t=' + Date.now();
+  const indexRes = await fetch('./config/banners/_index.json' + cacheBust);
   if (!indexRes.ok) throw new Error('_index.json 로드 실패 (file:// 로 열고 있지 않은지 확인 — http 서버 필요)');
   const index = await indexRes.json();
   const ids = index.ui_visible || index.banners;
   const loaded = await Promise.all(ids.map(async id => {
-    const r = await fetch(`./config/banners/${id}.json`);
+    const r = await fetch(`./config/banners/${id}.json` + cacheBust);
     if (!r.ok) throw new Error(`배너 ${id} 로드 실패`);
     return await r.json();
   }));
@@ -643,8 +705,16 @@ const FONT_SYSTEM = {
   }
 };
 
+// 토글 버튼 공용 스타일 (on/off 상태)
+const BTN_ON  = 'padding:4px 10px;border:1px solid #2563EB;background:#2563EB;color:#FFF;border-radius:6px;cursor:pointer;font-size:11px;';
+const BTN_OFF = 'padding:4px 10px;border:1px solid #E5E7EB;background:#FFF;color:#666;border-radius:6px;cursor:pointer;font-size:11px;';
+
 // 이벤트 리스너 일괄 해제용 AbortController (updatePreview마다 교체)
 let _previewAbort = null;
+// window mousemove/mouseup 리스너 정리용 (signal 없이 등록되므로 수동 관리)
+let _windowDragListeners = [];
+// 드래그 진행 중 플래그 (드래그 중 updatePreview가 리스너를 지우지 않도록 보호)
+let _isDragging = false;
 
 let state = {
   selectedSizes: ["pc_main_curtain"],
@@ -653,6 +723,21 @@ let state = {
   subText: "",
   imageUrl: null,
   imageIsTransparent: false,
+  // 로고 이미지 (logoBox 설정이 있는 배너 전용)
+  logoUrl: null,
+  _logoTransparent: false,
+  _logoBounds: null,
+  // 출처 표기 이미지
+  sourceLogoUrl: null,
+  _sourceLogoTransparent: false,
+  _sourceLogoBounds: null,
+  sourceLogoInvert: false,
+  collabLogoInvert: false,
+  logoSectionOpen: false,
+  // 듀얼 이미지 (커튼배너 전용: 좌측 이미지)
+  imageUrl2: null,
+  imageIsTransparent2: false,
+  contentBoundsCache2: null,
   showMargins: false,
   fontEnabled: false,
   mainFont: { ...FONT_SYSTEM.main.default },
@@ -688,13 +773,32 @@ function getImageTransform(sizeId) {
   return state.imageTransforms[sizeId];
 }
 
+// 듀얼 이미지 지원 여부 (UI 토글 표시용 — preset이 지원하면 true)
+function isDualImageSupported() {
+  if (state.selectedSizes.length !== 1) return false;
+  const p = PRESETS[state.selectedSizes[0]];
+  return p && p.dualImage === true;
+}
+
+// 듀얼 이미지 모드 활성 여부 (렌더링/학습용 — 토글이 열려있을 때만 true)
+function isDualImageMode() {
+  return isDualImageSupported() && _dualImageOpen;
+}
+
+// 듀얼 이미지용 transform (좌측 보조 이미지 전용, 키 suffix: _R)
+function getImageTransform2(sizeId) {
+  const key = sizeId + '_R';
+  if (!state.imageTransforms[key]) {
+    state.imageTransforms[key] = { mode: 'auto', scale: 1.0, offset: { x: 0, y: 0 } };
+  }
+  return state.imageTransforms[key];
+}
+
 // 좌측 패널 자동/수동 토글 시각 동기화
 function syncImageModeUI(mode) {
-  const onStyle  = 'padding:4px 10px;border:1px solid #2563EB;background:#2563EB;color:#FFF;border-radius:6px;cursor:pointer;font-size:11px;';
-  const offStyle = 'padding:4px 10px;border:1px solid #E5E7EB;background:#FFF;color:#666;border-radius:6px;cursor:pointer;font-size:11px;';
-  document.getElementById('imgModeAuto').style.cssText  = mode === 'auto'   ? onStyle : offStyle;
-  document.getElementById('imgModeManual').style.cssText = mode === 'manual' ? onStyle : offStyle;
-  document.getElementById('imgManualPanel').style.display = mode === 'manual' ? 'block' : 'none';
+  document.getElementById('imgModeAuto').style.cssText  = mode === 'auto'   ? BTN_ON : BTN_OFF;
+  document.getElementById('imgModeManual').style.cssText = mode === 'manual' ? BTN_ON : BTN_OFF;
+  document.getElementById('imgManualPanel').style.display = mode === 'manual' ? 'block' : 'none'; // block: 세로 나열 패널
 }
 
 // ===== 초기화 =====
@@ -724,9 +828,48 @@ async function init() {
 
   renderSizeGrid(visibleIds);
 
-  document.getElementById("fileInput").addEventListener("change", handleFileUpload);
-  document.getElementById("mainText").addEventListener("input", e => { state.mainText = e.target.value; document.getElementById("mainCount").textContent = e.target.value.replace(/[{}]/g, '').length; updatePreview(); });
-  document.getElementById("subText").addEventListener("input", e => { state.subText = e.target.value; document.getElementById("subCount").textContent = e.target.value.replace(/[{}]/g, '').length; updatePreview(); });
+  // 글자수 합산 제한 (배너 JSON의 copy.total_max_chars 또는 기본 35자)
+  function getTotalMaxChars() {
+    // 현재 선택된 배너 중 가장 작은 제한을 적용
+    let maxChars = Infinity;
+    for (const id of state.selectedSizes) {
+      const p = PRESETS[id];
+      if (p && p.copyConstraints && p.copyConstraints.total_max_chars) {
+        maxChars = Math.min(maxChars, p.copyConstraints.total_max_chars);
+      }
+    }
+    return maxChars === Infinity ? 35 : maxChars;
+  }
+  function updateCharCounts() {
+    const mainLen = stripEmphasis(state.mainText).length;
+    const subLen = stripEmphasis(state.subText).length;
+    const total = mainLen + subLen;
+    const max = getTotalMaxChars();
+    document.getElementById("mainCount").textContent = mainLen;
+    document.getElementById("subCount").textContent = subLen;
+    document.getElementById("totalCount").textContent = total;
+    const totalEl = document.getElementById("totalCharCount");
+    totalEl.innerHTML = '합계 <span id="totalCount">' + total + '</span>/' + max;
+    totalEl.style.color = total > max ? '#E53E3E' : '#888';
+  }
+  document.getElementById("mainText").addEventListener("input", e => {
+    const mainLen = stripEmphasis(e.target.value).length;
+    const subLen = stripEmphasis(state.subText).length;
+    const max = getTotalMaxChars();
+    if (mainLen + subLen > max) { e.target.value = state.mainText; return; }
+    state.mainText = e.target.value;
+    updateCharCounts();
+    updatePreview();
+  });
+  document.getElementById("subText").addEventListener("input", e => {
+    const mainLen = stripEmphasis(state.mainText).length;
+    const subLen = stripEmphasis(e.target.value).length;
+    const max = getTotalMaxChars();
+    if (mainLen + subLen > max) { e.target.value = state.subText; return; }
+    state.subText = e.target.value;
+    updateCharCounts();
+    updatePreview();
+  });
   document.getElementById("bgColorPicker").addEventListener("input", e => setBgColor(e.target.value));
   const bgTextInput = document.getElementById("bgColorText");
   bgTextInput.addEventListener("input", e => { if (!e.target.value.startsWith('#')) e.target.value = '#' + e.target.value.replace(/#/g, ''); });
@@ -750,72 +893,103 @@ async function init() {
   document.getElementById("ctaTextColorPicker").addEventListener("input", e => { state.ctaTextColor = e.target.value; document.getElementById("ctaTextColorText").value = e.target.value; updateCtaChip(); updatePreview(); });
   document.getElementById("ctaTextColorText").addEventListener("change", e => { if (/^#[0-9A-Fa-f]{6}$/.test(e.target.value)) { state.ctaTextColor = e.target.value; document.getElementById("ctaTextColorPicker").value = e.target.value; updateCtaChip(); updatePreview(); }});
 
-  // 드래그 앤 드롭
-  const uploadArea = document.getElementById("uploadArea");
-  uploadArea.addEventListener("dragover", e => { e.preventDefault(); uploadArea.classList.add("drag-over"); });
-  uploadArea.addEventListener("dragleave", e => { e.preventDefault(); uploadArea.classList.remove("drag-over"); });
-  uploadArea.addEventListener("drop", e => {
-    e.preventDefault();
-    uploadArea.classList.remove("drag-over");
-    const file = e.dataTransfer.files[0];
-    if (file && file.type.startsWith("image/")) loadImageFile(file);
-  });
+  // 이미지 업로드 영역 이벤트 세팅 (메인 + 듀얼 좌측 + 로고 + 출처 로고)
+  setupUploadArea('main');
+  setupUploadArea('sub');
+  setupUploadArea('logo');
+  setupUploadArea('sourceLogo');
+
+  updateDualImageUI();
+  updateLogoUI();
 
   updateGuide();
   updatePreview();
 }
 
-// ===== 이미지 업로드 =====
-function handleUploadClick(e) {
+// ===== 이미지 업로드 (슬롯 기반 통합) =====
+// main = 메인 이미지 (우측 배치, 기본), sub = 좌측 이미지 (커튼배너 듀얼 전용)
+const IMG_SLOTS = {
+  main: { stateUrl: 'imageUrl', stateTransparent: 'imageIsTransparent', stateBounds: 'contentBoundsCache', areaId: 'uploadArea', fileInputId: 'fileInput', label: '이미지를 업로드하세요' },
+  sub:  { stateUrl: 'imageUrl2', stateTransparent: 'imageIsTransparent2', stateBounds: 'contentBoundsCache2', areaId: 'uploadArea2', fileInputId: 'fileInput2', label: '좌측 이미지를 업로드하세요' },
+  logo: { stateUrl: 'logoUrl', stateTransparent: '_logoTransparent', stateBounds: '_logoBounds', areaId: 'uploadAreaLogo', fileInputId: 'fileInputLogo', label: '콜라보 로고를 업로드하세요' },
+  sourceLogo: { stateUrl: 'sourceLogoUrl', stateTransparent: '_sourceLogoTransparent', stateBounds: '_sourceLogoBounds', areaId: 'uploadAreaSourceLogo', fileInputId: 'fileInputSourceLogo', label: '출처 로고를 업로드하세요' }
+};
+
+function handleUploadClick(e, slot) {
+  slot = slot || 'main';
+  const cfg = IMG_SLOTS[slot];
   if (e.target.closest(".upload-reupload")) {
     e.stopPropagation();
-    document.getElementById("fileInput").click();
+    document.getElementById(cfg.fileInputId).click();
     return;
   }
-  if (!state.imageUrl) {
-    document.getElementById("fileInput").click();
+  if (!state[cfg.stateUrl]) {
+    document.getElementById(cfg.fileInputId).click();
   }
 }
 
-function handleFileUpload(e) {
-  const file = e.target.files[0];
-  if (!file) return;
-  loadImageFile(file);
-}
-
-function loadImageFile(file) {
+function loadImageFile(file, slot) {
+  slot = slot || 'main';
+  const cfg = IMG_SLOTS[slot];
   const reader = new FileReader();
   reader.onload = (ev) => {
-    state.imageUrl = ev.target.result;
-    state.contentBoundsCache = null; // 이미지 변경 시 바운딩 박스 캐시 초기화
-    checkTransparency(ev.target.result);
-    showUploadedImage(ev.target.result);
-    showImageControls();
+    state[cfg.stateUrl] = ev.target.result;
+    state[cfg.stateBounds] = null;
+    // 로고 슬롯은 투명도 체크·이미지 컨트롤 불필요
+    if (slot !== 'logo' && slot !== 'sourceLogo') {
+      checkTransparency(ev.target.result, slot);
+      showImageControls();
+    }
+    // 로고 업로드 시 컬러 반전 토글 표시
+    if (slot === 'sourceLogo') document.getElementById("sourceLogoInvertWrap").style.display = 'flex';
+    if (slot === 'logo') {
+      document.getElementById("collabLogoInvertWrap").style.display = 'flex';
+    
+    }
+    showUploadedImage(ev.target.result, slot);
     updatePreview();
   };
   reader.readAsDataURL(file);
 }
 
-function showUploadedImage(src) {
-  const area = document.getElementById("uploadArea");
+function showUploadedImage(src, slot) {
+  slot = slot || 'main';
+  const cfg = IMG_SLOTS[slot];
+  const area = document.getElementById(cfg.areaId);
   area.classList.add("has-image");
-  area.innerHTML = '<img src="' + src + '"><button class="upload-remove" onclick="removeImage(event)" title="이미지 제거">✕</button><div class="upload-reupload"><span>이미지 변경</span><div class="reupload-hint">클릭 또는 드래그</div></div>';
+  area.innerHTML = '<img src="' + src + '"><button class="upload-remove" onclick="removeImage(event,\'' + slot + '\')" title="이미지 제거">✕</button><div class="upload-reupload"><span>이미지 변경</span><div class="reupload-hint">클릭 또는 드래그</div></div>';
 }
 
-function removeImage(e) {
+function removeImage(e, slot) {
   e.stopPropagation();
-  state.imageUrl = null;
-  state.imageIsTransparent = false;
-  state.contentBoundsCache = null;
-  document.getElementById('imageControls').style.display = 'none';
-  document.getElementById("fileInput").value = "";
-  const area = document.getElementById("uploadArea");
+  slot = slot || 'main';
+  const cfg = IMG_SLOTS[slot];
+  state[cfg.stateUrl] = null;
+  state[cfg.stateTransparent] = false;
+  state[cfg.stateBounds] = null;
+  document.getElementById(cfg.fileInputId).value = "";
+  const area = document.getElementById(cfg.areaId);
   area.classList.remove("has-image");
-  area.innerHTML = '<div class="upload-icon">+</div><div class="upload-text"><strong>클릭 또는 드래그</strong>하여 이미지를 업로드하세요</div><div class="upload-hint">PNG, JPG 권장 · 투명 배경 PNG 자동 감지</div>';
+  area.innerHTML = '<div class="upload-icon">+</div><div class="upload-text"><strong>클릭 또는 드래그</strong>하여 ' + cfg.label + '</div><div class="upload-hint">PNG, JPG 권장 · 투명 배경 PNG 자동 감지</div>';
+  if (slot === 'main') document.getElementById('imageControls').style.display = 'none';
+  // 로고 제거 시 반전 토글 숨기고 상태 초기화
+  if (slot === 'sourceLogo') {
+    state.sourceLogoInvert = false;
+    document.getElementById("sourceLogoInvertToggle").classList.remove("on");
+    document.getElementById("sourceLogoInvertWrap").style.display = 'none';
+  }
+  if (slot === 'logo') {
+    state.collabLogoInvert = false;
+    document.getElementById("collabLogoInvertToggle").classList.remove("on");
+    document.getElementById("collabLogoInvertWrap").style.display = 'none';
+  
+  }
   updatePreview();
 }
 
-function checkTransparency(dataUrl) {
+function checkTransparency(dataUrl, slot) {
+  slot = slot || 'main';
+  const cfg = IMG_SLOTS[slot];
   const img = new Image();
   img.onload = () => {
     const canvas = document.createElement("canvas");
@@ -826,10 +1000,106 @@ function checkTransparency(dataUrl) {
     const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
     let tc = 0;
     for (let i = 3; i < data.length; i += 4) { if (data[i] < 250) tc++; }
-    state.imageIsTransparent = tc > (data.length / 4) * 0.05;
+    state[cfg.stateTransparent] = tc > (data.length / 4) * 0.05;
     updatePreview();
   };
   img.src = dataUrl;
+}
+
+// 업로드 영역 이벤트 일괄 세팅 (file input + 드래그&드롭)
+function setupUploadArea(slot) {
+  const cfg = IMG_SLOTS[slot];
+  document.getElementById(cfg.fileInputId).addEventListener("change", e => {
+    const file = e.target.files[0];
+    if (file) loadImageFile(file, slot);
+  });
+  const area = document.getElementById(cfg.areaId);
+  area.addEventListener("dragover", e => { e.preventDefault(); area.classList.add("drag-over"); });
+  area.addEventListener("dragleave", e => { e.preventDefault(); area.classList.remove("drag-over"); });
+  area.addEventListener("drop", e => {
+    e.preventDefault();
+    area.classList.remove("drag-over");
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith("image/")) loadImageFile(file, slot);
+  });
+}
+
+// 좌측 이미지 추가 토글 (커튼배너 전용)
+let _dualImageOpen = false;
+function toggleDualImage() {
+  _dualImageOpen = !_dualImageOpen;
+  const btn = document.getElementById("dualToggleBtn");
+  const inner = document.getElementById("dualUploadInner");
+  if (_dualImageOpen) {
+    btn.textContent = "－ 좌측 이미지 닫기";
+    btn.style.borderColor = "#2563EB";
+    btn.style.color = "#2563EB";
+    inner.style.display = "block";
+  } else {
+    btn.textContent = "＋ 좌측 이미지 추가";
+    btn.style.borderColor = "#D1D5DB";
+    btn.style.color = "#555";
+    inner.style.display = "none";
+  }
+}
+
+// 듀얼 이미지 UI 표시/숨김 (커튼배너 단독 선택 시에만 토글 버튼 노출)
+function updateDualImageUI() {
+  const supported = isDualImageSupported();
+  document.getElementById("dualToggleWrap").style.display = supported ? 'block' : 'none';
+  // 커튼배너가 아닌 경우 토글 닫기
+  if (!supported && _dualImageOpen) {
+    _dualImageOpen = false;
+    document.getElementById("dualUploadInner").style.display = "none";
+    document.getElementById("dualToggleBtn").textContent = "＋ 좌측 이미지 추가";
+    document.getElementById("dualToggleBtn").style.borderColor = "#D1D5DB";
+    document.getElementById("dualToggleBtn").style.color = "#555";
+  }
+}
+
+// 로고 컬러 반전 토글
+function toggleLogoInvert(type) {
+  if (type === 'source') {
+    state.sourceLogoInvert = !state.sourceLogoInvert;
+    document.getElementById("sourceLogoInvertToggle").classList.toggle("on", state.sourceLogoInvert);
+  } else {
+    state.collabLogoInvert = !state.collabLogoInvert;
+    document.getElementById("collabLogoInvertToggle").classList.toggle("on", state.collabLogoInvert);
+  }
+  updatePreview();
+}
+
+// 이미지 컬러 반전 (캔버스 기반)
+function invertImage(img, w, h) {
+  const tmpC = document.createElement('canvas');
+  tmpC.width = w; tmpC.height = h;
+  const tmpCtx = tmpC.getContext('2d');
+  tmpCtx.drawImage(img, 0, 0, w, h);
+  const imgData = tmpCtx.getImageData(0, 0, w, h);
+  const d = imgData.data;
+  for (let i = 0; i < d.length; i += 4) {
+    d[i] = 255 - d[i];       // R
+    d[i + 1] = 255 - d[i + 1]; // G
+    d[i + 2] = 255 - d[i + 2]; // B
+    // Alpha 유지
+  }
+  tmpCtx.putImageData(imgData, 0, 0);
+  return tmpC;
+}
+
+// 로고 섹션 토글 (닫힘/열림)
+function toggleLogoSection() {
+  state.logoSectionOpen = !state.logoSectionOpen;
+  document.getElementById("logoSectionContent").style.display = state.logoSectionOpen ? 'block' : 'none';
+  document.getElementById("logoToggle").classList.toggle("on", state.logoSectionOpen);
+}
+
+// 로고 UI는 모든 배너에서 항상 표시. config가 없는 배너에서는 캔버스 렌더링에만 미반영.
+// 로고 UI는 모든 배너에서 항상 표시. config가 없는 배너에서는 캔버스 렌더링에만 미반영.
+function updateLogoUI() {
+  document.getElementById("logoSectionWrap").style.display = 'block';
+  document.getElementById("logoUploadWrap").style.display = 'block';
+  document.getElementById("sourceLogoUploadWrap").style.display = 'block';
 }
 
 // ===== 사이즈 토글 (복수 선택) =====
@@ -845,6 +1115,9 @@ function toggleSize(el) {
     state.selectedSizes.push(id);
     el.classList.add("selected");
   }
+  updateDualImageUI();
+  updateLogoUI();
+
   updateGuide();
   updatePreview();
 }
@@ -933,22 +1206,27 @@ function selectStructure(id) {
 function setImageFitMode(mode) {
   state.imageFitMode = mode;
   syncImageFitUI(mode);
-  // 모드 변경 시 수동 offset 초기화
+  // 의도: contain↔crop 전환 시 수동 조정값(위치·크기)을 리셋.
+  // 이전 모드에서의 offset/scale이 새 모드에 맞지 않으므로 auto로 강제 초기화.
   state.selectedSizes.forEach(id => {
     const t = getImageTransform(id);
     t.offset = { x: 0, y: 0 };
     t.scale = 1.0;
     t.mode = 'auto';
+    if (isDualImageMode()) {
+      const t2 = getImageTransform2(id);
+      t2.offset = { x: 0, y: 0 };
+      t2.scale = 1.0;
+      t2.mode = 'auto';
+    }
   });
   syncImageModeUI('auto');
   updatePreview();
 }
 
 function syncImageFitUI(mode) {
-  const onStyle  = 'padding:4px 10px;border:1px solid #2563EB;background:#2563EB;color:#FFF;border-radius:6px;cursor:pointer;font-size:11px;';
-  const offStyle = 'padding:4px 10px;border:1px solid #E5E7EB;background:#FFF;color:#666;border-radius:6px;cursor:pointer;font-size:11px;';
-  document.getElementById('imgFitContain').style.cssText = mode === 'contain' ? onStyle : offStyle;
-  document.getElementById('imgFitCrop').style.cssText    = mode === 'crop'    ? onStyle : offStyle;
+  document.getElementById('imgFitContain').style.cssText = mode === 'contain' ? BTN_ON : BTN_OFF;
+  document.getElementById('imgFitCrop').style.cssText    = mode === 'crop'    ? BTN_ON : BTN_OFF;
 }
 
 // 투명 PNG의 콘텐츠 바운딩 박스 계산 (실제 픽셀이 있는 영역의 상하좌우 경계)
@@ -982,22 +1260,31 @@ function getContentBounds(img) {
 // 배너별 학습 보정값 로드 (서버에서 JSON 파일 읽기)
 async function loadCalibration(bannerId) {
   try {
-    const res = await fetch('config/banners/' + bannerId + '_calibration.json');
+    const res = await fetch('config/banners/' + bannerId + '_calibration.json?t=' + Date.now());
     if (!res.ok) return null;
     const data = await res.json();
     state.calibrationCache[bannerId] = data.average || {};
+    // 듀얼 이미지용 좌/우 보정값도 로드 (없으면 빈 객체)
+    state.calibrationCache[bannerId + '_L'] = data.average_left || {};
+    state.calibrationCache[bannerId + '_R'] = data.average_right || {};
     return data.average || {};
   } catch (e) {
+    console.warn('학습 데이터 로드 실패:', bannerId, e);
     return null;
   }
 }
 
 // 다운로드 시 학습 데이터 저장 (서버에 POST)
-async function saveCalibration(bannerId) {
-  if (!state.imageUrl) return; // 이미지 없으면 저장 불필요
+// slot: undefined(단일), 'left'(듀얼 좌측), 'right'(듀얼 우측)
+async function saveCalibration(bannerId, slot) {
+  // slot 'left' = 보조 이미지(imageUrl2), slot 'right' 또는 없음 = 메인 이미지(imageUrl)
+  const imgUrl = slot === 'left' ? state.imageUrl2 : state.imageUrl;
+  if (!imgUrl) return; // 해당 이미지 없으면 저장 불필요
+
+  const transformFn = slot === 'left' ? getImageTransform2 : getImageTransform;
   const autoVals = state.cropAutoValues[bannerId] || { autoScale: 1.0, autoOffsetY: 0 };
 
-  const t = getImageTransform(bannerId);
+  const t = transformFn(bannerId);
   const finalScale = (t.mode === 'manual') ? t.scale : 1.0;
   const finalOffsetY = (t.mode === 'manual') ? t.offset.y : 0;
   const finalOffsetX = (t.mode === 'manual') ? t.offset.x : 0;
@@ -1014,17 +1301,21 @@ async function saveCalibration(bannerId) {
     offset_x_delta: Math.round(finalOffsetX)
   };
 
+  const body = { banner_id: bannerId, sample };
+  if (slot) body.slot = slot;
+
   try {
     const res = await fetch('/api/calibration', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ banner_id: bannerId, sample })
+      body: JSON.stringify(body)
     });
     const result = await res.json();
     if (result.ok) {
-      // 캐시 즉시 갱신
-      state.calibrationCache[bannerId] = result.average;
-      console.log('[calibration] 학습 저장 완료:', bannerId, result.average);
+      // 캐시 즉시 갱신 (slot에 맞는 키)
+      const cacheKey = slot === 'left' ? bannerId + '_L' : slot === 'right' ? bannerId + '_R' : bannerId;
+      state.calibrationCache[cacheKey] = result.average;
+      console.log('[calibration] 학습 저장 완료:', bannerId, slot || 'single', result.average);
     }
   } catch (e) {
     console.warn('[calibration] 저장 실패 (서버 미실행?):', e.message);
@@ -1039,7 +1330,10 @@ function showImageControls() {
 
 // 좌측 패널 버튼 → 선택된 모든 배너에 일괄 적용 (각 배너 독립 transform이라 명시적 일괄 처리 필요)
 function setImageMode(mode) {
-  state.selectedSizes.forEach(id => { getImageTransform(id).mode = mode; });
+  state.selectedSizes.forEach(id => {
+    getImageTransform(id).mode = mode;
+    if (isDualImageMode()) getImageTransform2(id).mode = mode;
+  });
   syncImageModeUI(mode);
   updatePreview();
 }
@@ -1049,6 +1343,12 @@ function resetImageTransform() {
     const t = getImageTransform(id);
     t.scale = 1.0;
     t.offset = { x: 0, y: 0 };
+    // 듀얼 이미지 좌측(보조)도 초기화
+    if (isDualImageMode()) {
+      const t2 = getImageTransform2(id);
+      t2.scale = 1.0;
+      t2.offset = { x: 0, y: 0 };
+    }
   });
   updatePreview();
 }
@@ -1097,11 +1397,9 @@ function updateCtaChip() {
 // ===== 텍스트 컬러 강제 선택 =====
 function setTextColorMode(mode) {
   state.textColorMode = mode;
-  const onStyle  = 'padding:4px 10px;border:1px solid #2563EB;background:#2563EB;color:#FFF;border-radius:6px;cursor:pointer;font-size:11px;';
-  const offStyle = 'padding:4px 10px;border:1px solid #E5E7EB;background:#FFF;color:#666;border-radius:6px;cursor:pointer;font-size:11px;';
-  document.getElementById('txtColorAuto').style.cssText  = mode === 'auto'  ? onStyle : offStyle;
-  document.getElementById('txtColorBlack').style.cssText = mode === 'black' ? onStyle : offStyle;
-  document.getElementById('txtColorWhite').style.cssText = mode === 'white' ? onStyle : offStyle;
+  document.getElementById('txtColorAuto').style.cssText  = mode === 'auto'  ? BTN_ON : BTN_OFF;
+  document.getElementById('txtColorBlack').style.cssText = mode === 'black' ? BTN_ON : BTN_OFF;
+  document.getElementById('txtColorWhite').style.cssText = mode === 'white' ? BTN_ON : BTN_OFF;
   const hints = { auto: '자동: 배경 밝기 기반 자동 판단', black: '강제: #171717 (어두운 텍스트)', white: '강제: #FFFFFF (밝은 텍스트)' };
   document.getElementById('txtColorHint').textContent = hints[mode];
   updatePreview();
@@ -1148,14 +1446,20 @@ function toggleMargins() {
 
 // ===== 미리보기 업데이트 (복수) =====
 function updatePreview() {
-  const hasContent = state.mainText || state.subText || state.imageUrl;
+  const hasContent = state.mainText || state.subText || state.imageUrl || state.imageUrl2 || state.logoUrl || state.sourceLogoUrl;
   const emptyState = document.getElementById("emptyState");
   const previewList = document.getElementById("previewList");
   const downloadBtn = document.getElementById("downloadBtn");
 
-  // 이전 미리보기의 window 이벤트 리스너 일괄 해제
+  // 이전 미리보기의 이벤트 리스너 일괄 해제
   if (_previewAbort) _previewAbort.abort();
   _previewAbort = new AbortController();
+  // window에 signal 없이 등록된 mousemove/mouseup 수동 정리
+  // 단, 드래그 중에는 정리하지 않음 (드래그 중 updatePreview 호출 시 리스너 유지)
+  if (!_isDragging) {
+    _windowDragListeners.forEach(({ type, fn }) => window.removeEventListener(type, fn));
+    _windowDragListeners = [];
+  }
 
   emptyState.style.display = hasContent ? "none" : "block";
   previewList.style.display = hasContent ? "flex" : "none";
@@ -1196,6 +1500,293 @@ function updatePreview() {
   });
 }
 
+// ===== crop 모드 공통 스케일/오프셋 계산 (중복 제거용 헬퍼) =====
+// baseH: 콘텐츠가 들어갈 기준 높이 (grouped: preset.h - vPad, anchor: zoneH)
+function computeCropTransform(img, bounds, baseH, cal, userScale, vPad) {
+  const baseCropScale = (baseH * 1.15) / bounds.contentH;
+  const calScale = 1.0 + (cal.scale_delta || 0);
+  const cropScale = baseCropScale * calScale;
+  const finalScale = cropScale * userScale;
+  const contentTopY = bounds.top * finalScale;
+  const topOffset = vPad - contentTopY + (cal.offset_y_delta || 0);
+  return {
+    cropScale, finalScale,
+    scaledW: img.width * finalScale,
+    scaledH: img.height * finalScale,
+    topOffset,
+    calOffsetX: cal.offset_x_delta || 0
+  };
+}
+
+// ===== 이미지 로딩 Promise 래퍼 (비동기 패턴 통합) =====
+function loadImg(url) {
+  return new Promise(resolve => {
+    if (!url) { resolve(null); return; }
+    const i = new Image();
+    i.crossOrigin = "anonymous";
+    i.onload = () => resolve(i);
+    i.onerror = () => resolve(null);
+    i.src = url;
+  });
+}
+
+// ===== anchor 기반 이미지 배치 (투명 이미지, right_center/left_center 등) =====
+function drawAnchorImage(ctx, img, box, preset, presetId) {
+  const t = getImageTransform(presetId);
+  const userScale = (t.mode === 'manual') ? t.scale : 1.0;
+  const vPad = box.v_padding || 0;
+  const ox = t.mode === 'manual' ? t.offset.x : 0;
+  const oy = t.mode === 'manual' ? t.offset.y : 0;
+
+  if (state.imageFitMode === 'crop') {
+    if (!state.contentBoundsCache) state.contentBoundsCache = getContentBounds(img);
+    const bounds = state.contentBoundsCache;
+    const cal = state.calibrationCache[presetId] || {};
+    const baseH = preset.h * (box.height_ratio || 0.85) - vPad * 2;
+    const crop = computeCropTransform(img, bounds, baseH, cal, userScale, vPad);
+    state.cropAutoValues[presetId] = { autoScale: crop.cropScale, autoOffsetY: crop.topOffset };
+    const pos = anchorToXY(box.anchor, preset, crop.scaledW, crop.scaledH, vPad);
+    ctx.drawImage(img, pos.x + ox + crop.calOffsetX, crop.topOffset + oy, crop.scaledW, crop.scaledH);
+  } else {
+    const zoneW = preset.w * (box.width_ratio || preset.imgRatio) * userScale;
+    const zoneH = (preset.h * (box.height_ratio || 0.85) - vPad * 2) * userScale;
+    const s = Math.min(zoneW / img.width, zoneH / img.height);
+    const dw = img.width * s, dh = img.height * s;
+    const pos = anchorToXY(box.anchor, preset, dw, dh, vPad);
+    ctx.drawImage(img, pos.x + ox, pos.y + oy, dw, dh);
+  }
+}
+
+// ===== 비투명 이미지 배치 (cover/contain 풀 배경) =====
+function drawFullImage(ctx, img, preset, presetId) {
+  const t = getImageTransform(presetId);
+  const userScale = (t.mode === 'manual') ? t.scale : 1.0;
+  const ox = t.mode === 'manual' ? t.offset.x : 0;
+  const oy = t.mode === 'manual' ? t.offset.y : 0;
+
+  if (state.imageFitMode === 'crop') {
+    const coverScale = Math.max(preset.w / img.width, preset.h / img.height) * userScale;
+    const dw = img.width * coverScale, dh = img.height * coverScale;
+    ctx.drawImage(img, (preset.w - dw) / 2 + ox, (preset.h - dh) / 2 + oy, dw, dh);
+  } else {
+    const containScale = Math.min(preset.w / img.width, preset.h / img.height) * userScale;
+    const dw = img.width * containScale, dh = img.height * containScale;
+    ctx.drawImage(img, (preset.w - dw) / 2 + ox, (preset.h - dh) / 2 + oy, dw, dh);
+  }
+}
+
+// ===== 텍스트 렌더링 (renderToCanvas에서 분리) =====
+function drawText(ctx, preset, presetId, textColor, textX, textAlign, maxTextW, centerY, fitFontSize, drawGroupedImg, gi, overrideSubText) {
+  ctx.fillStyle = textColor;
+  // gi = { left, right, single } — 이미지 배치 데이터 (파라미터로 전달, state 오염 방지)
+  gi = gi || { left: null, right: null, single: null };
+  // overrideSubText: 특정 배너에서 서브카피를 대체할 때 사용 (replaces: "sub" 등). undefined면 state.subText 사용.
+  const effectiveSubText = (overrideSubText !== undefined) ? overrideSubText : state.subText;
+  let textGroupLeftX = textX; // 텍스트 그룹 좌측 끝 X (로고 정렬에 사용)
+
+  const decision = getCompositionDecision(presetId, state.mainText, effectiveSubText);
+
+  if (decision) {
+    // ===== 자동 구성 기반 렌더링 (textX/textAlign 기준 — 좌측정렬 또는 중앙) =====
+    const cx = textX;
+    const cy = centerY;
+    const GAP = preset.textGap || 24;
+
+    if (decision.type === 'single_main') {
+      const giL = gi.left || null;
+      const giR = gi.right || null;
+      const giS = gi.single || null;
+      const IMG_GAP = preset.imageBox?.image_gap ?? (preset.textGap || 24);
+
+      if (state.mainText) {
+        const fittedMain = fitFontSize(state.mainText, decision.mainSize, state.mainFont.css, state.mainFont.weight, preset.fonts.main.spacing);
+        const sp = preset.fonts.main.spacing * fittedMain;
+
+        ctx.save();
+        ctx.font = state.mainFont.weight + " " + fittedMain + "px " + state.mainFont.css;
+        const mainW = measureTextWithSpacing(ctx, state.mainText, sp);
+        const baselineY = cy + fittedMain * 0.38;
+
+        if (giL || giR) {
+          const leftW = giL ? giL.w : 0;
+          const rightW = giR ? giR.w : 0;
+          const totalGroupW = (leftW > 0 ? leftW + IMG_GAP : 0) + mainW + (rightW > 0 ? IMG_GAP + rightW : 0);
+          const startX = cx - totalGroupW / 2;
+          let curX = startX;
+          if (giL) { drawGroupedImg(giL, curX); curX += leftW + IMG_GAP; }
+          drawTextWithSpacing(ctx, state.mainText, curX, baselineY, sp, "left");
+          textGroupLeftX = curX; // 텍스트 시작 X
+          if (giR) { drawGroupedImg(giR, curX + mainW + IMG_GAP); }
+        } else if (giS) {
+          const totalGroupW = mainW + IMG_GAP + giS.w;
+          const startX = cx - totalGroupW / 2;
+          drawTextWithSpacing(ctx, state.mainText, startX, baselineY, sp, "left");
+          textGroupLeftX = startX; // 텍스트 시작 X
+          drawGroupedImg(giS, startX + mainW + IMG_GAP);
+        } else {
+          drawTextWithSpacing(ctx, state.mainText, cx, baselineY, sp, textAlign);
+          textGroupLeftX = (textAlign === 'center') ? cx - mainW / 2 : cx; // 텍스트 시작 X
+        }
+        ctx.restore();
+
+      } else if (giL || giR || giS) {
+        // 텍스트 없이 이미지만 있을 때도 중앙 배치
+        if (giL || giR) {
+          const leftW = giL ? giL.w : 0;
+          const rightW = giR ? giR.w : 0;
+          const totalW = leftW + (leftW > 0 && rightW > 0 ? IMG_GAP : 0) + rightW;
+          const startX = cx - totalW / 2;
+          if (giL) drawGroupedImg(giL, startX);
+          if (giR) drawGroupedImg(giR, leftW > 0 ? startX + leftW + IMG_GAP : startX);
+        } else if (giS) {
+          drawGroupedImg(giS, cx - giS.w / 2);
+        }
+      }
+
+    } else if (decision.type === 'vertical_sub_main') {
+      const fittedSub = fitFontSize(effectiveSubText, decision.subSize, state.subFont.css, state.subFont.weight, preset.fonts.sub.spacing);
+      const fittedMain = fitFontSize(state.mainText, decision.mainSize, state.mainFont.css, state.mainFont.weight, preset.fonts.main.spacing);
+      const subBoxH = preset.fonts.sub.boxH ?? fittedSub;
+      const mainBoxH = preset.fonts.main.boxH ?? fittedMain;
+      const lineGap = preset.verticalLineGap ?? Math.max(12, Math.round(fittedSub * 0.6));
+      const blockH = subBoxH + lineGap + mainBoxH;
+      const startY = cy - blockH / 2;
+
+      const baselineInBox = (boxH, fontSize) => (boxH + fontSize * 0.7) / 2;
+      const mainTop = state.structureChoice === 'main_top_sub_bottom';
+      const topY  = startY + (mainTop ? baselineInBox(mainBoxH, fittedMain) : baselineInBox(subBoxH, fittedSub));
+      const botY  = startY + (mainTop ? mainBoxH : subBoxH) + lineGap + (mainTop ? baselineInBox(subBoxH, fittedSub) : baselineInBox(mainBoxH, fittedMain));
+
+      const drawSubLine = (y) => {
+        if (!effectiveSubText) return;
+        ctx.save();
+        ctx.font = state.subFont.weight + " " + fittedSub + "px " + state.subFont.css;
+        drawTextWithSpacing(ctx, effectiveSubText, cx, y, preset.fonts.sub.spacing * fittedSub, textAlign);
+        ctx.restore();
+      };
+      const drawMainLine = (y) => {
+        if (!state.mainText) return;
+        ctx.save();
+        ctx.font = state.mainFont.weight + " " + fittedMain + "px " + state.mainFont.css;
+        drawTextWithSpacing(ctx, state.mainText, cx, y, preset.fonts.main.spacing * fittedMain, textAlign);
+        ctx.restore();
+      };
+
+      if (mainTop) { drawMainLine(topY); drawSubLine(botY); }
+      else         { drawSubLine(topY);  drawMainLine(botY); }
+
+    } else if (decision.type === 'horizontal_sub_main') {
+      const swapped = state.structureChoice === 'main_left_sub_right';
+      const leftText  = swapped ? state.mainText : effectiveSubText;
+      const rightText = swapped ? effectiveSubText  : state.mainText;
+      const leftSize  = swapped ? decision.mainSize : decision.subSize;
+      const rightSize = swapped ? decision.subSize  : decision.mainSize;
+      const leftFont  = swapped ? state.mainFont : state.subFont;
+      const rightFont = swapped ? state.subFont  : state.mainFont;
+      const leftSpRatio  = swapped ? preset.fonts.main.spacing : preset.fonts.sub.spacing;
+      const rightSpRatio = swapped ? preset.fonts.sub.spacing  : preset.fonts.main.spacing;
+
+      const leftSp  = leftSpRatio * leftSize;
+      const rightSp = rightSpRatio * rightSize;
+
+      ctx.font = leftFont.weight + " " + leftSize + "px " + leftFont.css;
+      const leftW = leftText ? measureTextWithSpacing(ctx, leftText, leftSp) : 0;
+      ctx.font = rightFont.weight + " " + rightSize + "px " + rightFont.css;
+      const rightW = rightText ? measureTextWithSpacing(ctx, rightText, rightSp) : 0;
+
+      const textTotalW = (leftW > 0 && rightW > 0) ? leftW + GAP + rightW : leftW + rightW;
+
+      const hgiL = gi.left || null;
+      const hgiR = gi.right || null;
+      const hgiS = gi.single || null;
+      const IMG_GAP = preset.imageBox?.image_gap ?? GAP;
+
+      // 그룹 전체 폭 계산
+      const imgLeftW = hgiL ? hgiL.w : 0;
+      const imgRightW = hgiR ? hgiR.w : 0;
+      const imgSingleW = hgiS ? hgiS.w : 0;
+      let totalGroupW, startX;
+
+      if (hgiL || hgiR) {
+        // 듀얼 이미지: [좌IMG] GAP [서브+메인텍스트] GAP [우IMG]
+        totalGroupW = (imgLeftW > 0 ? imgLeftW + IMG_GAP : 0) + textTotalW + (imgRightW > 0 ? IMG_GAP + imgRightW : 0);
+        startX = cx - totalGroupW / 2;
+      } else {
+        totalGroupW = textTotalW + (imgSingleW > 0 ? IMG_GAP + imgSingleW : 0);
+        startX = cx - totalGroupW / 2;
+      }
+
+      let textStartX = startX;
+      if (hgiL) {
+        drawGroupedImg(hgiL, startX);
+        textStartX = startX + imgLeftW + IMG_GAP;
+      }
+      textGroupLeftX = textStartX; // 텍스트 시작 X (로고 정렬용)
+
+      const textY = cy + decision.mainSize * 0.38;
+
+      if (leftText) {
+        ctx.save();
+        ctx.font = leftFont.weight + " " + leftSize + "px " + leftFont.css;
+        ctx.fillStyle = textColor;
+        drawTextWithSpacing(ctx, leftText, textStartX, textY, leftSp, "left");
+        ctx.restore();
+      }
+      if (rightText) {
+        ctx.save();
+        ctx.font = rightFont.weight + " " + rightSize + "px " + rightFont.css;
+        ctx.fillStyle = textColor;
+        const rightStartX = leftW > 0 ? textStartX + leftW + GAP : textStartX;
+        drawTextWithSpacing(ctx, rightText, rightStartX, textY, rightSp, "left");
+        ctx.restore();
+      }
+
+      if (hgiR) {
+        drawGroupedImg(hgiR, textStartX + textTotalW + IMG_GAP);
+      } else if (hgiS) {
+        drawGroupedImg(hgiS, startX + textTotalW + IMG_GAP);
+      }
+    }
+
+  } else {
+    // ===== 기본 렌더링 (decision 없는 배너) =====
+    const fittedSub = fitFontSize(effectiveSubText, preset.fonts.sub.size, state.subFont.css, state.subFont.weight, preset.fonts.sub.spacing);
+    const fittedMain = fitFontSize(state.mainText, preset.fonts.main.size, state.mainFont.css, state.mainFont.weight, preset.fonts.main.spacing);
+
+    if (effectiveSubText) {
+      ctx.save();
+      ctx.font = state.subFont.weight + " " + fittedSub + "px " + state.subFont.css;
+      const subSpacing = preset.fonts.sub.spacing * fittedSub;
+      drawTextWithSpacing(ctx, effectiveSubText, textX, centerY - fittedMain * 0.3, subSpacing, textAlign);
+      ctx.restore();
+    }
+    if (state.mainText) {
+      ctx.save();
+      ctx.font = state.mainFont.weight + " " + fittedMain + "px " + state.mainFont.css;
+      const mainSpacing = preset.fonts.main.spacing * fittedMain;
+      drawTextWithSpacing(ctx, state.mainText, textX, centerY + fittedMain * 0.5, mainSpacing, textAlign);
+      ctx.restore();
+    }
+  }
+  return { textLeftX: textGroupLeftX };
+}
+
+// ===== CTA 렌더링 (renderToCanvas에서 분리) =====
+function drawCTA(ctx, preset) {
+  if (state.ctaEnabled && state.ctaText && preset.ctaSupported !== false) {
+    const ctaFS = Math.min(preset.fonts.sub.size * 0.7, 24);
+    const ctaLabel = state.ctaText + " ›";
+    ctx.font = "700 " + ctaFS + "px " + state.mainFont.css;
+    const ctaBarH = Math.max(preset.h * 0.17, 30);
+    const ctaY = preset.h - ctaBarH;
+    ctx.fillStyle = state.ctaColor;
+    ctx.fillRect(0, ctaY, preset.w, ctaBarH);
+    ctx.fillStyle = state.ctaTextColor;
+    ctx.textAlign = "center";
+    ctx.fillText(ctaLabel, preset.w / 2, ctaY + ctaBarH / 2 + ctaFS * 0.35);
+  }
+}
+
 // ===== 통합 Canvas 렌더링 (미리보기 = 출력 동일) =====
 // 원본 사이즈로 Canvas에 그린 후, 미리보기에서는 CSS 축소로 표시.
 // 가이드: 이미지/텍스트/CTA는 마진 안쪽 영역에만 보임 (마진과 겹치는 부분은 클립으로 잘림).
@@ -1228,8 +1819,10 @@ function renderToCanvas(presetId, preset, callback) {
   const textX = useLeftAlign ? m.left : preset.w / 2;
   const textAlign = useLeftAlign ? "left" : "center";
   // 텍스트 영역 가용 폭 (left_align: textRatio 영역, center: 좌우 마진 사이)
+  // TEXT_RIGHT_PAD: 좌측 정렬 시 이미지 영역과의 간격 확보용 여유분
+  const TEXT_RIGHT_PAD = preset.textPaddingRight || 8;
   const maxTextW = useLeftAlign
-    ? Math.max(0, preset.w * preset.textRatio - m.left - 8)
+    ? Math.max(0, preset.w * preset.textRatio - m.left - TEXT_RIGHT_PAD)
     : Math.max(0, preset.w - m.left - m.right);
   const centerY = preset.h / 2;
   const textColor = getTextColor();
@@ -1255,307 +1848,174 @@ function renderToCanvas(presetId, preset, callback) {
     ctx.drawImage(gi.img, imgX + (gi.ox || 0), imgY, gi.w, gi.h);
   }
 
-  const drawContent = () => {
-    // 3. 텍스트 (자간 반영)
-    ctx.fillStyle = textColor;
+  // grouped 이미지 데이터 생성 (듀얼/단일 공용, computeCropTransform 헬퍼 활용)
+  function computeGroupedImgData(img, isRight) {
+    const box = preset.imageBox || {};
+    const vPad = box.v_padding || 8;
+    const maxImgH = preset.h - vPad * 2;
+    const t = isRight ? getImageTransform2(presetId) : getImageTransform(presetId);
+    const userScale = (t.mode === 'manual') ? t.scale : 1.0;
+    const ox = t.mode === 'manual' ? t.offset.x : 0;
+    const oy = t.mode === 'manual' ? t.offset.y : 0;
+    const gap = box.image_gap ?? (preset.textGap || 24);
 
-    const decision = getCompositionDecision(presetId, state.mainText, state.subText);
-
-    if (decision) {
-      // ===== 자동 구성 기반 렌더링 (textX/textAlign 기준 — 좌측정렬 또는 중앙) =====
-      const cx = textX;
-      const cy = preset.h / 2;
-      const GAP = preset.textGap || 24; // JSON copy.text_gap_px 우선, 없으면 24px
-
-      if (decision.type === 'single_main' && state.mainText) {
-        const fittedMain = fitFontSize(state.mainText, decision.mainSize, state.mainFont.css, state.mainFont.weight, preset.fonts.main.spacing);
-        const sp = preset.fonts.main.spacing * fittedMain;
-
-        // 이미지+텍스트 그룹 중앙정렬 (center_grouped)
-        const gi = state._groupedImg || null;
-        const imgGroupW = gi ? gi.w : 0;
-        const IMG_GAP = preset.imageBox?.image_gap ?? (preset.textGap || 24);
-
-        ctx.save();
-        ctx.font = state.mainFont.weight + " " + fittedMain + "px " + state.mainFont.css;
-        const mainW = measureTextWithSpacing(ctx, state.mainText, sp);
-        const baselineY = cy + fittedMain * 0.38;
-
-        if (gi) {
-          // 텍스트+이미지 그룹 중앙 배치
-          const totalGroupW = mainW + IMG_GAP + imgGroupW;
-          const startX = cx - totalGroupW / 2;
-          drawTextWithSpacing(ctx, state.mainText, startX, baselineY, sp, "left");
-          drawGroupedImg(gi, startX + mainW + IMG_GAP);
-        } else {
-          drawTextWithSpacing(ctx, state.mainText, cx, baselineY, sp, textAlign);
-        }
-        ctx.restore();
-
-      } else if (decision.type === 'vertical_sub_main') {
-        // 세로 2줄. 위/아래 순서는 structureChoice가 결정 (main_top_sub_bottom이면 반전)
-        const fittedSub = fitFontSize(state.subText, decision.subSize, state.subFont.css, state.subFont.weight, preset.fonts.sub.spacing);
-        const fittedMain = fitFontSize(state.mainText, decision.mainSize, state.mainFont.css, state.mainFont.weight, preset.fonts.main.spacing);
-        const subBoxH = preset.fonts.sub.boxH ?? fittedSub;
-        const mainBoxH = preset.fonts.main.boxH ?? fittedMain;
-        const lineGap = preset.verticalLineGap ?? Math.max(12, Math.round(fittedSub * 0.6));
-        const blockH = subBoxH + lineGap + mainBoxH;
-        const startY = cy - blockH / 2;
-
-        // 위/아래 두 슬롯의 baseline 계산
-        const baselineInBox = (boxH, fontSize) => (boxH + fontSize * 0.7) / 2;
-        const mainTop = state.structureChoice === 'main_top_sub_bottom';
-        const topY  = startY + (mainTop ? baselineInBox(mainBoxH, fittedMain) : baselineInBox(subBoxH, fittedSub));
-        const botY  = startY + (mainTop ? mainBoxH : subBoxH) + lineGap + (mainTop ? baselineInBox(subBoxH, fittedSub) : baselineInBox(mainBoxH, fittedMain));
-
-        const drawSub = (y) => {
-          if (!state.subText) return;
-          ctx.save();
-          ctx.font = state.subFont.weight + " " + fittedSub + "px " + state.subFont.css;
-          drawTextWithSpacing(ctx, state.subText, cx, y, preset.fonts.sub.spacing * fittedSub, textAlign);
-          ctx.restore();
-        };
-        const drawMain = (y) => {
-          if (!state.mainText) return;
-          ctx.save();
-          ctx.font = state.mainFont.weight + " " + fittedMain + "px " + state.mainFont.css;
-          drawTextWithSpacing(ctx, state.mainText, cx, y, preset.fonts.main.spacing * fittedMain, textAlign);
-          ctx.restore();
-        };
-
-        if (mainTop) { drawMain(topY); drawSub(botY); }
-        else         { drawSub(topY);  drawMain(botY); }
-
-      } else if (decision.type === 'horizontal_sub_main') {
-        // 가로 1줄: structureChoice에 따라 좌우 순서 결정
-        // 기본(sub_left_main_right): 서브(좌) + 메인(우)
-        // 반전(main_left_sub_right): 메인(좌) + 서브(우)
-        const swapped = state.structureChoice === 'main_left_sub_right';
-        const leftText  = swapped ? state.mainText : state.subText;
-        const rightText = swapped ? state.subText  : state.mainText;
-        const leftSize  = swapped ? decision.mainSize : decision.subSize;
-        const rightSize = swapped ? decision.subSize  : decision.mainSize;
-        const leftFont  = swapped ? state.mainFont : state.subFont;
-        const rightFont = swapped ? state.subFont  : state.mainFont;
-        const leftSpRatio  = swapped ? preset.fonts.main.spacing : preset.fonts.sub.spacing;
-        const rightSpRatio = swapped ? preset.fonts.sub.spacing  : preset.fonts.main.spacing;
-
-        const leftSp  = leftSpRatio * leftSize;
-        const rightSp = rightSpRatio * rightSize;
-
-        // 텍스트 폭 측정
-        ctx.font = leftFont.weight + " " + leftSize + "px " + leftFont.css;
-        const leftW = leftText ? measureTextWithSpacing(ctx, leftText, leftSp) : 0;
-        ctx.font = rightFont.weight + " " + rightSize + "px " + rightFont.css;
-        const rightW = rightText ? measureTextWithSpacing(ctx, rightText, rightSp) : 0;
-
-        const textTotalW = (leftW > 0 && rightW > 0) ? leftW + GAP + rightW : leftW + rightW;
-
-        // 이미지+텍스트 그룹 중앙정렬 (center_grouped) — state._groupedImg 활용
-        const gi = state._groupedImg || null;
-        const imgGroupW = gi ? gi.w : 0;
-        const IMG_GAP = preset.imageBox?.image_gap ?? GAP;
-        const totalGroupW = textTotalW + (imgGroupW > 0 ? IMG_GAP + imgGroupW : 0);
-        const startX = cx - totalGroupW / 2;
-
-        const textStartX = startX;
-
-        const textY = cy + decision.mainSize * 0.38;
-
-        if (leftText) {
-          ctx.save();
-          ctx.font = leftFont.weight + " " + leftSize + "px " + leftFont.css;
-          ctx.fillStyle = textColor;
-          drawTextWithSpacing(ctx, leftText, textStartX, textY, leftSp, "left");
-          ctx.restore();
-        }
-        if (rightText) {
-          ctx.save();
-          ctx.font = rightFont.weight + " " + rightSize + "px " + rightFont.css;
-          ctx.fillStyle = textColor;
-          const rightStartX = leftW > 0 ? textStartX + leftW + GAP : textStartX;
-          drawTextWithSpacing(ctx, rightText, rightStartX, textY, rightSp, "left");
-          ctx.restore();
-        }
-
-        // 이미지 그리기 (텍스트 우측에 GAP 간격으로)
-        if (gi) {
-          drawGroupedImg(gi, startX + textTotalW + IMG_GAP);
-        }
-      }
-
+    if (state.imageFitMode === 'crop') {
+      const boundsKey = isRight ? 'contentBoundsCache2' : 'contentBoundsCache';
+      if (!state[boundsKey]) state[boundsKey] = getContentBounds(img);
+      const bounds = state[boundsKey];
+      // isRight=true -> 보조(imageUrl2, 좌측 배치) -> _L / isRight=false -> 메인 -> 듀얼이면 _R, 단일이면 기본
+      const calKey = isRight ? presetId + '_L' : (isDualImageMode() ? presetId + '_R' : presetId);
+      const cal = state.calibrationCache[calKey] || {};
+      const availH = preset.h - vPad;
+      const crop = computeCropTransform(img, bounds, availH, cal, userScale, vPad);
+      state.cropAutoValues[presetId] = { autoScale: crop.cropScale, autoOffsetY: crop.topOffset };
+      return {
+        img, w: crop.scaledW, h: crop.scaledH, vPad, isCrop: true, gap,
+        ox: ox + crop.calOffsetX, oy: oy + crop.topOffset
+      };
     } else {
-      // ===== 기본 렌더링 (decision 없는 배너) =====
-      const fittedSub = fitFontSize(state.subText, preset.fonts.sub.size, state.subFont.css, state.subFont.weight, preset.fonts.sub.spacing);
-      const fittedMain = fitFontSize(state.mainText, preset.fonts.main.size, state.mainFont.css, state.mainFont.weight, preset.fonts.main.spacing);
-
-      if (state.subText) {
-        ctx.save();
-        ctx.font = state.subFont.weight + " " + fittedSub + "px " + state.subFont.css;
-        const subSpacing = preset.fonts.sub.spacing * fittedSub;
-        drawTextWithSpacing(ctx, state.subText, textX, centerY - fittedMain * 0.3, subSpacing, textAlign);
-        ctx.restore();
-      }
-      if (state.mainText) {
-        ctx.save();
-        ctx.font = state.mainFont.weight + " " + fittedMain + "px " + state.mainFont.css;
-        const mainSpacing = preset.fonts.main.spacing * fittedMain;
-        drawTextWithSpacing(ctx, state.mainText, textX, centerY + fittedMain * 0.5, mainSpacing, textAlign);
-        ctx.restore();
-      }
+      const baseScale = Math.min(maxImgH / img.height, 1);
+      const finalScale = baseScale * userScale;
+      return {
+        img, w: img.width * finalScale, h: img.height * finalScale, vPad, isCrop: false, gap,
+        ox, oy
+      };
     }
+  }
 
-    // 4. CTA 버튼 (가이드: ctaSupported === false면 그리지 않음)
-    if (state.ctaEnabled && state.ctaText && preset.ctaSupported !== false) {
-      const ctaFS = Math.min(preset.fonts.sub.size * 0.7, 24);
-      const ctaLabel = state.ctaText + " ›";
-      ctx.font = "700 " + ctaFS + "px " + state.mainFont.css;
-      // CTA: 풀너비(cta1) 고정
-      const ctaBarH = Math.max(preset.h * 0.17, 30);
-      const ctaY = preset.h - ctaBarH;
-      ctx.fillStyle = state.ctaColor;
-      ctx.fillRect(0, ctaY, preset.w, ctaBarH);
-      ctx.fillStyle = state.ctaTextColor;
-      ctx.textAlign = "center";
-      ctx.fillText(ctaLabel, preset.w / 2, ctaY + ctaBarH / 2 + ctaFS * 0.35);
-    }
-
-    // drawContent 끝 (callback은 외부에서 클립 해제 후 호출)
-  };
-
-  // 2. 이미지/텍스트/CTA를 마진 안쪽에 클립해서 그리기
+  // 2. 이미지 로딩 -> 배치 -> 텍스트/CTA 그리기 (Promise 통합, state 오염 없음)
   const renderClipped = () => {
-    ctx.save();
-    applyClip();
-    if (state.imageUrl) {
-      const img = new Image();
-      img.crossOrigin = "anonymous";
-      img.onload = () => {
+    // 필요한 이미지 URL 수집
+    const urls = [];
+    if (isDualImageMode() && (state.imageUrl || state.imageUrl2)) {
+      urls.push(state.imageUrl, state.imageUrl2); // [메인(우), 보조(좌)]
+    } else if (state.imageUrl) {
+      urls.push(state.imageUrl);
+    }
+    // 로고 이미지 (마지막에 추가, 인덱스 기억)
+    const hasLogo = preset.logoBox && state.logoUrl;
+    const logoIdx = hasLogo ? urls.length : -1;
+    if (hasLogo) urls.push(state.logoUrl);
+    // 출처 표기 이미지 (마지막에 추가)
+    const hasSourceLogo = preset.sourceLabelImage?.enabled && state.sourceLogoUrl;
+    const sourceLogoIdx = hasSourceLogo ? urls.length : -1;
+    if (hasSourceLogo) urls.push(state.sourceLogoUrl);
+
+    // 모든 이미지를 Promise로 로딩 (비동기 패턴 통합)
+    Promise.all(urls.map(loadImg)).then(images => {
+      // gi = grouped images — state를 오염하지 않고 파라미터로 전달
+      const gi = { left: null, right: null, single: null };
+      // 로고 이미지 분리 (나머지 이미지 인덱스에 영향 없음)
+      const logoImg = logoIdx >= 0 ? images[logoIdx] : null;
+      const sourceLogoImg = sourceLogoIdx >= 0 ? images[sourceLogoIdx] : null;
+      // 로고/출처를 제외한 메인/듀얼 이미지 수
+      const firstSpecialIdx = [logoIdx, sourceLogoIdx].filter(i => i >= 0);
+      const mainImgCount = firstSpecialIdx.length > 0 ? Math.min(...firstSpecialIdx) : images.length;
+
+      // 이미지 모드 판별: 수동 조정 또는 crop이면 세이프존 클리핑 해제
+      const t = getImageTransform(presetId);
+      const t2 = getImageTransform2(presetId);
+      const isManualOrCrop = (t.mode === 'manual') || (state.imageFitMode === 'crop') || (t2.mode === 'manual');
+
+      // ── 1단계: 이미지 그리기 (수동/crop 시 클리핑 없이, 자동 시 마진 클리핑) ──
+      ctx.save();
+      if (!isManualOrCrop) applyClip();
+
+      if (isDualImageMode() && mainImgCount >= 2 && (images[0] || images[1])) {
+        // 듀얼 이미지 모드 (커튼배너 전용)
+        const [imgMain, imgSub] = images;
+        if (imgMain) gi.right = computeGroupedImgData(imgMain, false);
+        if (imgSub)  gi.left  = computeGroupedImgData(imgSub, true);
+
+      } else if (mainImgCount >= 1 && images[0]) {
+        const img = images[0];
         if (state.imageIsTransparent) {
           const box = preset.imageBox || { width_ratio: preset.imgRatio, height_ratio: 0.85, anchor: "right_center", v_padding: 8 };
-
           if (box.anchor === 'center_grouped') {
-            // center_grouped: drawContent에서 텍스트+이미지를 함께 그림 — 여기서는 이미지 정보만 저장
-            const vPad = box.v_padding || 8;
-            const maxImgH = preset.h - vPad * 2;
-            const t = getImageTransform(presetId);
-            const userScale = (t.mode === 'manual') ? t.scale : 1.0;
-            const ox = t.mode === 'manual' ? t.offset.x : 0;
-            const oy = t.mode === 'manual' ? t.offset.y : 0;
-
-            if (state.imageFitMode === 'crop') {
-              // crop 모드: 콘텐츠 바운딩 박스 기준 + 학습 보정값 적용 (캐시 활용)
-              if (!state.contentBoundsCache) state.contentBoundsCache = getContentBounds(img);
-              const bounds = state.contentBoundsCache;
-              const cal = state.calibrationCache[presetId] || {};
-              // 기본 스케일: 콘텐츠 높이가 배너의 1.15배 + 학습 보정
-              const availH = preset.h - vPad;
-              const baseCropScale = (availH * 1.15) / bounds.contentH;
-              const calScale = 1.0 + (cal.scale_delta || 0); // 학습된 스케일 보정
-              const cropScale = baseCropScale * calScale;
-              const finalScale = cropScale * userScale;
-              const scaledW = img.width * finalScale;
-              const scaledH = img.height * finalScale;
-              // 콘텐츠 상단 정렬 + 학습된 Y 보정
-              const contentTopY = bounds.top * finalScale;
-              const topOffset = vPad - contentTopY + (cal.offset_y_delta || 0);
-              // 자동 배치 기본값 저장 (다운로드 시 delta 계산용)
-              state.cropAutoValues[presetId] = { autoScale: cropScale, autoOffsetY: topOffset };
-              state._groupedImg = {
-                img, w: scaledW, h: scaledH, vPad, isCrop: true,
-                gap: box.image_gap ?? (preset.textGap || 24),
-                ox: ox + (cal.offset_x_delta || 0), oy: oy + topOffset
-              };
-            } else {
-              // contain 모드: 기존 방식 — 패딩 안에 전체 표시
-              const baseScale = Math.min(maxImgH / img.height, 1);
-              const finalScale = baseScale * userScale;
-              state._groupedImg = {
-                img, w: img.width * finalScale, h: img.height * finalScale, vPad, isCrop: false,
-                gap: box.image_gap ?? (preset.textGap || 24),
-                ox, oy
-              };
-            }
-
-            drawContent();
-            delete state._groupedImg;
-            ctx.restore();
-            callback(canvas);
-            return; // 아래 drawContent 중복 호출 방지
+            // center_grouped -> drawText에서 텍스트와 함께 배치 (grouped)
+            gi.single = computeGroupedImgData(img, false);
           } else {
-            // anchor 기반 배치 (right_center, left_center 등) — contain/crop 지원
-            const t = getImageTransform(presetId);
-            const userScale = (t.mode === 'manual') ? t.scale : 1.0;
-            const vPad = box.v_padding || 0;
-            const ox = t.mode === 'manual' ? t.offset.x : 0;
-            const oy = t.mode === 'manual' ? t.offset.y : 0;
-
-            if (state.imageFitMode === 'crop') {
-              // crop 모드: 콘텐츠 바운딩 박스 기준 크롭 + 학습 보정
-              if (!state.contentBoundsCache) state.contentBoundsCache = getContentBounds(img);
-              const bounds = state.contentBoundsCache;
-              const cal = state.calibrationCache[presetId] || {};
-              const zoneH = preset.h * (box.height_ratio || 0.85) - vPad * 2;
-              const baseCropScale = (zoneH * 1.15) / bounds.contentH;
-              const calScale = 1.0 + (cal.scale_delta || 0);
-              const cropScale = baseCropScale * calScale;
-              const finalScale = cropScale * userScale;
-              const scaledW = img.width * finalScale;
-              const scaledH = img.height * finalScale;
-              // 콘텐츠 상단 기준 배치
-              const contentTopY = bounds.top * finalScale;
-              const topOffset = vPad - contentTopY + (cal.offset_y_delta || 0);
-              state.cropAutoValues[presetId] = { autoScale: cropScale, autoOffsetY: topOffset };
-              // 앵커 X 좌표 계산 (크롭 스케일된 이미지 기준)
-              const pos = anchorToXY(box.anchor, preset, scaledW, scaledH, vPad);
-              ctx.drawImage(img, pos.x + ox + (cal.offset_x_delta || 0), topOffset + oy, scaledW, scaledH);
-            } else {
-              // contain 모드: 기존 방식 — 존 안에 전체 표시
-              const zoneW = preset.w * (box.width_ratio || preset.imgRatio) * userScale;
-              const zoneH = (preset.h * (box.height_ratio || 0.85) - vPad * 2) * userScale;
-              const s = Math.min(zoneW / img.width, zoneH / img.height);
-              const dw = img.width * s, dh = img.height * s;
-              const pos = anchorToXY(box.anchor, preset, dw, dh, vPad);
-              ctx.drawImage(img, pos.x + ox, pos.y + oy, dw, dh);
-            }
+            // anchor 기반 배치 -> 독립 렌더링 (추출된 헬퍼 함수 사용)
+            drawAnchorImage(ctx, img, box, preset, presetId);
           }
         } else {
-          // 비투명 이미지: contain/crop 지원
-          const t = getImageTransform(presetId);
-          const userScale = (t.mode === 'manual') ? t.scale : 1.0;
-          const ox = t.mode === 'manual' ? t.offset.x : 0;
-          const oy = t.mode === 'manual' ? t.offset.y : 0;
-
-          if (state.imageFitMode === 'crop') {
-            // crop: cover 방식 (배너 전체 덮기) + 수동 조정
-            const coverScale = Math.max(preset.w / img.width, preset.h / img.height) * userScale;
-            const dw = img.width * coverScale;
-            const dh = img.height * coverScale;
-            const dx = (preset.w - dw) / 2 + ox;
-            const dy = (preset.h - dh) / 2 + oy;
-            ctx.drawImage(img, dx, dy, dw, dh);
-          } else {
-            // contain: 비율 유지, 배너 안에 전체 표시
-            const containScale = Math.min(preset.w / img.width, preset.h / img.height) * userScale;
-            const dw = img.width * containScale;
-            const dh = img.height * containScale;
-            const dx = (preset.w - dw) / 2 + ox;
-            const dy = (preset.h - dh) / 2 + oy;
-            ctx.drawImage(img, dx, dy, dw, dh);
-          }
+          // 비투명 이미지 -> cover/contain 독립 렌더링 (추출된 헬퍼 함수 사용)
+          drawFullImage(ctx, img, preset, presetId);
         }
-        drawContent();
-        ctx.restore();
-        callback(canvas);
-      };
-      img.src = state.imageUrl;
-    } else {
-      drawContent();
+      }
+      ctx.restore();
+
+      // ── 2단계: 텍스트 + 로고 + 출처 + CTA (수동/crop 시 클리핑 해제) ──
+      ctx.save();
+      if (!isManualOrCrop) applyClip();
+
+      // 로고+텍스트 그룹 세로 중앙 정렬 계산
+      let adjustedCenterY = centerY;
+      let logoDrawnH = 0, logoDrawnW = 0;
+      if (logoImg && preset.logoBox) {
+        const lb = preset.logoBox;
+        const logoScale = Math.min(lb.maxHeight / logoImg.height, 1);
+        logoDrawnH = logoImg.height * logoScale;
+        logoDrawnW = logoImg.width * logoScale;
+        // 텍스트 centerY를 아래로 밀어서 로고+gap+텍스트 그룹 전체가 중앙에 오도록 조정
+        const logoShift = (logoDrawnH + lb.gap) / 2;
+        adjustedCenterY = centerY + logoShift;
+      }
+
+      // replaces: "sub" — 해당 배너에서 콜라보 로고가 서브카피를 대체할 때, 해당 배너 렌더링에서만 서브카피를 빈 문자열로 전달
+      const logoReplacesSub = logoImg && preset.logoBox && preset.logoBox.replaces === 'sub';
+      const overrideSubText = logoReplacesSub ? '' : undefined;
+
+      // 텍스트 + CTA (gi를 파라미터로 전달 — state 오염 없음)
+      const drawResult = drawText(ctx, preset, presetId, textColor, textX, textAlign, maxTextW, adjustedCenterY, fitFontSize, drawGroupedImg, gi, overrideSubText);
+
+      // 로고 그리기 (drawText 이후 — 텍스트 좌측 X 좌표 기반 배치)
+      if (logoImg && preset.logoBox) {
+        const lb = preset.logoBox;
+        const effectiveSub = logoReplacesSub ? '' : state.subText;
+        const comp = getCompositionDecision(presetId, state.mainText, effectiveSub);
+        const textH = comp ? comp.mainSize : (preset.fonts.main.size || 72);
+        // 로고 Y: adjustedCenterY(텍스트 중심) 위에 gap만큼 띄워서 배치
+        const logoY = adjustedCenterY - textH * 0.38 - lb.gap - logoDrawnH;
+        // 로고 X: align 설정에 따라 결정
+        let logoX;
+        if (lb.align === 'text_left') {
+          logoX = drawResult.textLeftX; // 텍스트 그룹 좌측 끝에 정렬
+        } else if (lb.align === 'left') {
+          logoX = preset.margins.left;
+        } else if (lb.align === 'right') {
+          logoX = preset.w - preset.margins.right - logoDrawnW;
+        } else {
+          logoX = preset.w / 2 - logoDrawnW / 2; // center 기본값
+        }
+        const logoSrc = state.collabLogoInvert ? invertImage(logoImg, Math.round(logoDrawnW), Math.round(logoDrawnH)) : logoImg;
+        ctx.drawImage(logoSrc, logoX, logoY, logoDrawnW, logoDrawnH);
+      }
+
+      // 출처 표기 이미지 (우측 상단 고정 영역, 148px의 75% 크기 + 중앙 정렬)
+      if (sourceLogoImg && preset.sourceLabelImage) {
+        const sli = preset.sourceLabelImage;
+        const areaW = sli.width; // 고정 영역 가로 (148px)
+        const targetW = areaW * 0.80; // 영역의 80% 크기로 렌더링
+        const scale = targetW / sourceLogoImg.width;
+        const slW = sourceLogoImg.width * scale;
+        const slH = sourceLogoImg.height * scale;
+        // 148px 영역의 좌측 끝 X = 배너 우측 - right여백 - 영역폭
+        const areaX = preset.w - sli.right - areaW;
+        // 영역 내 중앙 정렬
+        const slX = areaX + (areaW - slW) / 2;
+        const slY = sli.top;
+        const slSrc = state.sourceLogoInvert ? invertImage(sourceLogoImg, Math.round(slW), Math.round(slH)) : sourceLogoImg;
+        ctx.drawImage(slSrc, slX, slY, slW, slH);
+      }
+
+      drawCTA(ctx, preset);
       ctx.restore();
       callback(canvas);
-    }
+    });
   };
   renderClipped();
+
 }
 
 // ===== 자동 구성 결정 (레퍼런스 사례 기반) =====
@@ -1563,17 +2023,20 @@ function getCompositionDecision(presetId, mainText, subText) {
   const preset = PRESETS[presetId];
   if (!preset) return null;
 
-  // pc_main_curtain: 글자수 기반 자동 결정 (6개 사례 기반 룰, 28자 기준)
-  if (presetId === 'pc_main_curtain') {
+  // ① JSON composition_rules 기반 자동 결정 (배너별 JSON에 정의, 코드 수정 불필요)
+  const rules = preset.compositionRules;
+  if (rules) {
     const mainLen = stripEmphasis(mainText).length;
     const subLen = stripEmphasis(subText).length;
     const totalLen = mainLen + subLen;
-    if (!subText || subLen === 0) return { type: 'single_main', mainSize: 72, subSize: 0 };
-    if (totalLen <= 28) return { type: 'horizontal_sub_main', mainSize: 72, subSize: 72 };
-    return { type: 'horizontal_sub_main', mainSize: 64, subSize: 64 };
+    if (!subText || subLen === 0) {
+      return { type: 'single_main', mainSize: rules.sizes.below.mainSize, subSize: 0 };
+    }
+    const tier = totalLen <= (rules.char_threshold || 28) ? 'below' : 'above';
+    return { type: rules.default_type, mainSize: rules.sizes[tier].mainSize, subSize: rules.sizes[tier].subSize };
   }
 
-  // 일반화: JSON copy.structure가 "서브 1줄 + 메인 1줄"이면 세로 2단 구성
+  // ② 일반화: JSON copy.structure가 "서브 1줄 + 메인 1줄"이면 세로 2단 구성
   if (preset.composition === '서브 1줄 + 메인 1줄') {
     const mainSize = preset.fonts.main.size;
     const subSize = preset.fonts.sub.size;
@@ -1602,9 +2065,10 @@ function parseEmphasis(text) {
   return segments.filter(s => s.text.length > 0);
 }
 
-// {} 를 제거한 순수 텍스트 반환 (폭 측정용)
+// {} 짝이 맞는 마크업만 제거한 순수 텍스트 반환 (폭 측정 + 글자수 카운트용)
+// 짝이 맞지 않는 단독 { 또는 } 는 일반 글자로 유지
 function stripEmphasis(text) {
-  return (text || '').replace(/[{}]/g, '');
+  return (text || '').replace(/\{([^}]*)\}/g, '$1');
 }
 
 // 자간 포함 텍스트 폭 측정 (네이티브 letterSpacing 활용)
@@ -1627,15 +2091,15 @@ function drawTextWithSpacing(ctx, text, x, y, spacing, align) {
   if (!hasEmphasis) {
     // 강조 없음 → 기존 방식 그대로
     ctx.textAlign = align;
-    const prev = ctx.letterSpacing;
+    const prev = ctx.letterSpacing || "0px";
     ctx.letterSpacing = (spacing || 0) + "px";
     ctx.fillText(text, x, y);
-    ctx.letterSpacing = prev || "0px";
+    ctx.letterSpacing = prev;
     return;
   }
 
   // 강조 세그먼트 존재 → 세그먼트별로 개별 렌더링
-  const prevLS = ctx.letterSpacing;
+  const prevLS = ctx.letterSpacing || "0px";
   ctx.letterSpacing = (spacing || 0) + "px";
   const prevAlign = ctx.textAlign;
   const prevFill = ctx.fillStyle;
@@ -1696,13 +2160,34 @@ function renderPreviewItem(container, presetId, preset, scale) {
 function attachImageInteractions(canvas, displayScale, presetId) {
   let dragging = false;
   let startX = 0, startY = 0, startOffsetX = 0, startOffsetY = 0;
+  let activeTransformFn = null; // 현재 드래그 대상 이미지의 transform 함수
   const signal = _previewAbort ? _previewAbort.signal : undefined;
+
+  // 듀얼 이미지 모드에서 클릭 좌표 기반으로 좌/우 이미지 판별
+  function pickTransformFn(clientX) {
+    const dual = isDualImageMode() && state.imageUrl && state.imageUrl2;
+    if (!dual) return getImageTransform;
+    const rect = canvas.getBoundingClientRect();
+    const canvasX = (clientX - rect.left) / displayScale;
+    const preset = PRESETS[presetId];
+    // 우측 클릭 = 메인 이미지(imageUrl, getImageTransform) / 좌측 클릭 = 보조 이미지(imageUrl2, getImageTransform2)
+    return canvasX > preset.w / 2 ? getImageTransform : getImageTransform2;
+  }
 
   canvas.addEventListener('mousedown', (e) => {
     if (e.button !== 0) return;
-    const t = getImageTransform(presetId);
-    if (t.mode === 'auto') { t.mode = 'manual'; syncImageModeUI('manual'); }
+    activeTransformFn = pickTransformFn(e.clientX);
+    const t = activeTransformFn(presetId);
+    // 듀얼 모드: 양쪽 transform 모두 manual로 전환 (버튼 setImageMode 동작과 일관성 유지)
+    if (isDualImageMode()) {
+      getImageTransform(presetId).mode = 'manual';
+      getImageTransform2(presetId).mode = 'manual';
+    } else {
+      t.mode = 'manual';
+    }
+    syncImageModeUI('manual');
     dragging = true;
+    _isDragging = true;
     startX = e.clientX;
     startY = e.clientY;
     startOffsetX = t.offset.x;
@@ -1710,28 +2195,42 @@ function attachImageInteractions(canvas, displayScale, presetId) {
     canvas.style.cursor = 'grabbing';
     e.preventDefault();
   }, { signal });
-  // window의 mousemove/mouseup은 signal 없이 등록 — 드래그 중 updatePreview()가
-  // abort()해도 드래그가 끊기지 않음. dragging 플래그 체크로 보호되어 쌓여도 무해.
-  window.addEventListener('mousemove', (e) => {
-    if (!dragging) return;
+  // window의 mousemove/mouseup — named function으로 등록하고 참조를 저장하여
+  // updatePreview() 시 _windowDragListeners를 통해 수동 정리 (signal 없이 등록, 드래그 중단 방지)
+  const onMouseMove = (e) => {
+    if (!dragging || !activeTransformFn) return;
     const dx = (e.clientX - startX) / displayScale;
     const dy = (e.clientY - startY) / displayScale;
-    getImageTransform(presetId).offset = { x: startOffsetX + dx, y: startOffsetY + dy };
+    activeTransformFn(presetId).offset = { x: startOffsetX + dx, y: startOffsetY + dy };
     updatePreview();
-  });
-  window.addEventListener('mouseup', () => {
+  };
+  const onMouseUp = () => {
     if (!dragging) return;
     dragging = false;
-    const t = getImageTransform(presetId);
+    _isDragging = false;
+    const t = (activeTransformFn || getImageTransform)(presetId);
     canvas.style.cursor = t.mode === 'manual' ? 'grab' : 'pointer';
-  });
+    activeTransformFn = null;
+  };
+  window.addEventListener('mousemove', onMouseMove);
+  window.addEventListener('mouseup', onMouseUp);
+  _windowDragListeners.push({ type: 'mousemove', fn: onMouseMove });
+  _windowDragListeners.push({ type: 'mouseup', fn: onMouseUp });
 
   canvas.addEventListener('wheel', (e) => {
-    const t = getImageTransform(presetId);
-    if (t.mode === 'auto') { t.mode = 'manual'; syncImageModeUI('manual'); }
+    const tFn = pickTransformFn(e.clientX);
+    const t = tFn(presetId);
+    // 듀얼 모드: 양쪽 transform 모두 manual로 전환 (버튼 setImageMode 동작과 일관성 유지)
+    if (isDualImageMode()) {
+      getImageTransform(presetId).mode = 'manual';
+      getImageTransform2(presetId).mode = 'manual';
+    } else {
+      t.mode = 'manual';
+    }
+    syncImageModeUI('manual');
     e.preventDefault();
     const delta = e.deltaY > 0 ? -0.03 : 0.03;
-    t.scale = Math.max(0.8, Math.min(1.5, t.scale + delta));
+    t.scale = Math.max(0.8, Math.min(2.5, t.scale + delta));
     updatePreview();
   }, { passive: false, signal });
 }
@@ -1778,14 +2277,15 @@ function drawMarginOverlayEl(overlay, preset, scale) {
   addMR(overlay, m.left*scale, h-m.bottom*scale, w-(m.left+m.right)*scale, m.bottom*scale, m.bottom+"px");
 }
 
-function addMR(p, x, y, w, h, l) {
-  if (w<=0||h<=0) return;
-  const d=document.createElement("div"); d.className="margin-line";
-  d.style.cssText="left:"+x+"px;top:"+y+"px;width:"+w+"px;height:"+h+"px;";
-  p.appendChild(d);
-  const lb=document.createElement("div"); lb.className="margin-label"; lb.textContent=l;
-  lb.style.cssText="left:"+(x+w/2-12)+"px;top:"+(y+h/2-6)+"px;";
-  p.appendChild(lb);
+// 마진 영역 오버레이 요소 추가 (parent: 부모 컨테이너, x/y/w/h: 위치·크기, label: 라벨 텍스트)
+function addMR(parent, x, y, w, h, label) {
+  if (w <= 0 || h <= 0) return;
+  const div = document.createElement("div"); div.className = "margin-line";
+  div.style.cssText = "left:" + x + "px;top:" + y + "px;width:" + w + "px;height:" + h + "px;";
+  parent.appendChild(div);
+  const lbl = document.createElement("div"); lbl.className = "margin-label"; lbl.textContent = label;
+  lbl.style.cssText = "left:" + (x + w / 2 - 12) + "px;top:" + (y + h / 2 - 6) + "px;";
+  parent.appendChild(lbl);
 }
 
 // ===== PNG 다운로드 (통합 렌더링 사용) =====
@@ -1802,8 +2302,14 @@ function downloadBanner(sizeId) {
     link.download = "banner_" + preset.w + "x" + preset.h + "_" + state.bgColor.slice(1) + ".png";
     link.href = canvas.toDataURL("image/png");
     link.click();
-    // 다운로드 시 학습 데이터 저장
-    saveCalibration(sizeId);
+    // 다운로드 시 학습 데이터 저장 (듀얼 이미지 모드면 좌/우 각각 저장)
+    // 듀얼 모드: imageUrl=우측(right), imageUrl2=좌측(left) 각각 학습 저장
+    if (isDualImageMode() && (state.imageUrl || state.imageUrl2)) {
+      if (state.imageUrl) saveCalibration(sizeId, 'right');
+      if (state.imageUrl2) saveCalibration(sizeId, 'left');
+    } else {
+      saveCalibration(sizeId);
+    }
   });
 }
 
