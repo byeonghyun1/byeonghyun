@@ -1666,7 +1666,9 @@ function drawText(ctx, preset, presetId, textColor, textX, textAlign, maxTextW, 
 
       const blockH = subBoxH + lineGap + mainBoxH;
       // 상단 정렬(top_center): 상단 마진부터 시작. 기본: 세로 중앙 정렬.
-      const startY = isTopAlign ? m.top : cy - blockH / 2;
+      const isTopLayout = preset.layoutTemplate === 'top_center';
+      const topMargin = preset.margins?.top ?? 0;
+      const startY = isTopLayout ? topMargin : cy - blockH / 2;
 
       const baselineInBox = (boxH, fontSize) => (boxH + fontSize * 0.7) / 2;
       const mainTop = state.structureChoice === 'main_top_sub_bottom';
@@ -1855,9 +1857,7 @@ function renderToCanvas(presetId, preset, callback) {
   const maxTextW = useLeftAlign
     ? Math.max(0, preset.w * preset.textRatio - m.left - TEXT_RIGHT_PAD)
     : Math.max(0, preset.w - m.left - m.right);
-  // 텍스트 세로 기준점: top_center면 상단 마진 기준, 아니면 캔버스 세로 중앙
-  const isTopAlign = preset.layoutTemplate === 'top_center';
-  const centerY = isTopAlign ? null : preset.h / 2;  // top_center에서는 drawText 내부에서 상단 기준 계산
+  const centerY = preset.h / 2;
   const textColor = getTextColor();
 
   // 텍스트가 영역을 넘으면 폰트 자동 축소 (minFont까지)
