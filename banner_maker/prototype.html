@@ -366,7 +366,7 @@ body { font-family: 'Pretendard', -apple-system, sans-serif; background: #F5F5F7
         <input type="text" id="subText" placeholder="예: 광고 노출할 곳을 찾는다면?">
         <div class="char-count"><span id="subCount">0</span></div>
       </div>
-      <div id="totalCharCount" style="font-size:12px;color:#888;text-align:right;margin-top:-4px;">합계 <span id="totalCount">0</span>/35</div>
+      <div id="totalCharCount" style="display:none;font-size:12px;color:#888;text-align:right;margin-top:-4px;">합계 <span id="totalCount">0</span>/35</div>
       <!-- 카피 배치 (structure_variants가 2개 이상인 배너에서만 노출) -->
       <div id="structureSelector" style="display:none;margin-top:12px;">
         <label style="font-size:13px;font-weight:500;color:#555;display:block;margin-bottom:6px;">카피 배치</label>
@@ -833,35 +833,60 @@ async function init() {
 
   renderSizeGrid(visibleIds);
 
-  // 글자수 합산 제한 (배너 JSON의 copy.total_max_chars 또는 기본 35자)
-  function getTotalMaxChars() {
-    // 현재 선택된 배너 중 가장 작은 제한을 적용
-    let maxChars = Infinity;
+  // 글자수 제한 — 배너 JSON의 copy.{main_max_chars(_kr) / sub_max_chars(_kr) / total_max_chars}
+  // 다중 선택 시 가장 빡센 제한을 적용. 제한 명시가 없는 배너만 선택되면 무제한.
+  // 반환: { mainMax, subMax, totalMax }  (각각 Infinity면 해당 항목 제한 없음)
+  function getCharLimits() {
+    let mainMax = Infinity, subMax = Infinity, totalMax = Infinity;
     for (const id of state.selectedSizes) {
-      const p = PRESETS[id];
-      if (p && p.copyConstraints && p.copyConstraints.total_max_chars) {
-        maxChars = Math.min(maxChars, p.copyConstraints.total_max_chars);
-      }
+      const c = PRESETS[id]?.copyConstraints;
+      if (!c) continue;
+      const mm = c.main_max_chars_kr ?? c.main_max_chars;
+      const sm = c.sub_max_chars_kr ?? c.sub_max_chars;
+      const tm = c.total_max_chars;
+      if (mm) mainMax = Math.min(mainMax, mm);
+      if (sm) subMax  = Math.min(subMax, sm);
+      if (tm) totalMax = Math.min(totalMax, tm);
     }
-    return maxChars === Infinity ? 35 : maxChars;
+    return { mainMax, subMax, totalMax };
+  }
+  // 레거시 호환 (다른 곳에서 호출 시 안전망)
+  function getTotalMaxChars() {
+    const t = getCharLimits().totalMax;
+    return t === Infinity ? Infinity : t;
   }
   function updateCharCounts() {
     const mainLen = stripEmphasis(state.mainText).length;
     const subLen = stripEmphasis(state.subText).length;
     const total = mainLen + subLen;
-    const max = getTotalMaxChars();
-    document.getElementById("mainCount").textContent = mainLen;
-    document.getElementById("subCount").textContent = subLen;
-    document.getElementById("totalCount").textContent = total;
+    const { mainMax, subMax, totalMax } = getCharLimits();
+
+    // 메인 카운트: 개별 제한 있으면 "8/16", 없으면 "8"
+    const mainEl = document.getElementById("mainCount");
+    mainEl.textContent = (mainMax === Infinity) ? String(mainLen) : (mainLen + '/' + mainMax);
+    mainEl.style.color = (mainMax !== Infinity && mainLen >= mainMax) ? '#E53E3E' : '';
+
+    // 서브 카운트: 동일
+    const subEl = document.getElementById("subCount");
+    subEl.textContent = (subMax === Infinity) ? String(subLen) : (subLen + '/' + subMax);
+    subEl.style.color = (subMax !== Infinity && subLen >= subMax) ? '#E53E3E' : '';
+
+    // 합계 표시: total_max_chars가 명시된 배너(예: 커튼)가 선택됐을 때만 노출
     const totalEl = document.getElementById("totalCharCount");
-    totalEl.innerHTML = '합계 <span id="totalCount">' + total + '</span>/' + max;
-    totalEl.style.color = total > max ? '#E53E3E' : '#888';
+    if (totalMax === Infinity) {
+      totalEl.style.display = 'none';
+    } else {
+      totalEl.style.display = '';
+      totalEl.innerHTML = '합계 <span id="totalCount">' + total + '</span>/' + totalMax;
+      totalEl.style.color = total > totalMax ? '#E53E3E' : '#888';
+    }
   }
   document.getElementById("mainText").addEventListener("input", e => {
     const mainLen = stripEmphasis(e.target.value).length;
     const subLen = stripEmphasis(state.subText).length;
-    const max = getTotalMaxChars();
-    if (mainLen + subLen > max) { e.target.value = state.mainText; return; }
+    const { mainMax, totalMax } = getCharLimits();
+    // 메인 개별 제한 또는 합계 제한 초과 시 입력 되돌림
+    if (mainLen > mainMax || mainLen + subLen > totalMax) { e.target.value = state.mainText; return; }
     state.mainText = e.target.value;
     updateCharCounts();
     updatePreview();
@@ -869,8 +894,9 @@ async function init() {
   document.getElementById("subText").addEventListener("input", e => {
     const mainLen = stripEmphasis(state.mainText).length;
     const subLen = stripEmphasis(e.target.value).length;
-    const max = getTotalMaxChars();
-    if (mainLen + subLen > max) { e.target.value = state.subText; return; }
+    const { subMax, totalMax } = getCharLimits();
+    // 서브 개별 제한 또는 합계 제한 초과 시 입력 되돌림
+    if (subLen > subMax || mainLen + subLen > totalMax) { e.target.value = state.subText; return; }
     state.subText = e.target.value;
     updateCharCounts();
     updatePreview();
@@ -1124,6 +1150,7 @@ function toggleSize(el) {
   updateLogoUI();
 
   updateGuide();
+  updateCharCounts();
   updatePreview();
 }
 
