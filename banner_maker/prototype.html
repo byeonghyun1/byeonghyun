@@ -540,7 +540,8 @@ body { font-family: 'Pretendard', -apple-system, sans-serif; background: #F5F5F7
  * renderToCanvas()               : 메인 렌더링 (Promise 통합, state 오염 없음)
  * fitFontSize()                  : 텍스트 영역 초과 시 폰트 자동 축소 (font_size_strict면 비활성)
  * updateStructureSelector()      : 배너의 structure_variants 2개 이상이면 카피 배치 토글 노출
- * getCompositionDecision()       : composition 룰 분기 — JSON compositionRules 기반 + composition 일반화
+ * getCompositionDecision()       : font_size_rules 기반 글자수→폰트사이즈 범용 자동 결정
+ * resolveFontSize()              : font_size_rules.rules 조건 매칭 헬퍼
  * getContrastColor()             : 배경 명도 기반 텍스트색 자동
  * getImageTransform(sizeId)      : 배너별 이미지 transform — { mode, scale, offset } (lazy 생성)
  * attachImageInteractions()      : 미리보기 드래그(=offset) + 휠(=scale 등비율). 배너별 독립. 자동→수동 자동 전환
@@ -622,7 +623,8 @@ function adaptBanner(json) {
     verticalLineGap: json.copy?.line_gap_px ?? null,      // 가이드 명시 시 그 값, 없으면 폰트 비례
     textGap: json.copy?.text_gap_px ?? 24,                 // 가로 1줄 서브-메인 간격 (기본 24px)
     structureVariants: json.structure_variants || null,   // [{id, description, examples}] — 빌더에서 토글 노출
-    compositionRules: json.composition_rules || null,      // {default_type, char_threshold, sizes: {below, above}}
+    fontSizeRules: json.font_size_rules || null,            // {mode, default_type, rules: [{condition, main_size, sub_size}]}
+    compositionRules: json.composition_rules || null,      // (레거시 호환)
     imageBox: json.image_box || null,                     // {width_ratio, height_ratio, anchor, v_padding}
     dualImage: !!(json.image_box && json.image_box.dual_image), // 듀얼 이미지 지원 여부 (커튼배너 전용)
     logoBox: json.logo_box || null, // 콜라보 로고 이미지 배치 설정 { maxHeight, gap, align }
@@ -2018,16 +2020,33 @@ function renderToCanvas(presetId, preset, callback) {
 
 }
 
-// ===== 자동 구성 결정 (레퍼런스 사례 기반) =====
+// ===== 자동 구성 결정 (font_size_rules 기반 범용) =====
+// JSON font_size_rules를 읽어 배너별 글자수 기준 폰트 사이즈를 자동 결정.
+// mode="total": 메인+서브 합산 글자수 기준 (커튼배너)
+// mode="individual": 메인/서브 각각 글자수 기준 (스카이배너 등)
 function getCompositionDecision(presetId, mainText, subText) {
   const preset = PRESETS[presetId];
   if (!preset) return null;
 
-  // ① JSON composition_rules 기반 자동 결정 (배너별 JSON에 정의, 코드 수정 불필요)
+  const mainLen = stripEmphasis(mainText).length;
+  const subLen = stripEmphasis(subText || '').length;
+
+  // ① font_size_rules 기반 (범용 — 신규 형식)
+  const fsr = preset.fontSizeRules;
+  if (fsr && fsr.rules) {
+    const defaultType = fsr.default_type || 'vertical_sub_main';
+    if (!subText || subLen === 0) {
+      const ms = resolveFontSize(fsr, 'main', mainLen, subLen, preset.fonts.main.size);
+      return { type: 'single_main', mainSize: ms, subSize: 0 };
+    }
+    const ms = resolveFontSize(fsr, 'main', mainLen, subLen, preset.fonts.main.size);
+    const ss = resolveFontSize(fsr, 'sub', mainLen, subLen, preset.fonts.sub.size);
+    return { type: defaultType, mainSize: ms, subSize: ss };
+  }
+
+  // ② 레거시: composition_rules 호환 (기존 배너 안전 유지)
   const rules = preset.compositionRules;
   if (rules) {
-    const mainLen = stripEmphasis(mainText).length;
-    const subLen = stripEmphasis(subText).length;
     const totalLen = mainLen + subLen;
     if (!subText || subLen === 0) {
       return { type: 'single_main', mainSize: rules.sizes.below.mainSize, subSize: 0 };
@@ -2036,7 +2055,7 @@ function getCompositionDecision(presetId, mainText, subText) {
     return { type: rules.default_type, mainSize: rules.sizes[tier].mainSize, subSize: rules.sizes[tier].subSize };
   }
 
-  // ② 일반화: JSON copy.structure가 "서브 1줄 + 메인 1줄"이면 세로 2단 구성
+  // ③ 일반화: JSON copy.structure가 "서브 1줄 + 메인 1줄"이면 세로 2단 구성
   if (preset.composition === '서브 1줄 + 메인 1줄') {
     const mainSize = preset.fonts.main.size;
     const subSize = preset.fonts.sub.size;
@@ -2045,6 +2064,32 @@ function getCompositionDecision(presetId, mainText, subText) {
   }
 
   return null;
+}
+
+// font_size_rules.rules 배열에서 조건 매칭하여 폰트 사이즈 반환
+// target: 'main' 또는 'sub'
+function resolveFontSize(fsr, target, mainLen, subLen, defaultSize) {
+  const totalLen = mainLen + subLen;
+  for (const rule of fsr.rules) {
+    const cond = rule.condition;
+    // 해당 target의 사이즈가 정의된 규칙만 처리
+    const sizeKey = target + '_size';
+    if (!(sizeKey in rule)) continue;
+    // 조건 파싱: "main <= 7", "sub > 20", "total <= 28" 등
+    const match = cond.match(/^(main|sub|total)\s*(<=|>=|<|>|==)\s*(\d+)$/);
+    if (!match) continue;
+    const [, varName, op, valStr] = match;
+    const val = parseInt(valStr);
+    const len = varName === 'main' ? mainLen : varName === 'sub' ? subLen : totalLen;
+    let pass = false;
+    if (op === '<=') pass = len <= val;
+    else if (op === '>=') pass = len >= val;
+    else if (op === '<') pass = len < val;
+    else if (op === '>') pass = len > val;
+    else if (op === '==') pass = len === val;
+    if (pass) return rule[sizeKey];
+  }
+  return defaultSize;
 }
 
 // {} 중괄호 마크업 파싱 → [{text, isEmphasis}, ...] 세그먼트 배열

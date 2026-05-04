@@ -1,23 +1,104 @@
 {
   "id": "pc_job_sky",
   "name": "공고 스카이 배너",
-  "last_updated": "2026-04-27",
+  "last_updated": "2026-05-04",
+  "location": "PC > 공고 상세 우측",
   "dimensions": { "width": 560, "height": 700 },
+  "display_size": { "width": 280, "height": 350 },
   "layout": "vertical",
   "textRatio": 0.45,
   "imgRatio": 0.55,
   "margins": { "left": 49, "right": 49, "top": 62, "bottom": 62 },
   "fonts": {
-    "main": { "family": "Gmarket Sans", "weight": "Bold", "size_px": 42, "letter_spacing": "-2%" },
-    "sub": { "family": "Gmarket Sans", "weight": "Medium", "size_px": 28, "letter_spacing": "-2%" }
+    "main": { "family": "Paperlogy", "weight": "7Bold", "size_px": 80, "letter_spacing": "-2%", "line_height": 1.2 },
+    "sub": { "family": "Paperlogy", "weight": "4 Regular", "size_px": 32, "letter_spacing": "-2%", "line_height": 1.2 }
   },
-  "minFont": 12,
+  "font_size_rules": {
+    "mode": "individual",
+    "default_type": "vertical_sub_main",
+    "rules": [
+      { "condition": "main <= 7", "main_size": 80 },
+      { "condition": "main > 7", "main_size": 72 },
+      { "condition": "sub <= 20", "sub_size": 32 },
+      { "condition": "sub > 20", "sub_size": 24 }
+    ],
+    "_note": "mode=individual: 메인/서브 각각 글자수 기준. 메인 7자 기준 80/72px, 서브 20자 기준 32/24px."
+  },
+  "minFont": 24,
+  "font_size_strict": false,
+  "copy": {
+    "structure": "서브 1줄 + 메인 최대 2줄",
+    "line_gap_px": 8,
+    "main_max_chars_kr": 16,
+    "sub_max_chars_kr": 28,
+    "main_line_break_allowed": true,
+    "sub_line_break_allowed": false,
+    "tone": {
+      "sub": "맥락·후크·인용·캠페인명",
+      "main": "행동 유도·핵심 메시지"
+    }
+  },
+  "text_color_rule": {
+    "method": "luminance_based",
+    "threshold": 0.5,
+    "dark_bg_text": "#FFFFFF",
+    "light_bg_text": "#171717",
+    "max_text_colors": 2
+  },
+  "layout_pattern": {
+    "default_template": "top_center",
+    "text_area": "상단 중앙 고정",
+    "visual_area": "하단 (추후 상세 정의)"
+  },
+  "logo_box": {
+    "mode": "unified",
+    "position": "above_text",
+    "gap": 16,
+    "align": "center",
+    "_note": "출처 로고와 콜라보 로고가 동일 위치에 삽입. 둘 중 하나만 사용. 텍스트 위쪽 고정, 로고-텍스트 간격 16px."
+  },
   "color_rules": {
+    "page_bg": "#FFFFFF",
     "required": "흰 배경에서 가시성 있는 BG컬러 사용"
   },
+  "audience": {
+    "targets": ["구직자"],
+    "description": "공고 상세 페이지 방문자 대상"
+  },
+  "structure_variants": [
+    {
+      "id": "sub_top_main_bottom",
+      "description": "서브(위) + 메인(아래). 기본 구조. 맥락 → 결론 흐름.",
+      "examples": []
+    },
+    {
+      "id": "main_top_sub_bottom",
+      "description": "메인(위) + 서브(아래). 메인을 후크로 먼저 던지고 서브로 부연.",
+      "examples": []
+    }
+  ],
+  "builder_io": {
+    "input_mapping": {
+      "UserInput.texts.headline": "text_placements[0] (slot=headline)",
+      "UserInput.texts.subhead": "text_placements[1] (slot=subhead)",
+      "UserInput.image": "image_placement (하단 비주얼)",
+      "UserInput.bg_color": "직접 입력 또는 이미지 dominant_colors 추출"
+    },
+    "cta": {
+      "supported": true,
+      "style": "full_width"
+    }
+  },
+  "few_shot_refs": [],
   "rules": [
     { "type": "필수", "text": "흰 배경에서 가시성 있는 BG컬러 사용" },
-    { "type": "권장", "text": "서브 1줄 + 메인 1줄 권장" },
-    { "type": "권장", "text": "최소 폰트: 12px" }
+    { "type": "필수", "text": "텍스트 상단 중앙 정렬 고정" },
+    { "type": "필수", "text": "메인 카피 최대 2줄, 서브 카피 줄바꿈 불가" },
+    { "type": "권장", "text": "메인 16자 / 서브 28자 이내" },
+    { "type": "권장", "text": "최소 폰트: 24px" }
+  ],
+  "tbd": [
+    "이미지 영역 상세 규정 (추후 추가)",
+    "제작 사례 (few-shot) 추가 예정"
   ]
 }

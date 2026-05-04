@@ -87,13 +87,14 @@
     }
   },
 
-  "composition_rules": {
+  "font_size_rules": {
+    "mode": "total",
     "default_type": "horizontal_sub_main",
-    "char_threshold": 28,
-    "sizes": {
-      "below": { "mainSize": 72, "subSize": 72 },
-      "above": { "mainSize": 64, "subSize": 64 }
-    }
+    "rules": [
+      { "condition": "total <= 28", "main_size": 72, "sub_size": 72 },
+      { "condition": "total > 28", "main_size": 64, "sub_size": 64 }
+    ],
+    "_note": "mode=total: 메인+서브 합산 글자수 기준. 28자 이하 72px, 초과 64px."
   },
 
   "copy": {
