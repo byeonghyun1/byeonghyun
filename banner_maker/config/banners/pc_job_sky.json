@@ -29,7 +29,7 @@
   "font_size_strict": true,
   "copy": {
     "structure": "서브 1줄 + 메인 최대 2줄",
-    "line_gap_px": 4,
+    "line_gap_px": 8,
     "main_max_chars_kr": 16,
     "sub_max_chars_kr": 28,
     "main_line_break_allowed": true,
