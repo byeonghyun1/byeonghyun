@@ -10,7 +10,7 @@
   "imgRatio": 0.55,
   "margins": { "left": 44, "right": 44, "top": 52, "bottom": 62 },
   "fonts": {
-    "main": { "family": "Paperlogy", "weight": "7Bold", "size_px": 80, "letter_spacing": "-2%", "line_height_percent": 104, "box_h_px": 92 },
+    "main": { "family": "Paperlogy", "weight": "7Bold", "size_px": 80, "letter_spacing": "-2%", "line_height_percent": 108, "box_h_px": 92 },
     "sub": { "family": "Paperlogy", "weight": "5Medium", "size_px": 32, "letter_spacing": "-2%", "line_height_percent": 108, "box_h_px": 32 }
   },
   "font_size_rules": {
@@ -22,14 +22,14 @@
       { "condition": "sub <= 20", "sub_size": 32, "sub_box_h": 32 },
       { "condition": "sub > 20", "sub_size": 24, "sub_box_h": 24 }
     ],
-    "line_height_percent": 104,
+    "line_height_percent": 108,
     "_note": "mode=individual: 메인/서브 각각 글자수 기준. 메인 7자 기준 80/72px, 서브 20자 기준 32/24px. 행간 104% (폰트 사이즈 대비). 메인 1줄 박스높이 80px→92px / 72px→80px. 2줄 박스높이 80px→180px / 72px→162px."
   },
   "minFont": 24,
   "font_size_strict": true,
   "copy": {
     "structure": "서브 1줄 + 메인 최대 2줄",
-    "line_gap_px": 8,
+    "line_gap_px": 10,
     "main_max_chars_kr": 16,
     "sub_max_chars_kr": 28,
     "main_line_break_allowed": true,
