@@ -33,6 +33,7 @@
     "main_max_chars_kr": 16,
     "sub_max_chars_kr": 28,
     "main_line_break_allowed": true,
+    "main_auto_wrap": true,
     "sub_line_break_allowed": false,
     "tone": {
       "sub": "맥락·후크·인용·캠페인명",

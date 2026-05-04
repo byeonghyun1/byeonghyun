@@ -632,6 +632,7 @@ function adaptBanner(json) {
     sourceLabelImage: json.source_label?.image_mode || null, // 출처 표기 이미지 모드 { enabled, width, top, right }
     ctaSupported: json.builder_io?.cta?.supported !== false, // false 명시 시만 차단
     ctaUnsupportedReason: json.builder_io?.cta?.reason || null,
+    mainAutoWrap: json.copy?.main_auto_wrap === true,  // true면 메인 카피 가용폭 초과 시 자동 2줄 분할
     copyConstraints: json.copy || null,
     textColorRule: json.text_color_rule || null,
     rules: (json.rules || []).map(r =>
@@ -1602,13 +1603,48 @@ function drawText(ctx, preset, presetId, textColor, textX, textAlign, maxTextW, 
       const IMG_GAP = preset.imageBox?.image_gap ?? (preset.textGap || 24);
 
       if (state.mainText) {
-        const fittedMain = fitFontSize(state.mainText, decision.mainSize, state.mainFont.css, state.mainFont.weight, preset.fonts.main.spacing);
+        // ── auto line-wrap: mainAutoWrap true이고 1줄 텍스트가 maxTextW 초과 시 자동 2줄 분리 ──
+        let renderText = state.mainText;
+        if (preset.mainAutoWrap && !state.mainText.includes('\n')) {
+          ctx.save();
+          ctx.font = state.mainFont.weight + " " + decision.mainSize + "px " + state.mainFont.css;
+          const fullW = measureTextWithSpacing(ctx, state.mainText, preset.fonts.main.spacing * decision.mainSize);
+          ctx.restore();
+          if (fullW > maxTextW) {
+            // 가장 균등한 위치에서 줄바꿈
+            const chars = [...state.mainText];
+            const mid = Math.ceil(chars.length / 2);
+            renderText = chars.slice(0, mid).join('') + '\n' + chars.slice(mid).join('');
+          }
+        }
+
+        const mainLines = renderText.split('\n');
+        const isMultiLine = mainLines.length > 1;
+        const fittedMain = fitFontSize(isMultiLine ? mainLines[0] : renderText, decision.mainSize, state.mainFont.css, state.mainFont.weight, preset.fonts.main.spacing);
         const sp = preset.fonts.main.spacing * fittedMain;
 
         ctx.save();
         ctx.font = state.mainFont.weight + " " + fittedMain + "px " + state.mainFont.css;
-        const mainW = measureTextWithSpacing(ctx, state.mainText, sp);
-        const baselineY = cy + fittedMain * 0.38;
+        const mainW = measureTextWithSpacing(ctx, isMultiLine ? mainLines[0] : renderText, sp);
+
+        // ── top_center 레이아웃: 상단 마진부터 배치 ──
+        const isTopLayout = preset.layoutTemplate === 'top_center';
+        const topMargin = preset.margins?.top ?? 0;
+        const mainBoxH = isMultiLine
+          ? (decision.mainBoxH2line ?? (fittedMain * 2 + (preset.fontSizeRules?.line_height_fixed ?? fittedMain * 0.4)))
+          : (decision.mainBoxH ?? fittedMain);
+        const mainLineHeight = preset.fontSizeRules?.line_height_fixed ?? (fittedMain * 1.2);
+
+        let baselineY;
+        if (isTopLayout) {
+          if (isMultiLine) {
+            baselineY = topMargin + fittedMain * 0.8;
+          } else {
+            baselineY = topMargin + (mainBoxH + fittedMain * 0.7) / 2;
+          }
+        } else {
+          baselineY = cy + fittedMain * 0.38;
+        }
 
         if (giL || giR) {
           const leftW = giL ? giL.w : 0;
@@ -1617,18 +1653,26 @@ function drawText(ctx, preset, presetId, textColor, textX, textAlign, maxTextW, 
           const startX = cx - totalGroupW / 2;
           let curX = startX;
           if (giL) { drawGroupedImg(giL, curX); curX += leftW + IMG_GAP; }
-          drawTextWithSpacing(ctx, state.mainText, curX, baselineY, sp, "left");
-          textGroupLeftX = curX; // 텍스트 시작 X
+          drawTextWithSpacing(ctx, renderText, curX, baselineY, sp, "left");
+          textGroupLeftX = curX;
           if (giR) { drawGroupedImg(giR, curX + mainW + IMG_GAP); }
         } else if (giS) {
           const totalGroupW = mainW + IMG_GAP + giS.w;
           const startX = cx - totalGroupW / 2;
-          drawTextWithSpacing(ctx, state.mainText, startX, baselineY, sp, "left");
-          textGroupLeftX = startX; // 텍스트 시작 X
+          drawTextWithSpacing(ctx, renderText, startX, baselineY, sp, "left");
+          textGroupLeftX = startX;
           drawGroupedImg(giS, startX + mainW + IMG_GAP);
         } else {
-          drawTextWithSpacing(ctx, state.mainText, cx, baselineY, sp, textAlign);
-          textGroupLeftX = (textAlign === 'center') ? cx - mainW / 2 : cx; // 텍스트 시작 X
+          // multi-line 렌더링 (auto-wrap 또는 수동 줄바꿈)
+          if (isMultiLine) {
+            mainLines.forEach((line, i) => {
+              const ly = baselineY + i * mainLineHeight;
+              drawTextWithSpacing(ctx, line.trim(), cx, ly, sp, textAlign);
+            });
+          } else {
+            drawTextWithSpacing(ctx, renderText, cx, baselineY, sp, textAlign);
+          }
+          textGroupLeftX = (textAlign === 'center') ? cx - mainW / 2 : cx;
         }
         ctx.restore();
 
@@ -1650,8 +1694,22 @@ function drawText(ctx, preset, presetId, textColor, textX, textAlign, maxTextW, 
       const fittedSub = fitFontSize(effectiveSubText, decision.subSize, state.subFont.css, state.subFont.weight, preset.fonts.sub.spacing);
       const fittedMain = fitFontSize(state.mainText, decision.mainSize, state.mainFont.css, state.mainFont.weight, preset.fonts.main.spacing);
 
+      // ── auto line-wrap: mainAutoWrap true이고 1줄 텍스트가 maxTextW 초과 시 자동 2줄 분리 ──
+      let mainRenderText = state.mainText || '';
+      if (preset.mainAutoWrap && !mainRenderText.includes('\n')) {
+        ctx.save();
+        ctx.font = state.mainFont.weight + " " + fittedMain + "px " + state.mainFont.css;
+        const fullW = measureTextWithSpacing(ctx, mainRenderText, preset.fonts.main.spacing * fittedMain);
+        ctx.restore();
+        if (fullW > maxTextW) {
+          const chars = [...mainRenderText];
+          const mid = Math.ceil(chars.length / 2);
+          mainRenderText = chars.slice(0, mid).join('') + '\n' + chars.slice(mid).join('');
+        }
+      }
+
       // 메인 카피 2줄 지원: \n 기준 분리
-      const mainLines = (state.mainText || '').split('\n');
+      const mainLines = mainRenderText.split('\n');
       const isMultiLine = mainLines.length > 1;
 
       // 박스 높이: font_size_rules에서 결정된 값 또는 기본값
@@ -1682,7 +1740,7 @@ function drawText(ctx, preset, presetId, textColor, textX, textAlign, maxTextW, 
       };
 
       const drawMainBlock = (blockTopY) => {
-        if (!state.mainText) return;
+        if (!mainRenderText) return;
         ctx.save();
         ctx.font = state.mainFont.weight + " " + fittedMain + "px " + state.mainFont.css;
         if (isMultiLine) {
@@ -1695,7 +1753,7 @@ function drawText(ctx, preset, presetId, textColor, textX, textAlign, maxTextW, 
         } else {
           // 1줄
           const baseY = blockTopY + baselineInBox(mainBoxH, fittedMain);
-          drawTextWithSpacing(ctx, state.mainText, cx, baseY, preset.fonts.main.spacing * fittedMain, textAlign);
+          drawTextWithSpacing(ctx, mainRenderText, cx, baseY, preset.fonts.main.spacing * fittedMain, textAlign);
         }
         ctx.restore();
       };
