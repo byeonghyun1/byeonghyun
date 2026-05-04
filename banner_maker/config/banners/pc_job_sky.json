@@ -26,7 +26,7 @@
     "_note": "mode=individual: 메인/서브 각각 글자수 기준. 메인 7자 기준 80/72px, 서브 20자 기준 32/24px. 행간 108 고정. 메인 1줄 박스높이 88px, 2줄 박스높이 72px→156px / 80px→180px."
   },
   "minFont": 24,
-  "font_size_strict": false,
+  "font_size_strict": true,
   "copy": {
     "structure": "서브 1줄 + 메인 최대 2줄",
     "line_gap_px": 8,
