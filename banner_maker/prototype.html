@@ -1631,9 +1631,9 @@ function drawText(ctx, preset, presetId, textColor, textX, textAlign, maxTextW, 
         const isTopLayout = preset.layoutTemplate === 'top_center';
         const topMargin = preset.margins?.top ?? 0;
         const mainBoxH = isMultiLine
-          ? (decision.mainBoxH2line ?? (fittedMain * 2 + (preset.fontSizeRules?.line_height_fixed ?? fittedMain * 0.4)))
+          ? (decision.mainBoxH2line ?? (fittedMain * 2 + (preset.fontSizeRules?.line_height_fixed ?? (preset.fontSizeRules?.line_height_percent ? fittedMain * preset.fontSizeRules.line_height_percent / 100 : fittedMain * 0.4))))
           : (decision.mainBoxH ?? fittedMain);
-        const mainLineHeight = preset.fontSizeRules?.line_height_fixed ?? (fittedMain * 1.2);
+        const mainLineHeight = preset.fontSizeRules?.line_height_fixed ?? (preset.fontSizeRules?.line_height_percent ? fittedMain * preset.fontSizeRules.line_height_percent / 100 : fittedMain * 1.2);
 
         let baselineY;
         if (isTopLayout) {
@@ -1715,12 +1715,12 @@ function drawText(ctx, preset, presetId, textColor, textX, textAlign, maxTextW, 
       // 박스 높이: font_size_rules에서 결정된 값 또는 기본값
       const subBoxH = decision.subBoxH ?? preset.fonts.sub.boxH ?? fittedSub;
       const mainBoxH = isMultiLine
-        ? (decision.mainBoxH2line ?? (fittedMain * 2 + (preset.fontSizeRules?.line_height_fixed ?? fittedMain * 0.4)))
+        ? (decision.mainBoxH2line ?? (fittedMain * 2 + (preset.fontSizeRules?.line_height_fixed ?? (preset.fontSizeRules?.line_height_percent ? fittedMain * preset.fontSizeRules.line_height_percent / 100 : fittedMain * 0.4))))
         : (decision.mainBoxH ?? preset.fonts.main.boxH ?? fittedMain);
       const lineGap = preset.verticalLineGap ?? Math.max(12, Math.round(fittedSub * 0.6));
 
       // 행간 (메인 카피 2줄 사이 간격)
-      const mainLineHeight = preset.fontSizeRules?.line_height_fixed ?? (fittedMain * 1.2);
+      const mainLineHeight = preset.fontSizeRules?.line_height_fixed ?? (preset.fontSizeRules?.line_height_percent ? fittedMain * preset.fontSizeRules.line_height_percent / 100 : fittedMain * 1.2);
 
       const blockH = subBoxH + lineGap + mainBoxH;
       // 상단 정렬(top_center): 상단 마진부터 시작. 기본: 세로 중앙 정렬.
