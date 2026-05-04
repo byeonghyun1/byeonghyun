@@ -8,21 +8,22 @@
   "layout": "vertical",
   "textRatio": 0.45,
   "imgRatio": 0.55,
-  "margins": { "left": 49, "right": 49, "top": 62, "bottom": 62 },
+  "margins": { "left": 44, "right": 44, "top": 52, "bottom": 62 },
   "fonts": {
-    "main": { "family": "Paperlogy", "weight": "7Bold", "size_px": 80, "letter_spacing": "-2%", "line_height": 1.2 },
-    "sub": { "family": "Paperlogy", "weight": "4 Regular", "size_px": 32, "letter_spacing": "-2%", "line_height": 1.2 }
+    "main": { "family": "Paperlogy", "weight": "7Bold", "size_px": 80, "letter_spacing": "-2%", "line_height": 108, "box_h_px": 88 },
+    "sub": { "family": "Paperlogy", "weight": "4 Regular", "size_px": 32, "letter_spacing": "-2%", "line_height": 108, "box_h_px": 32 }
   },
   "font_size_rules": {
     "mode": "individual",
     "default_type": "vertical_sub_main",
     "rules": [
-      { "condition": "main <= 7", "main_size": 80 },
-      { "condition": "main > 7", "main_size": 72 },
-      { "condition": "sub <= 20", "sub_size": 32 },
-      { "condition": "sub > 20", "sub_size": 24 }
+      { "condition": "main <= 7", "main_size": 80, "main_box_h": 88, "main_box_h_2line": 180 },
+      { "condition": "main > 7", "main_size": 72, "main_box_h": 88, "main_box_h_2line": 156 },
+      { "condition": "sub <= 20", "sub_size": 32, "sub_box_h": 32 },
+      { "condition": "sub > 20", "sub_size": 24, "sub_box_h": 24 }
     ],
-    "_note": "mode=individual: 메인/서브 각각 글자수 기준. 메인 7자 기준 80/72px, 서브 20자 기준 32/24px."
+    "line_height_fixed": 108,
+    "_note": "mode=individual: 메인/서브 각각 글자수 기준. 메인 7자 기준 80/72px, 서브 20자 기준 32/24px. 행간 108 고정. 메인 1줄 박스높이 88px, 2줄 박스높이 72px→156px / 80px→180px."
   },
   "minFont": 24,
   "font_size_strict": false,

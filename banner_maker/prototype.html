@@ -616,6 +616,7 @@ function adaptBanner(json) {
     layout: json.layout ?? "horizontal",
     pageBg: json.color_rules?.page_bg,
     // ── 가이드 메타 (JSON에 있으면 렌더링이 따라감, 없으면 기존 동작) ──
+    layoutTemplate: json.layout_pattern?.default_template || 'center', // top_center, left_align, center 등
     align: json.layout_pattern?.default_template === 'left_align' ? 'left'
          : json.layout_pattern?.default_template === 'right_align' ? 'right'
          : 'center',
@@ -1648,16 +1649,27 @@ function drawText(ctx, preset, presetId, textColor, textX, textAlign, maxTextW, 
     } else if (decision.type === 'vertical_sub_main') {
       const fittedSub = fitFontSize(effectiveSubText, decision.subSize, state.subFont.css, state.subFont.weight, preset.fonts.sub.spacing);
       const fittedMain = fitFontSize(state.mainText, decision.mainSize, state.mainFont.css, state.mainFont.weight, preset.fonts.main.spacing);
-      const subBoxH = preset.fonts.sub.boxH ?? fittedSub;
-      const mainBoxH = preset.fonts.main.boxH ?? fittedMain;
+
+      // 메인 카피 2줄 지원: \n 기준 분리
+      const mainLines = (state.mainText || '').split('\n');
+      const isMultiLine = mainLines.length > 1;
+
+      // 박스 높이: font_size_rules에서 결정된 값 또는 기본값
+      const subBoxH = decision.subBoxH ?? preset.fonts.sub.boxH ?? fittedSub;
+      const mainBoxH = isMultiLine
+        ? (decision.mainBoxH2line ?? (fittedMain * 2 + (preset.fontSizeRules?.line_height_fixed ?? fittedMain * 0.4)))
+        : (decision.mainBoxH ?? preset.fonts.main.boxH ?? fittedMain);
       const lineGap = preset.verticalLineGap ?? Math.max(12, Math.round(fittedSub * 0.6));
+
+      // 행간 (메인 카피 2줄 사이 간격)
+      const mainLineHeight = preset.fontSizeRules?.line_height_fixed ?? (fittedMain * 1.2);
+
       const blockH = subBoxH + lineGap + mainBoxH;
-      const startY = cy - blockH / 2;
+      // 상단 정렬(top_center): 상단 마진부터 시작. 기본: 세로 중앙 정렬.
+      const startY = isTopAlign ? m.top : cy - blockH / 2;
 
       const baselineInBox = (boxH, fontSize) => (boxH + fontSize * 0.7) / 2;
       const mainTop = state.structureChoice === 'main_top_sub_bottom';
-      const topY  = startY + (mainTop ? baselineInBox(mainBoxH, fittedMain) : baselineInBox(subBoxH, fittedSub));
-      const botY  = startY + (mainTop ? mainBoxH : subBoxH) + lineGap + (mainTop ? baselineInBox(subBoxH, fittedSub) : baselineInBox(mainBoxH, fittedMain));
 
       const drawSubLine = (y) => {
         if (!effectiveSubText) return;
@@ -1666,16 +1678,33 @@ function drawText(ctx, preset, presetId, textColor, textX, textAlign, maxTextW, 
         drawTextWithSpacing(ctx, effectiveSubText, cx, y, preset.fonts.sub.spacing * fittedSub, textAlign);
         ctx.restore();
       };
-      const drawMainLine = (y) => {
+
+      const drawMainBlock = (blockTopY) => {
         if (!state.mainText) return;
         ctx.save();
         ctx.font = state.mainFont.weight + " " + fittedMain + "px " + state.mainFont.css;
-        drawTextWithSpacing(ctx, state.mainText, cx, y, preset.fonts.main.spacing * fittedMain, textAlign);
+        if (isMultiLine) {
+          // 2줄: 각 줄을 행간 간격으로 배치
+          const firstBaseY = blockTopY + baselineInBox(fittedMain, fittedMain);
+          mainLines.forEach((line, i) => {
+            const ly = firstBaseY + i * mainLineHeight;
+            drawTextWithSpacing(ctx, line.trim(), cx, ly, preset.fonts.main.spacing * fittedMain, textAlign);
+          });
+        } else {
+          // 1줄
+          const baseY = blockTopY + baselineInBox(mainBoxH, fittedMain);
+          drawTextWithSpacing(ctx, state.mainText, cx, baseY, preset.fonts.main.spacing * fittedMain, textAlign);
+        }
         ctx.restore();
       };
 
-      if (mainTop) { drawMainLine(topY); drawSubLine(botY); }
-      else         { drawSubLine(topY);  drawMainLine(botY); }
+      if (mainTop) {
+        drawMainBlock(startY);
+        drawSubLine(startY + mainBoxH + lineGap + baselineInBox(subBoxH, fittedSub));
+      } else {
+        drawSubLine(startY + baselineInBox(subBoxH, fittedSub));
+        drawMainBlock(startY + subBoxH + lineGap);
+      }
 
     } else if (decision.type === 'horizontal_sub_main') {
       const swapped = state.structureChoice === 'main_left_sub_right';
@@ -1826,7 +1855,9 @@ function renderToCanvas(presetId, preset, callback) {
   const maxTextW = useLeftAlign
     ? Math.max(0, preset.w * preset.textRatio - m.left - TEXT_RIGHT_PAD)
     : Math.max(0, preset.w - m.left - m.right);
-  const centerY = preset.h / 2;
+  // 텍스트 세로 기준점: top_center면 상단 마진 기준, 아니면 캔버스 세로 중앙
+  const isTopAlign = preset.layoutTemplate === 'top_center';
+  const centerY = isTopAlign ? null : preset.h / 2;  // top_center에서는 drawText 내부에서 상단 기준 계산
   const textColor = getTextColor();
 
   // 텍스트가 영역을 넘으면 폰트 자동 축소 (minFont까지)
@@ -2037,11 +2068,16 @@ function getCompositionDecision(presetId, mainText, subText) {
     const defaultType = fsr.default_type || 'vertical_sub_main';
     if (!subText || subLen === 0) {
       const ms = resolveFontSize(fsr, 'main', mainLen, subLen, preset.fonts.main.size);
-      return { type: 'single_main', mainSize: ms, subSize: 0 };
+      const mbh = resolveRuleValue(fsr, 'main_box_h', mainLen, subLen);
+      const mbh2 = resolveRuleValue(fsr, 'main_box_h_2line', mainLen, subLen);
+      return { type: 'single_main', mainSize: ms, subSize: 0, mainBoxH: mbh, mainBoxH2line: mbh2 };
     }
     const ms = resolveFontSize(fsr, 'main', mainLen, subLen, preset.fonts.main.size);
     const ss = resolveFontSize(fsr, 'sub', mainLen, subLen, preset.fonts.sub.size);
-    return { type: defaultType, mainSize: ms, subSize: ss };
+    const mbh = resolveRuleValue(fsr, 'main_box_h', mainLen, subLen);
+    const mbh2 = resolveRuleValue(fsr, 'main_box_h_2line', mainLen, subLen);
+    const sbh = resolveRuleValue(fsr, 'sub_box_h', mainLen, subLen);
+    return { type: defaultType, mainSize: ms, subSize: ss, mainBoxH: mbh, mainBoxH2line: mbh2, subBoxH: sbh };
   }
 
   // ② 레거시: composition_rules 호환 (기존 배너 안전 유지)
@@ -2090,6 +2126,28 @@ function resolveFontSize(fsr, target, mainLen, subLen, defaultSize) {
     if (pass) return rule[sizeKey];
   }
   return defaultSize;
+}
+
+// font_size_rules.rules에서 특정 키(main_box_h, sub_box_h 등)의 값을 조건 매칭으로 반환
+function resolveRuleValue(fsr, key, mainLen, subLen) {
+  const totalLen = mainLen + subLen;
+  for (const rule of fsr.rules) {
+    if (!(key in rule)) continue;
+    const cond = rule.condition;
+    const match = cond.match(/^(main|sub|total)\s*(<=|>=|<|>|==)\s*(\d+)$/);
+    if (!match) continue;
+    const [, varName, op, valStr] = match;
+    const val = parseInt(valStr);
+    const len = varName === 'main' ? mainLen : varName === 'sub' ? subLen : totalLen;
+    let pass = false;
+    if (op === '<=') pass = len <= val;
+    else if (op === '>=') pass = len >= val;
+    else if (op === '<') pass = len < val;
+    else if (op === '>') pass = len > val;
+    else if (op === '==') pass = len === val;
+    if (pass) return rule[key];
+  }
+  return null;
 }
 
 // {} 중괄호 마크업 파싱 → [{text, isEmphasis}, ...] 세그먼트 배열
