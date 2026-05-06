@@ -317,7 +317,7 @@ body { font-family: 'Pretendard', -apple-system, sans-serif; background: #F5F5F7
       <div id="imageControls" style="display:none;margin-top:12px;padding:12px;background:#F9FAFB;border-radius:8px;font-size:12px;">
         <!-- 이미지 맞춤 모드 (contain / crop) -->
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-          <span style="font-weight:500;color:#555;">이미지 맞춤</span>
+          <span style="font-weight:500;color:#555;">이미지 맞춤 <span style="font-weight:400;color:#999;font-size:11px;">(기본값)</span></span>
           <div style="margin-left:auto;display:flex;gap:4px;">
             <button id="imgFitContain" onclick="setImageFitMode('contain')" style="padding:4px 10px;border:1px solid #2563EB;background:#2563EB;color:#FFF;border-radius:6px;cursor:pointer;font-size:11px;">contain</button>
             <button id="imgFitCrop" onclick="setImageFitMode('crop')" style="padding:4px 10px;border:1px solid #E5E7EB;background:#FFF;color:#666;border-radius:6px;cursor:pointer;font-size:11px;">crop</button>
@@ -804,7 +804,11 @@ let state = {
   // 카피 배치 변형 (배너의 structure_variants 중 사용자가 선택한 id). null이면 첫 번째 사용.
   structureChoice: null,
   // 이미지 맞춤 모드: 'contain' (전체 표시) / 'crop' (콘텐츠 바운딩 박스 기준 크롭)
+  // 좌측 패널에서 일괄 설정 (기본값). 카드별 override는 imageFitModePerBanner에 기록
   imageFitMode: 'contain',
+  // 배너별 fit 모드 override — 미리보기 카드의 contain/crop 토글로 설정
+  // 좌측 패널에서 fit 모드 변경 시 비워짐 (전역 일괄 재통일)
+  imageFitModePerBanner: {},
   // getContentBounds 결과 캐시 (이미지 변경 시에만 재계산)
   contentBoundsCache: null,
   // 배너별 학습 보정값 캐시. { [bannerId]: { scale_delta, offset_y_delta, offset_x_delta } }
@@ -1248,6 +1252,11 @@ function changeFont() {
   updatePreview();
 }
 
+// 특정 배너의 effective 이미지 맞춤 모드 — 카드별 override 우선, 없으면 좌측 기본값
+function getEffectiveFitMode(presetId) {
+  return state.imageFitModePerBanner[presetId] || state.imageFitMode;
+}
+
 // 특정 배너에서 CTA가 활성 상태인지 (지원 + 토글 ON + 체크박스 해제 안 됨)
 function isCtaActiveForBanner(preset) {
   return state.ctaEnabled
@@ -1323,6 +1332,8 @@ function selectStructure(id) {
 // ===== 이미지 맞춤 모드 (contain / crop) =====
 function setImageFitMode(mode) {
   state.imageFitMode = mode;
+  // 좌측 패널에서 일괄 변경 시 카드별 override 초기화 → 모든 배너 일괄 재통일
+  state.imageFitModePerBanner = {};
   syncImageFitUI(mode);
   // 의도: contain↔crop 전환 시 수동 조정값(위치·크기)을 리셋.
   // 이전 모드에서의 offset/scale이 새 모드에 맞지 않으므로 auto로 강제 초기화.
@@ -1427,7 +1438,7 @@ async function saveCalibration(bannerId, slot) {
 
   const sample = {
     date: new Date().toISOString().split('T')[0],
-    fit_mode: state.imageFitMode,
+    fit_mode: getEffectiveFitMode(bannerId),
     auto_scale: autoVals.autoScale,
     final_scale: finalScale,
     auto_offset_y: Math.round(autoVals.autoOffsetY),
@@ -1732,7 +1743,7 @@ function drawAnchorImage(ctx, img, box, preset, presetId) {
     return;
   }
 
-  if (state.imageFitMode === 'crop') {
+  if (getEffectiveFitMode(presetId) === 'crop') {
     if (!state.contentBoundsCache) state.contentBoundsCache = getContentBounds(img);
     const bounds = state.contentBoundsCache;
     const cal = state.calibrationCache[presetId] || {};
@@ -1758,7 +1769,7 @@ function drawFullImage(ctx, img, preset, presetId) {
   const ox = t.mode === 'manual' ? t.offset.x : 0;
   const oy = t.mode === 'manual' ? t.offset.y : 0;
 
-  if (state.imageFitMode === 'crop') {
+  if (getEffectiveFitMode(presetId) === 'crop') {
     const coverScale = Math.max(preset.w / img.width, preset.h / img.height) * userScale;
     const dw = img.width * coverScale, dh = img.height * coverScale;
     ctx.drawImage(img, (preset.w - dw) / 2 + ox, (preset.h - dh) / 2 + oy, dw, dh);
@@ -2164,7 +2175,7 @@ function renderToCanvas(presetId, preset, callback) {
     const oy = t.mode === 'manual' ? t.offset.y : 0;
     const gap = box.image_gap ?? (preset.textGap || 24);
 
-    if (state.imageFitMode === 'crop') {
+    if (getEffectiveFitMode(presetId) === 'crop') {
       const boundsKey = isRight ? 'contentBoundsCache2' : 'contentBoundsCache';
       if (!state[boundsKey]) state[boundsKey] = getContentBounds(img);
       const bounds = state[boundsKey];
@@ -2224,7 +2235,7 @@ function renderToCanvas(presetId, preset, callback) {
       // 이미지 모드 판별: 수동 조정 또는 crop이면 세이프존 클리핑 해제
       const t = getImageTransform(presetId);
       const t2 = getImageTransform2(presetId);
-      const isManualOrCrop = (t.mode === 'manual') || (state.imageFitMode === 'crop') || (t2.mode === 'manual');
+      const isManualOrCrop = (t.mode === 'manual') || (getEffectiveFitMode(presetId) === 'crop') || (t2.mode === 'manual');
 
       // ── 1단계: 이미지 그리기 (수동/crop 시 클리핑 없이, 자동 시 마진 클리핑) ──
       ctx.save();
@@ -2735,6 +2746,46 @@ function createLogoCheckbox(presetId, preset, displayScale, canvasHolder) {
   return createPreviewCheckbox(presetId, preset, displayScale, canvasHolder, '로고 적용', state.logoDisabledBanners);
 }
 
+// 카드별 이미지 맞춤 모드 토글 (contain / crop) — 이미지 업로드 시 노출
+function createFitModeToggle(presetId, preset, displayScale, canvasHolder) {
+  const wrap = document.createElement("div");
+  wrap.style.cssText = "display:flex;gap:4px;align-items:center;";
+  const baseBtn = "padding:3px 8px;border:1px solid #E5E7EB;background:#FFF;color:#666;border-radius:4px;cursor:pointer;font-size:11px;";
+  const activeBtn = "padding:3px 8px;border:1px solid #2563EB;background:#2563EB;color:#FFF;border-radius:4px;cursor:pointer;font-size:11px;";
+  const containBtn = document.createElement("button");
+  const cropBtn = document.createElement("button");
+  containBtn.textContent = "contain";
+  cropBtn.textContent = "crop";
+  const updateActive = () => {
+    const m = getEffectiveFitMode(presetId);
+    containBtn.style.cssText = m === 'contain' ? activeBtn : baseBtn;
+    cropBtn.style.cssText = m === 'crop' ? activeBtn : baseBtn;
+  };
+  updateActive();
+  const onPick = (newMode) => {
+    state.imageFitModePerBanner[presetId] = newMode;
+    updateActive();
+    // 캔버스만 다시 그림 (canvasHolder 공유)
+    renderToCanvas(presetId, preset, (newCanvas) => {
+      newCanvas.style.width = (preset.w * displayScale) + "px";
+      newCanvas.style.height = (preset.h * displayScale) + "px";
+      newCanvas.style.display = "block";
+      if (state.imageUrl) {
+        const t = getImageTransform(presetId);
+        newCanvas.style.cursor = t.mode === 'manual' ? 'grab' : 'pointer';
+      }
+      if (canvasHolder.current && canvasHolder.current.parentNode) canvasHolder.current.replaceWith(newCanvas);
+      canvasHolder.current = newCanvas;
+      if (state.imageUrl) attachImageInteractions(newCanvas, displayScale, presetId, canvasHolder);
+    });
+  };
+  containBtn.addEventListener('click', () => onPick('contain'));
+  cropBtn.addEventListener('click', () => onPick('crop'));
+  wrap.appendChild(containBtn);
+  wrap.appendChild(cropBtn);
+  return wrap;
+}
+
 // 미리보기용: Canvas를 축소해서 표시 + 마진 오버레이 + (수동 모드 시) 크기 슬라이더
 function renderPreviewItem(container, presetId, preset, scale) {
   const wrapper = document.createElement("div");
@@ -2770,17 +2821,20 @@ function renderPreviewItem(container, presetId, preset, scale) {
 
     const previewItem = container.parentElement; // .preview-item 카드
 
-    // 캔버스 위 컨트롤 행 — 로고 체크박스(왼) + CTA 체크박스(오)
+    // 캔버스 위 컨트롤 행 — 로고 체크박스(왼) + CTA 체크박스(중) + fit 모드 토글(오)
     // 로고 체크박스: logoBox 정의 + 로고(콜라보 또는 출처) 업로드 됐을 때만
     // CTA 체크박스: CTA 토글 ON + 지원 배너일 때만
+    // Fit 모드 토글: 이미지 업로드 됐을 때만 (배너별 contain/crop override)
     if (previewItem) {
       const showLogo = !!(preset.logoBox && (state.logoUrl || state.sourceLogoUrl));
       const showCta = !!(state.ctaEnabled && preset.ctaSupported !== false);
-      if (showLogo || showCta) {
+      const showFit = !!state.imageUrl;
+      if (showLogo || showCta || showFit) {
         const ctrlRow = document.createElement("div");
         ctrlRow.style.cssText = "margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:16px;font-size:12px;color:#555;";
         if (showLogo) ctrlRow.appendChild(createLogoCheckbox(presetId, preset, scale, canvasHolder));
         if (showCta)  ctrlRow.appendChild(createCtaCheckbox(presetId, preset, scale, canvasHolder));
+        if (showFit)  ctrlRow.appendChild(createFitModeToggle(presetId, preset, scale, canvasHolder));
         previewItem.insertBefore(ctrlRow, container);
       }
     }
