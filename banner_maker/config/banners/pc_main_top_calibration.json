@@ -165,12 +165,34 @@
       "scale_delta": 0,
       "offset_y_delta": 0,
       "offset_x_delta": 0
+    },
+    {
+      "date": "2026-05-06",
+      "fit_mode": "crop",
+      "auto_scale": 1.0858968376068372,
+      "final_scale": 1,
+      "auto_offset_y": 17,
+      "final_offset_y": 17,
+      "scale_delta": 0,
+      "offset_y_delta": 0,
+      "offset_x_delta": 0
+    },
+    {
+      "date": "2026-05-06",
+      "fit_mode": "crop",
+      "auto_scale": 1.0807737350427349,
+      "final_scale": 1,
+      "auto_offset_y": 17,
+      "final_offset_y": 17,
+      "scale_delta": 0,
+      "offset_y_delta": 0,
+      "offset_x_delta": 0
     }
   ],
   "average": {
-    "scale_delta": 0.081,
-    "offset_y_delta": 9.2,
-    "offset_x_delta": -31.33,
-    "sample_count": 15
+    "scale_delta": 0.0715,
+    "offset_y_delta": 8.12,
+    "offset_x_delta": -27.65,
+    "sample_count": 17
   }
 }

@@ -2152,7 +2152,12 @@ function renderToCanvas(presetId, preset, callback) {
         // Math.min(_,1) 제거 → 원본보다 작은 로고도 박스 크기에 맞춰 확대 (디자이너 의도 = 박스 사이즈로 강제)
         const boxH = lb.maxHeight || 20;
         const targetH = boxH * (lb.imageScale ?? 1);
-        const logoScale = targetH / logoImg.height;
+        let logoScale = targetH / logoImg.height;
+        // 가로 임계값 초과 시 비율 유지하며 shrinkScale로 축소 (예: 가로 ≥ 340 → 80%)
+        const drawnWPreview = logoImg.width * logoScale;
+        if (lb.shrinkThresholdW && drawnWPreview >= lb.shrinkThresholdW) {
+          logoScale *= (lb.shrinkScale ?? 0.8);
+        }
         logoDrawnH = logoImg.height * logoScale;
         logoDrawnW = logoImg.width * logoScale;
         // 텍스트 centerY를 아래로 밀어서 로고+gap+텍스트 그룹 전체가 중앙에 오도록 조정
