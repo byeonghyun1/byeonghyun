@@ -258,6 +258,30 @@ body { font-family: 'Pretendard', -apple-system, sans-serif; background: #F5F5F7
 }
 .btn-download:hover { background: #1D4ED8; }
 .btn-download:disabled { background: #D1D5DB; cursor: not-allowed; }
+
+/* 이미지 크기 조절 슬라이더 (수동 모드) */
+.scale-slider {
+  -webkit-appearance: none; appearance: none;
+  height: 4px;
+  background: linear-gradient(to right, #2563EB 0%, #E5E7EB 0%);
+  border-radius: 999px;
+  outline: none; cursor: pointer; border: none; padding: 0; margin: 0;
+}
+.scale-slider::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none;
+  width: 16px; height: 16px;
+  background: #2563EB; border: none; box-shadow: none;
+  border-radius: 50%; cursor: pointer;
+}
+.scale-slider::-moz-range-thumb {
+  width: 16px; height: 16px;
+  background: #2563EB; border: none;
+  border-radius: 50%; cursor: pointer;
+}
+.scale-slider::-moz-range-track {
+  background: transparent; border: none; height: 4px;
+}
+.scale-slider:focus { outline: none; }
 </style>
 </head>
 <body>
@@ -346,7 +370,7 @@ body { font-family: 'Pretendard', -apple-system, sans-serif; background: #F5F5F7
         </div>
         <div id="imgManualPanel" style="display:none;color:#666;line-height:1.6;">
           <div>· 미리보기에서 <strong>드래그</strong> = 위치 이동</div>
-          <div>· <strong>마우스 휠</strong> = 크기 조절 (등비율, 80~150%)</div>
+          <div>· 미리보기 아래 <strong>슬라이더</strong> = 크기 조절 (0~100, 등비율)</div>
           <div style="margin-top:6px;color:#888;font-size:11px;">각 미리보기마다 독립 조정 · 위 버튼은 선택된 모든 배너에 일괄 적용</div>
           <button onclick="resetImageTransform()" style="margin-top:8px;padding:6px 12px;border:1px solid #E5E7EB;background:#FFF;color:#555;border-radius:6px;cursor:pointer;font-size:11px;">↺ 위치·크기 초기화</button>
         </div>
@@ -358,7 +382,7 @@ body { font-family: 'Pretendard', -apple-system, sans-serif; background: #F5F5F7
       <div class="section-title">2. 텍스트 입력</div>
       <div class="input-group">
         <label>메인 카피</label>
-        <textarea id="mainText" rows="2" placeholder="예: 지금 바로 알바몬에 광고하세요" style="resize:none;"></textarea>
+        <input type="text" id="mainText" placeholder="예: 지금 바로 알바몬에 광고하세요">
         <div class="char-count"><span id="mainCount">0</span></div>
       </div>
       <div class="input-group">
@@ -366,7 +390,7 @@ body { font-family: 'Pretendard', -apple-system, sans-serif; background: #F5F5F7
         <input type="text" id="subText" placeholder="예: 광고 노출할 곳을 찾는다면?">
         <div class="char-count"><span id="subCount">0</span></div>
       </div>
-      <div id="totalCharCount" style="display:none;font-size:12px;color:#888;text-align:right;margin-top:-4px;">합계 <span id="totalCount">0</span>/35</div>
+      <div id="totalCharCount" style="display:none;font-size:12px;color:#888;text-align:right;margin-top:-4px;">합계 <span id="totalCount">0</span>/<span id="totalMax">35</span></div>
       <!-- 카피 배치 (structure_variants가 2개 이상인 배너에서만 노출) -->
       <div id="structureSelector" style="display:none;margin-top:12px;">
         <label style="font-size:13px;font-weight:500;color:#555;display:block;margin-bottom:6px;">카피 배치</label>
@@ -418,8 +442,8 @@ body { font-family: 'Pretendard', -apple-system, sans-serif; background: #F5F5F7
       <div class="section-title">5. 배경 컬러</div>
       <div class="color-row">
         <div class="color-input-wrap">
-          <input type="color" id="bgColorPicker" value="#4A90D9">
-          <input type="text" id="bgColorText" value="#4A90D9">
+          <input type="color" id="bgColorPicker" value="#000000">
+          <input type="text" id="bgColorText" value="#000000">
         </div>
       </div>
       <div class="color-help">HEX 컬러값을 직접 입력하거나 컬러 피커를 사용하세요</div>
@@ -591,6 +615,13 @@ function adaptBanner(json) {
   const fixed = fonts.fixed || {};
   const main = fonts.main || {};
   const sub = fonts.sub || {};
+  // font_size_rules 폴백: JSON에서 fonts.main/sub의 size_px/box_h_px가 없을 때
+  // font_size_rules의 첫 번째 매칭 규칙에서 값을 가져옴 → 데이터 중복 제거 가능 (단일 SSoT)
+  const fsr = json.font_size_rules?.rules || [];
+  const fbMainSize = fsr.find(r => r.main_size != null)?.main_size;
+  const fbSubSize  = fsr.find(r => r.sub_size != null)?.sub_size;
+  const fbMainBoxH = fsr.find(r => r.main_box_h != null)?.main_box_h;
+  const fbSubBoxH  = fsr.find(r => r.sub_box_h != null)?.sub_box_h;
   return {
     id: json.id,
     name: json.name,
@@ -598,15 +629,15 @@ function adaptBanner(json) {
     margins: json.margins || { left: 0, right: 0, top: 0, bottom: 0 },
     fonts: {
       main: {
-        size: main.size_px ?? 0,
+        size: main.size_px ?? fbMainSize ?? 0,
         spacing: parsePercentSpacing(main.letter_spacing ?? fixed.letter_spacing),
-        boxH: main.box_h_px ?? null,        // line-height 기반 박스 높이 (없으면 폰트 사이즈 사용)
+        boxH: main.box_h_px ?? fbMainBoxH ?? null,
         lineHeight: main.line_height ?? null
       },
       sub: {
-        size: sub.size_px ?? 0,
+        size: sub.size_px ?? fbSubSize ?? 0,
         spacing: parsePercentSpacing(sub.letter_spacing ?? fixed.letter_spacing),
-        boxH: sub.box_h_px ?? null,
+        boxH: sub.box_h_px ?? fbSubBoxH ?? null,
         lineHeight: sub.line_height ?? null
       }
     },
@@ -723,7 +754,7 @@ let _isDragging = false;
 
 let state = {
   selectedSizes: ["pc_main_curtain"],
-  bgColor: "#4A90D9",
+  bgColor: "#000000",
   mainText: "",
   subText: "",
   imageUrl: null,
@@ -785,9 +816,15 @@ function isDualImageSupported() {
   return p && p.dualImage === true;
 }
 
-// 듀얼 이미지 모드 활성 여부 (렌더링/학습용 — 토글이 열려있을 때만 true)
-function isDualImageMode() {
-  return isDualImageSupported() && _dualImageOpen;
+// 특정 배너의 듀얼 모드 활성 여부 (다중 선택과 무관하게 배너 자체가 dualImage이고 토글 ON이면 true)
+// 렌더링/학습/인터랙션은 이쪽을 사용 — 다중 선택 중에도 커튼 미리보기에 좌측 이미지가 유지됨.
+function isDualImageModeForBanner(presetId) {
+  return isDualImageSupportedFor(presetId) && _dualImageOpen;
+}
+// 특정 배너가 듀얼 이미지 지원 배너인지 (다중 선택과 무관)
+function isDualImageSupportedFor(presetId) {
+  const p = PRESETS[presetId];
+  return !!(p && p.dualImage === true);
 }
 
 // 듀얼 이미지용 transform (좌측 보조 이미지 전용, 키 suffix: _R)
@@ -804,6 +841,77 @@ function syncImageModeUI(mode) {
   document.getElementById('imgModeAuto').style.cssText  = mode === 'auto'   ? BTN_ON : BTN_OFF;
   document.getElementById('imgModeManual').style.cssText = mode === 'manual' ? BTN_ON : BTN_OFF;
   document.getElementById('imgManualPanel').style.display = mode === 'manual' ? 'block' : 'none'; // block: 세로 나열 패널
+}
+
+// ===== 글자수 제한 =====
+// 배너 JSON의 copy.{main_max_chars(_kr) / sub_max_chars(_kr) / total_max_chars}
+// 다중 선택 시 가장 빡센 제한 적용. 제한 명시가 없는 배너만 선택되면 무제한.
+// 반환: { mainMax, subMax, totalMax }  (각각 Infinity면 해당 항목 제한 없음)
+function getCharLimits() {
+  let mainMax = Infinity, subMax = Infinity, totalMax = Infinity;
+  for (const id of state.selectedSizes) {
+    const c = PRESETS[id]?.copyConstraints;
+    if (!c) continue;
+    const mm = c.main_max_chars_kr;
+    const sm = c.sub_max_chars_kr;
+    const tm = c.total_max_chars;
+    if (mm) mainMax = Math.min(mainMax, mm);
+    if (sm) subMax  = Math.min(subMax, sm);
+    if (tm) totalMax = Math.min(totalMax, tm);
+  }
+  return { mainMax, subMax, totalMax };
+}
+function updateCharCounts() {
+  const mainLen = stripEmphasis(state.mainText).length;
+  const subLen = stripEmphasis(state.subText).length;
+  const total = mainLen + subLen;
+  const { mainMax, subMax, totalMax } = getCharLimits();
+
+  // 메인 카운트: 개별 제한 있으면 "8/16", 없으면 "8"
+  const mainEl = document.getElementById("mainCount");
+  mainEl.textContent = (mainMax === Infinity) ? String(mainLen) : (mainLen + '/' + mainMax);
+  mainEl.style.color = (mainMax !== Infinity && mainLen >= mainMax) ? '#E53E3E' : '';
+
+  // 서브 카운트: 동일
+  const subEl = document.getElementById("subCount");
+  subEl.textContent = (subMax === Infinity) ? String(subLen) : (subLen + '/' + subMax);
+  subEl.style.color = (subMax !== Infinity && subLen >= subMax) ? '#E53E3E' : '';
+
+  // 합계 표시: total_max_chars가 명시된 배너(예: 커튼)가 선택됐을 때만 노출
+  // span만 textContent로 갱신 → 외부 참조 stale 방지 + DOM 재생성 비용 절감
+  const totalEl = document.getElementById("totalCharCount");
+  if (totalMax === Infinity) {
+    totalEl.style.display = 'none';
+  } else {
+    totalEl.style.display = '';
+    const totalCountEl = document.getElementById("totalCount");
+    if (totalCountEl) totalCountEl.textContent = total;
+    // /max 부분만 별도 span에 담아두고 거기만 갱신 (구조: "합계 <count>/<max>")
+    const maxEl = document.getElementById("totalMax");
+    if (maxEl) maxEl.textContent = totalMax;
+    totalEl.style.color = total > totalMax ? '#E53E3E' : '#888';
+  }
+}
+
+// 입력란 글자수 제한 가드 — kind: 'main' | 'sub'
+// 늘어나는 입력만 차단(개별/합계 제한 동시 검사). 지우기·동일·감소는 항상 허용.
+function attachLengthGuard(elementId, kind) {
+  const el = document.getElementById(elementId);
+  if (!el) return;
+  el.addEventListener("input", (e) => {
+    const newLen = stripEmphasis(e.target.value).length;
+    const prevLen = stripEmphasis(state[kind + 'Text']).length;
+    const otherLen = stripEmphasis(state[(kind === 'main' ? 'sub' : 'main') + 'Text']).length;
+    const limits = getCharLimits();
+    const ownMax = (kind === 'main') ? limits.mainMax : limits.subMax;
+    const total = newLen + otherLen;
+    if (newLen > prevLen && (newLen > ownMax || total > limits.totalMax)) {
+      e.target.value = state[kind + 'Text']; return;
+    }
+    state[kind + 'Text'] = e.target.value;
+    updateCharCounts();
+    updatePreview();
+  });
 }
 
 // ===== 초기화 =====
@@ -833,74 +941,9 @@ async function init() {
 
   renderSizeGrid(visibleIds);
 
-  // 글자수 제한 — 배너 JSON의 copy.{main_max_chars(_kr) / sub_max_chars(_kr) / total_max_chars}
-  // 다중 선택 시 가장 빡센 제한을 적용. 제한 명시가 없는 배너만 선택되면 무제한.
-  // 반환: { mainMax, subMax, totalMax }  (각각 Infinity면 해당 항목 제한 없음)
-  function getCharLimits() {
-    let mainMax = Infinity, subMax = Infinity, totalMax = Infinity;
-    for (const id of state.selectedSizes) {
-      const c = PRESETS[id]?.copyConstraints;
-      if (!c) continue;
-      const mm = c.main_max_chars_kr ?? c.main_max_chars;
-      const sm = c.sub_max_chars_kr ?? c.sub_max_chars;
-      const tm = c.total_max_chars;
-      if (mm) mainMax = Math.min(mainMax, mm);
-      if (sm) subMax  = Math.min(subMax, sm);
-      if (tm) totalMax = Math.min(totalMax, tm);
-    }
-    return { mainMax, subMax, totalMax };
-  }
-  // 레거시 호환 (다른 곳에서 호출 시 안전망)
-  function getTotalMaxChars() {
-    const t = getCharLimits().totalMax;
-    return t === Infinity ? Infinity : t;
-  }
-  function updateCharCounts() {
-    const mainLen = stripEmphasis(state.mainText).length;
-    const subLen = stripEmphasis(state.subText).length;
-    const total = mainLen + subLen;
-    const { mainMax, subMax, totalMax } = getCharLimits();
-
-    // 메인 카운트: 개별 제한 있으면 "8/16", 없으면 "8"
-    const mainEl = document.getElementById("mainCount");
-    mainEl.textContent = (mainMax === Infinity) ? String(mainLen) : (mainLen + '/' + mainMax);
-    mainEl.style.color = (mainMax !== Infinity && mainLen >= mainMax) ? '#E53E3E' : '';
-
-    // 서브 카운트: 동일
-    const subEl = document.getElementById("subCount");
-    subEl.textContent = (subMax === Infinity) ? String(subLen) : (subLen + '/' + subMax);
-    subEl.style.color = (subMax !== Infinity && subLen >= subMax) ? '#E53E3E' : '';
-
-    // 합계 표시: total_max_chars가 명시된 배너(예: 커튼)가 선택됐을 때만 노출
-    const totalEl = document.getElementById("totalCharCount");
-    if (totalMax === Infinity) {
-      totalEl.style.display = 'none';
-    } else {
-      totalEl.style.display = '';
-      totalEl.innerHTML = '합계 <span id="totalCount">' + total + '</span>/' + totalMax;
-      totalEl.style.color = total > totalMax ? '#E53E3E' : '#888';
-    }
-  }
-  document.getElementById("mainText").addEventListener("input", e => {
-    const mainLen = stripEmphasis(e.target.value).length;
-    const subLen = stripEmphasis(state.subText).length;
-    const { mainMax, totalMax } = getCharLimits();
-    // 메인 개별 제한 또는 합계 제한 초과 시 입력 되돌림
-    if (mainLen > mainMax || mainLen + subLen > totalMax) { e.target.value = state.mainText; return; }
-    state.mainText = e.target.value;
-    updateCharCounts();
-    updatePreview();
-  });
-  document.getElementById("subText").addEventListener("input", e => {
-    const mainLen = stripEmphasis(state.mainText).length;
-    const subLen = stripEmphasis(e.target.value).length;
-    const { subMax, totalMax } = getCharLimits();
-    // 서브 개별 제한 또는 합계 제한 초과 시 입력 되돌림
-    if (subLen > subMax || mainLen + subLen > totalMax) { e.target.value = state.subText; return; }
-    state.subText = e.target.value;
-    updateCharCounts();
-    updatePreview();
-  });
+  // (글자수 제한 함수 3개 — getCharLimits / updateCharCounts — 전역 함수로 옮김. 정의는 init() 위쪽에 있음)
+  attachLengthGuard("mainText", "main");
+  attachLengthGuard("subText", "sub");
   document.getElementById("bgColorPicker").addEventListener("input", e => setBgColor(e.target.value));
   const bgTextInput = document.getElementById("bgColorText");
   bgTextInput.addEventListener("input", e => { if (!e.target.value.startsWith('#')) e.target.value = '#' + e.target.value.replace(/#/g, ''); });
@@ -1074,17 +1117,26 @@ function toggleDualImage() {
   }
 }
 
-// 듀얼 이미지 UI 표시/숨김 (커튼배너 단독 선택 시에만 토글 버튼 노출)
+// 듀얼 이미지 UI 표시/숨김 (커튼배너 단독 선택 시에만 사이드바 토글 버튼 노출)
+// 다중 선택으로 토글 버튼이 숨겨져도 _dualImageOpen 상태는 유지 → 데이터(state.imageUrl2)와
+// 커튼 미리보기의 좌측 이미지 렌더링은 그대로 살아있음.
+// 다시 단독 선택으로 돌아왔을 때 토글 버튼 텍스트/스타일도 _dualImageOpen 상태에 맞게 동기화.
 function updateDualImageUI() {
   const supported = isDualImageSupported();
   document.getElementById("dualToggleWrap").style.display = supported ? 'block' : 'none';
-  // 커튼배너가 아닌 경우 토글 닫기
-  if (!supported && _dualImageOpen) {
-    _dualImageOpen = false;
-    document.getElementById("dualUploadInner").style.display = "none";
-    document.getElementById("dualToggleBtn").textContent = "＋ 좌측 이미지 추가";
-    document.getElementById("dualToggleBtn").style.borderColor = "#D1D5DB";
-    document.getElementById("dualToggleBtn").style.color = "#555";
+  if (!supported) return;
+  const btn = document.getElementById("dualToggleBtn");
+  const inner = document.getElementById("dualUploadInner");
+  if (_dualImageOpen) {
+    btn.textContent = "－ 좌측 이미지 닫기";
+    btn.style.borderColor = "#2563EB";
+    btn.style.color = "#2563EB";
+    inner.style.display = "block";
+  } else {
+    btn.textContent = "＋ 좌측 이미지 추가";
+    btn.style.borderColor = "#D1D5DB";
+    btn.style.color = "#555";
+    inner.style.display = "none";
   }
 }
 
@@ -1245,7 +1297,7 @@ function setImageFitMode(mode) {
     t.offset = { x: 0, y: 0 };
     t.scale = 1.0;
     t.mode = 'auto';
-    if (isDualImageMode()) {
+    if (isDualImageModeForBanner(id)) {
       const t2 = getImageTransform2(id);
       t2.offset = { x: 0, y: 0 };
       t2.scale = 1.0;
@@ -1289,19 +1341,37 @@ function getContentBounds(img) {
 }
 
 // ===== 학습 데이터 (calibration) =====
-// 배너별 학습 보정값 로드 (서버에서 JSON 파일 읽기)
+// localStorage 백업 키 prefix — 서버 미실행 환경(예: GitHub Pages)에서 학습 임시 저장
+const CALIBRATION_LS_PREFIX = 'calibration_v1_';
+
+// localStorage에서 학습 데이터 폴백 로드
+function loadCalibrationFromLocalStorage(bannerId) {
+  try {
+    const raw = localStorage.getItem(CALIBRATION_LS_PREFIX + bannerId);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch (e) { return null; }
+}
+
+// 배너별 학습 보정값 로드 (서버 우선, 실패 시 localStorage 폴백)
 async function loadCalibration(bannerId) {
   try {
     const res = await fetch('config/banners/' + bannerId + '_calibration.json?t=' + Date.now());
-    if (!res.ok) return null;
+    if (!res.ok) throw new Error('서버 응답 없음');
     const data = await res.json();
     state.calibrationCache[bannerId] = data.average || {};
-    // 듀얼 이미지용 좌/우 보정값도 로드 (없으면 빈 객체)
     state.calibrationCache[bannerId + '_L'] = data.average_left || {};
     state.calibrationCache[bannerId + '_R'] = data.average_right || {};
     return data.average || {};
   } catch (e) {
-    console.warn('학습 데이터 로드 실패:', bannerId, e);
+    // 서버 실패 → localStorage 폴백
+    const ls = loadCalibrationFromLocalStorage(bannerId);
+    if (ls) {
+      state.calibrationCache[bannerId] = ls.average || {};
+      state.calibrationCache[bannerId + '_L'] = ls.average_left || {};
+      state.calibrationCache[bannerId + '_R'] = ls.average_right || {};
+      return ls.average || {};
+    }
     return null;
   }
 }
@@ -1336,6 +1406,8 @@ async function saveCalibration(bannerId, slot) {
   const body = { banner_id: bannerId, sample };
   if (slot) body.slot = slot;
 
+  const cacheKey = slot === 'left' ? bannerId + '_L' : slot === 'right' ? bannerId + '_R' : bannerId;
+
   try {
     const res = await fetch('/api/calibration', {
       method: 'POST',
@@ -1344,13 +1416,25 @@ async function saveCalibration(bannerId, slot) {
     });
     const result = await res.json();
     if (result.ok) {
-      // 캐시 즉시 갱신 (slot에 맞는 키)
-      const cacheKey = slot === 'left' ? bannerId + '_L' : slot === 'right' ? bannerId + '_R' : bannerId;
       state.calibrationCache[cacheKey] = result.average;
-      console.log('[calibration] 학습 저장 완료:', bannerId, slot || 'single', result.average);
+      console.log('[calibration] 학습 저장 완료 (서버):', bannerId, slot || 'single', result.average);
+      return;
     }
+    throw new Error('서버 응답 ok=false');
   } catch (e) {
-    console.warn('[calibration] 저장 실패 (서버 미실행?):', e.message);
+    // 서버 실패 → localStorage 폴백 (현재 sample을 average로 캐시·저장)
+    state.calibrationCache[cacheKey] = sample;
+    try {
+      const lsKey = CALIBRATION_LS_PREFIX + bannerId;
+      const existing = loadCalibrationFromLocalStorage(bannerId) || {};
+      if (slot === 'left')       existing.average_left  = sample;
+      else if (slot === 'right') existing.average_right = sample;
+      else                       existing.average       = sample;
+      localStorage.setItem(lsKey, JSON.stringify(existing));
+      console.log('[calibration] 학습 저장 (localStorage 폴백):', bannerId, slot || 'single');
+    } catch (lsErr) {
+      console.warn('[calibration] localStorage 저장 실패:', lsErr.message);
+    }
   }
 }
 
@@ -1364,7 +1448,7 @@ function showImageControls() {
 function setImageMode(mode) {
   state.selectedSizes.forEach(id => {
     getImageTransform(id).mode = mode;
-    if (isDualImageMode()) getImageTransform2(id).mode = mode;
+    if (isDualImageModeForBanner(id)) getImageTransform2(id).mode = mode;
   });
   syncImageModeUI(mode);
   updatePreview();
@@ -1376,7 +1460,7 @@ function resetImageTransform() {
     t.scale = 1.0;
     t.offset = { x: 0, y: 0 };
     // 듀얼 이미지 좌측(보조)도 초기화
-    if (isDualImageMode()) {
+    if (isDualImageModeForBanner(id)) {
       const t2 = getImageTransform2(id);
       t2.scale = 1.0;
       t2.offset = { x: 0, y: 0 };
@@ -1631,20 +1715,11 @@ function drawText(ctx, preset, presetId, textColor, textX, textAlign, maxTextW, 
       const IMG_GAP = preset.imageBox?.image_gap ?? (preset.textGap || 24);
 
       if (state.mainText) {
-        // ── auto line-wrap: mainAutoWrap true이고 1줄 텍스트가 maxTextW 초과 시 자동 2줄 분리 ──
-        let renderText = state.mainText;
-        if (preset.mainAutoWrap && !state.mainText.includes('\n')) {
-          ctx.save();
-          ctx.font = state.mainFont.weight + " " + decision.mainSize + "px " + state.mainFont.css;
-          const fullW = measureTextWithSpacing(ctx, state.mainText, preset.fonts.main.spacing * decision.mainSize);
-          ctx.restore();
-          if (fullW > maxTextW) {
-            // 가장 균등한 위치에서 줄바꿈
-            const chars = [...state.mainText];
-            const mid = Math.ceil(chars.length / 2);
-            renderText = chars.slice(0, mid).join('') + '\n' + chars.slice(mid).join('');
-          }
-        }
+        // ── auto line-wrap: 단어 단위 줄바꿈 (WORD_WRAP_BANNERS 등록 배너만) ──
+        const renderText = getWrappedMainText(
+          ctx, state.mainText, preset, decision.mainSize,
+          preset.fonts.main.spacing * decision.mainSize, maxTextW
+        );
 
         const mainLines = renderText.split('\n');
         const isMultiLine = mainLines.length > 1;
@@ -1722,19 +1797,11 @@ function drawText(ctx, preset, presetId, textColor, textX, textAlign, maxTextW, 
       const fittedSub = fitFontSize(effectiveSubText, decision.subSize, state.subFont.css, state.subFont.weight, preset.fonts.sub.spacing);
       const fittedMain = fitFontSize(state.mainText, decision.mainSize, state.mainFont.css, state.mainFont.weight, preset.fonts.main.spacing);
 
-      // ── auto line-wrap: mainAutoWrap true이고 1줄 텍스트가 maxTextW 초과 시 자동 2줄 분리 ──
-      let mainRenderText = state.mainText || '';
-      if (preset.mainAutoWrap && !mainRenderText.includes('\n')) {
-        ctx.save();
-        ctx.font = state.mainFont.weight + " " + fittedMain + "px " + state.mainFont.css;
-        const fullW = measureTextWithSpacing(ctx, mainRenderText, preset.fonts.main.spacing * fittedMain);
-        ctx.restore();
-        if (fullW > maxTextW) {
-          const chars = [...mainRenderText];
-          const mid = Math.ceil(chars.length / 2);
-          mainRenderText = chars.slice(0, mid).join('') + '\n' + chars.slice(mid).join('');
-        }
-      }
+      // ── auto line-wrap: 단어 단위 줄바꿈 (WORD_WRAP_BANNERS 등록 배너만) ──
+      const mainRenderText = getWrappedMainText(
+        ctx, state.mainText || '', preset, fittedMain,
+        preset.fonts.main.spacing * fittedMain, maxTextW
+      );
 
       // 메인 카피 2줄 지원: \n 기준 분리
       const mainLines = mainRenderText.split('\n');
@@ -1983,7 +2050,7 @@ function renderToCanvas(presetId, preset, callback) {
       if (!state[boundsKey]) state[boundsKey] = getContentBounds(img);
       const bounds = state[boundsKey];
       // isRight=true -> 보조(imageUrl2, 좌측 배치) -> _L / isRight=false -> 메인 -> 듀얼이면 _R, 단일이면 기본
-      const calKey = isRight ? presetId + '_L' : (isDualImageMode() ? presetId + '_R' : presetId);
+      const calKey = isRight ? presetId + '_L' : (isDualImageModeForBanner(presetId) ? presetId + '_R' : presetId);
       const cal = state.calibrationCache[calKey] || {};
       const availH = preset.h - vPad;
       const crop = computeCropTransform(img, bounds, availH, cal, userScale, vPad);
@@ -2006,7 +2073,7 @@ function renderToCanvas(presetId, preset, callback) {
   const renderClipped = () => {
     // 필요한 이미지 URL 수집
     const urls = [];
-    if (isDualImageMode() && (state.imageUrl || state.imageUrl2)) {
+    if (isDualImageModeForBanner(presetId) && (state.imageUrl || state.imageUrl2)) {
       urls.push(state.imageUrl, state.imageUrl2); // [메인(우), 보조(좌)]
     } else if (state.imageUrl) {
       urls.push(state.imageUrl);
@@ -2040,7 +2107,7 @@ function renderToCanvas(presetId, preset, callback) {
       ctx.save();
       if (!isManualOrCrop) applyClip();
 
-      if (isDualImageMode() && mainImgCount >= 2 && (images[0] || images[1])) {
+      if (isDualImageModeForBanner(presetId) && mainImgCount >= 2 && (images[0] || images[1])) {
         // 듀얼 이미지 모드 (커튼배너 전용)
         const [imgMain, imgSub] = images;
         if (imgMain) gi.right = computeGroupedImgData(imgMain, false);
@@ -2271,6 +2338,64 @@ function measureTextWithSpacing(ctx, text, spacing) {
   return w;
 }
 
+// 단어 단위 자동 줄바꿈 (CSS의 word-break: keep-all + overflow-wrap: break-word 효과)
+// - 공백으로 어절 분리 → 어절 단위로 줄에 채우다가 가용폭 초과 직전 줄바꿈
+// - 한 어절이 자체로 가용폭 초과 시 글자 단위로 자름
+// 반환: '\n'으로 연결된 문자열
+function wrapTextByWord(ctx, text, maxWidth, spacing) {
+  if (!text) return '';
+  const words = text.split(' ');
+  const lines = [];
+  let curLine = '';
+  for (const word of words) {
+    const tryLine = curLine ? curLine + ' ' + word : word;
+    if (measureTextWithSpacing(ctx, tryLine, spacing) <= maxWidth) {
+      curLine = tryLine;
+    } else {
+      // 어절이 자체로 가용폭 초과면 글자 단위로 자르기
+      if (measureTextWithSpacing(ctx, word, spacing) > maxWidth) {
+        if (curLine) { lines.push(curLine); curLine = ''; }
+        for (const ch of [...word]) {
+          const tryCh = curLine + ch;
+          if (measureTextWithSpacing(ctx, tryCh, spacing) <= maxWidth) {
+            curLine = tryCh;
+          } else {
+            if (curLine) lines.push(curLine);
+            curLine = ch;
+          }
+        }
+      } else {
+        if (curLine) lines.push(curLine);
+        curLine = word;
+      }
+    }
+  }
+  if (curLine) lines.push(curLine);
+  return lines.join('\n');
+}
+
+// 단어 단위 자동 줄바꿈을 적용할 배너 ID 목록
+// 추가 시 이 배열에만 ID 추가 — 코드 다른 곳 수정 불필요
+const WORD_WRAP_BANNERS = ['pc_job_sky'];
+
+// 메인카피 자동 줄바꿈 적용 (단어 단위 시도 → 2줄 초과 시 글자수 절반 분할 폴백)
+// preset.mainAutoWrap=true && WORD_WRAP_BANNERS에 있는 배너 && \n 없을 때만 동작
+function getWrappedMainText(ctx, text, preset, fontSize, spacing, maxWidth) {
+  if (!preset.mainAutoWrap || !WORD_WRAP_BANNERS.includes(preset.id)) return text;
+  if (!text || text.includes('\n')) return text;
+  ctx.save();
+  ctx.font = state.mainFont.weight + " " + fontSize + "px " + state.mainFont.css;
+  const fullW = measureTextWithSpacing(ctx, text, spacing);
+  if (fullW <= maxWidth) { ctx.restore(); return text; }
+  const wrapped = wrapTextByWord(ctx, text, maxWidth, spacing);
+  ctx.restore();
+  if (wrapped.split('\n').length <= 2) return wrapped;
+  // 폴백: 글자수 절반 분할 (2줄 강제)
+  const chars = [...text];
+  const mid = Math.ceil(chars.length / 2);
+  return chars.slice(0, mid).join('') + '\n' + chars.slice(mid).join('');
+}
+
 // 자간을 적용한 텍스트 렌더링 (강조 컬러 지원)
 // {} 마크업이 있으면 세그먼트별로 나눠 그리고, 없으면 기존처럼 한번에 그림
 function drawTextWithSpacing(ctx, text, x, y, spacing, align) {
@@ -2312,7 +2437,56 @@ function drawTextWithSpacing(ctx, text, x, y, spacing, align) {
   ctx.letterSpacing = prevLS;
 }
 
-// 미리보기용: Canvas를 축소해서 표시 + 마진 오버레이
+// 슬라이더 ↔ scale 매핑 (슬라이더 0~100 ↔ scale 0.8~2.5)
+const SCALE_MIN = 0.8, SCALE_MAX = 2.5;
+function scaleToSlider(s) { return Math.round(((s - SCALE_MIN) / (SCALE_MAX - SCALE_MIN)) * 100); }
+function sliderToScale(v) { return SCALE_MIN + (v / 100) * (SCALE_MAX - SCALE_MIN); }
+
+// 슬라이더 라벨 상수 (다국어 변환 시 한 곳만 수정)
+const SLIDER_LABELS = { left: '좌측', right: '우측', single: '' };
+
+// 캔버스 아래 크기 조절 슬라이더 div 생성 (manual 모드일 때만)
+// label: '' (단일) | '좌측' | '우측'
+// canvasRef: 교체 대상 canvas의 직접 참조 (wrapper.querySelector 가정 제거)
+// transformFn: getImageTransform | getImageTransform2
+function createScaleSlider(presetId, preset, displayScale, canvasRef, label, transformFn) {
+  const t = transformFn(presetId);
+  const row = document.createElement("div");
+  row.style.cssText = "margin-top:10px;display:flex;align-items:center;gap:10px;justify-content:center;font-size:11px;color:#888;";
+  const labelHtml = label ? `<span style="min-width:28px;color:#555;">${label}</span>` : '';
+  const initVal = scaleToSlider(t.scale);
+  row.innerHTML =
+    labelHtml +
+    '<span style="min-width:14px;text-align:right;">0</span>' +
+    '<input type="range" class="scale-slider" min="0" max="100" step="1" value="' + initVal + '" style="flex:1;max-width:280px;">' +
+    '<span style="min-width:24px;">100</span>';
+  const slider = row.querySelector('input[type="range"]');
+  // 진행 채움 배경 동적 갱신
+  const updateBg = (v) => {
+    slider.style.background = `linear-gradient(to right, #2563EB ${v}%, #E5E7EB ${v}%)`;
+  };
+  updateBg(initVal);
+  // 교체된 canvas를 추적 (input 이벤트가 여러 번 발생해도 항상 최신 canvas를 가리킴)
+  let currentCanvas = canvasRef;
+  slider.addEventListener('input', (e) => {
+    const v = parseFloat(e.target.value);
+    updateBg(v);
+    t.scale = sliderToScale(v);
+    // 캔버스만 다시 그림 (슬라이더 DOM은 유지) — 드래그 중 끊김 방지
+    renderToCanvas(presetId, preset, (newCanvas) => {
+      newCanvas.style.width = (preset.w * displayScale) + "px";
+      newCanvas.style.height = (preset.h * displayScale) + "px";
+      newCanvas.style.display = "block";
+      newCanvas.style.cursor = 'grab';
+      if (currentCanvas && currentCanvas.parentNode) currentCanvas.replaceWith(newCanvas);
+      currentCanvas = newCanvas;
+      if (state.imageUrl) attachImageInteractions(newCanvas, displayScale, presetId);
+    });
+  });
+  return row;
+}
+
+// 미리보기용: Canvas를 축소해서 표시 + 마진 오버레이 + (수동 모드 시) 크기 슬라이더
 function renderPreviewItem(container, presetId, preset, scale) {
   const wrapper = document.createElement("div");
   wrapper.style.cssText = "position:relative;display:inline-block;";
@@ -2328,7 +2502,7 @@ function renderPreviewItem(container, presetId, preset, scale) {
     }
     wrapper.appendChild(canvas);
 
-    // 이미지 드래그·휠 (이미지 업로드 시 모든 미리보기에서 개별 조정 가능)
+    // 이미지 드래그 (이미지 업로드 시 모든 미리보기에서 개별 조정 가능)
     if (state.imageUrl) {
       attachImageInteractions(canvas, scale, presetId);
     }
@@ -2341,6 +2515,21 @@ function renderPreviewItem(container, presetId, preset, scale) {
     wrapper.appendChild(overlay);
 
     container.appendChild(wrapper);
+
+    // 크기 조절 슬라이더 (수동 모드일 때만 — 캔버스 아래 노출)
+    // 단일 이미지: 슬라이더 1개 / 듀얼 모드 + 양쪽 이미지 모두 있음: 슬라이더 2개 (좌/우)
+    const previewItem = container.parentElement; // .preview-item 카드
+    const t = getImageTransform(presetId);
+    const isManual = state.imageUrl && t.mode === 'manual';
+    if (isManual && previewItem) {
+      const dual = isDualImageModeForBanner(presetId) && state.imageUrl && state.imageUrl2;
+      if (dual) {
+        previewItem.appendChild(createScaleSlider(presetId, preset, scale, canvas, SLIDER_LABELS.left,  getImageTransform2));
+        previewItem.appendChild(createScaleSlider(presetId, preset, scale, canvas, SLIDER_LABELS.right, getImageTransform));
+      } else {
+        previewItem.appendChild(createScaleSlider(presetId, preset, scale, canvas, SLIDER_LABELS.single, getImageTransform));
+      }
+    }
   });
 }
 
@@ -2354,7 +2543,7 @@ function attachImageInteractions(canvas, displayScale, presetId) {
 
   // 듀얼 이미지 모드에서 클릭 좌표 기반으로 좌/우 이미지 판별
   function pickTransformFn(clientX) {
-    const dual = isDualImageMode() && state.imageUrl && state.imageUrl2;
+    const dual = isDualImageModeForBanner(presetId) && state.imageUrl && state.imageUrl2;
     if (!dual) return getImageTransform;
     const rect = canvas.getBoundingClientRect();
     const canvasX = (clientX - rect.left) / displayScale;
@@ -2368,7 +2557,7 @@ function attachImageInteractions(canvas, displayScale, presetId) {
     activeTransformFn = pickTransformFn(e.clientX);
     const t = activeTransformFn(presetId);
     // 듀얼 모드: 양쪽 transform 모두 manual로 전환 (버튼 setImageMode 동작과 일관성 유지)
-    if (isDualImageMode()) {
+    if (isDualImageModeForBanner(presetId)) {
       getImageTransform(presetId).mode = 'manual';
       getImageTransform2(presetId).mode = 'manual';
     } else {
@@ -2406,22 +2595,7 @@ function attachImageInteractions(canvas, displayScale, presetId) {
   _windowDragListeners.push({ type: 'mousemove', fn: onMouseMove });
   _windowDragListeners.push({ type: 'mouseup', fn: onMouseUp });
 
-  canvas.addEventListener('wheel', (e) => {
-    const tFn = pickTransformFn(e.clientX);
-    const t = tFn(presetId);
-    // 듀얼 모드: 양쪽 transform 모두 manual로 전환 (버튼 setImageMode 동작과 일관성 유지)
-    if (isDualImageMode()) {
-      getImageTransform(presetId).mode = 'manual';
-      getImageTransform2(presetId).mode = 'manual';
-    } else {
-      t.mode = 'manual';
-    }
-    syncImageModeUI('manual');
-    e.preventDefault();
-    const delta = e.deltaY > 0 ? -0.03 : 0.03;
-    t.scale = Math.max(0.8, Math.min(2.5, t.scale + delta));
-    updatePreview();
-  }, { passive: false, signal });
+  // 휠 크기 조절 제거 — 슬라이더로 대체됨 (renderPreviewItem이 캔버스 아래 슬라이더 추가)
 }
 
 // 앵커 ID → 캔버스 좌표 (이미지 좌상단 dx, dy)
@@ -2493,7 +2667,7 @@ function downloadBanner(sizeId) {
     link.click();
     // 다운로드 시 학습 데이터 저장 (듀얼 이미지 모드면 좌/우 각각 저장)
     // 듀얼 모드: imageUrl=우측(right), imageUrl2=좌측(left) 각각 학습 저장
-    if (isDualImageMode() && (state.imageUrl || state.imageUrl2)) {
+    if (isDualImageModeForBanner(sizeId) && (state.imageUrl || state.imageUrl2)) {
       if (state.imageUrl) saveCalibration(sizeId, 'right');
       if (state.imageUrl2) saveCalibration(sizeId, 'left');
     } else {

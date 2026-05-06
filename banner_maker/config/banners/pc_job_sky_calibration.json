@@ -1,0 +1,22 @@
+{
+  "banner_id": "pc_job_sky",
+  "samples": [
+    {
+      "date": "2026-05-04",
+      "fit_mode": "contain",
+      "auto_scale": 1,
+      "final_scale": 1.2590000000000001,
+      "auto_offset_y": 0,
+      "final_offset_y": 116,
+      "scale_delta": 0.259,
+      "offset_y_delta": 116,
+      "offset_x_delta": 6
+    }
+  ],
+  "average": {
+    "scale_delta": 0.259,
+    "offset_y_delta": 116.0,
+    "offset_x_delta": 6.0,
+    "sample_count": 1
+  }
+}

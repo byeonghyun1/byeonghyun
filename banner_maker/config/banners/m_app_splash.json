@@ -27,8 +27,8 @@
     "width": 1440,
     "height": 240,
     "position": "top_25_percent",
-    "main_max_chars": 16,
-    "sub_max_chars": 18,
+    "main_max_chars_kr": 16,
+    "sub_max_chars_kr": 18,
     "alignment": "center"
   },
   "object_area": {

@@ -100,7 +100,8 @@
   "copy": {
     "structure": "메인 단독 1줄 또는 서브+메인 가로 1줄 조합",
     "text_gap_px": 24,
-    "total_max_chars": 35,
+    "main_max_chars_kr": 20,
+    "sub_max_chars_kr": 20,
     "total_chars_threshold": 28,
     "font_shrink_rule": "서브+메인 합계 28자 초과 시 72px → 64px 축소",
     "main_line_break_allowed": false,
