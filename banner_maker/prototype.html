@@ -2332,8 +2332,9 @@ function renderToCanvas(presetId, preset, callback) {
         ctx.drawImage(slSrc, slX, slY, slW, slH);
       }
 
-      drawCTA(ctx, preset);
       ctx.restore();
+      // CTA는 클립 밖에서 그림 — 풀너비(가로 끝까지) 보장 (contain + auto 모드에서 좌우 잘림 방지)
+      drawCTA(ctx, preset);
       callback(canvas);
     });
   };
