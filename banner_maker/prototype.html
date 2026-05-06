@@ -1731,8 +1731,10 @@ function drawText(ctx, preset, presetId, textColor, textX, textAlign, maxTextW, 
         const mainW = measureTextWithSpacing(ctx, isMultiLine ? mainLines[0] : renderText, sp);
 
         // ── top_center 레이아웃: 상단 마진부터 배치 ──
+        // 로고가 있으면 (로고 박스 + 간격)만큼 텍스트를 밀어 내림 → 메인카피가 서브카피 자리에 옴
         const isTopLayout = preset.layoutTemplate === 'top_center';
         const topMargin = preset.margins?.top ?? 0;
+        const logoOffsetForText = getTopLayoutLogoOffset(preset);
         const mainBoxH = isMultiLine
           ? (decision.mainBoxH2line ?? (fittedMain * 2 + (preset.fontSizeRules?.line_height_fixed ?? (preset.fontSizeRules?.line_height_percent ? fittedMain * preset.fontSizeRules.line_height_percent / 100 : fittedMain * 0.4))))
           : (decision.mainBoxH ?? fittedMain);
@@ -1741,9 +1743,9 @@ function drawText(ctx, preset, presetId, textColor, textX, textAlign, maxTextW, 
         let baselineY;
         if (isTopLayout) {
           if (isMultiLine) {
-            baselineY = topMargin + fittedMain * 0.8;
+            baselineY = topMargin + logoOffsetForText + fittedMain * 0.8;
           } else {
-            baselineY = topMargin + (mainBoxH + fittedMain * 0.7) / 2;
+            baselineY = topMargin + logoOffsetForText + (mainBoxH + fittedMain * 0.7) / 2;
           }
         } else {
           baselineY = cy + fittedMain * 0.38;
@@ -1819,18 +1821,10 @@ function drawText(ctx, preset, presetId, textColor, textX, textAlign, maxTextW, 
 
       const blockH = subBoxH + lineGap + mainBoxH;
       // 상단 정렬(top_center): 상단 마진부터 시작. 기본: 세로 중앙 정렬.
+      // 로고가 있고 top_center면 텍스트 시작 Y를 (로고 박스 + 간격)만큼 밀어 내림
       const isTopLayout = preset.layoutTemplate === 'top_center';
       const topMargin = preset.margins?.top ?? 0;
-      // 로고가 있고 top_center 레이아웃이면 텍스트 시작 Y를 (로고 박스 + 간격)만큼 밀어 내림
-      const logoOffsetForText = (() => {
-        if (!isTopLayout || !preset.logoBox) return 0;
-        const lb = preset.logoBox;
-        const hasLogoUrl = lb.mode === 'unified'
-          ? (state.logoUrl || state.sourceLogoUrl)
-          : state.logoUrl;
-        if (!hasLogoUrl) return 0;
-        return (lb.maxHeight || 20) + (lb.gap ?? 0);
-      })();
+      const logoOffsetForText = getTopLayoutLogoOffset(preset);
       const startY = isTopLayout ? (topMargin + logoOffsetForText) : cy - blockH / 2;
 
       const baselineInBox = (boxH, fontSize) => (boxH + fontSize * 0.7) / 2;
@@ -2400,6 +2394,18 @@ function wrapTextByWord(ctx, text, maxWidth, spacing) {
 // 단어 단위 자동 줄바꿈을 적용할 배너 ID 목록
 // 추가 시 이 배열에만 ID 추가 — 코드 다른 곳 수정 불필요
 const WORD_WRAP_BANNERS = ['pc_job_sky'];
+
+// top_center 레이아웃에서 로고가 있을 때 텍스트 시작 Y에 더해줄 오프셋 (로고 박스 + 간격)
+// 로고 없거나 top_center 아닌 배너면 0 반환
+function getTopLayoutLogoOffset(preset) {
+  if (preset.layoutTemplate !== 'top_center' || !preset.logoBox) return 0;
+  const lb = preset.logoBox;
+  const hasLogoUrl = lb.mode === 'unified'
+    ? (state.logoUrl || state.sourceLogoUrl)
+    : state.logoUrl;
+  if (!hasLogoUrl) return 0;
+  return (lb.maxHeight || 20) + (lb.gap ?? 0);
+}
 
 // 메인카피 자동 줄바꿈 적용 (단어 단위 시도 → 2줄 초과 시 글자수 절반 분할 폴백)
 // preset.mainAutoWrap=true && WORD_WRAP_BANNERS에 있는 배너 && \n 없을 때만 동작
