@@ -21,7 +21,7 @@
     }
   },
   "logo_box": {
-    "maxHeight": 26,
+    "max_height": 26,
     "gap": 24,
     "align": "text_left",
     "replaces": "sub",
