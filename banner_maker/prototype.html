@@ -1613,6 +1613,13 @@ function updatePreview() {
 
   if (!hasContent) return;
 
+  // 스크롤 튕김 방지 — 비우는 동안 영역 높이를 잠깐 고정 (200ms 후 해제)
+  const prevH = previewList.offsetHeight;
+  if (prevH > 0) {
+    previewList.style.minHeight = prevH + "px";
+    setTimeout(() => { previewList.style.minHeight = ""; }, 200);
+  }
+
   // 미리보기 아이템 생성
   previewList.innerHTML = "";
   state.selectedSizes.forEach(sizeId => {
