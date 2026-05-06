@@ -29,7 +29,7 @@
   "font_size_strict": true,
   "copy": {
     "structure": "서브 1줄 + 메인 최대 2줄",
-    "line_gap_px": 10,
+    "line_gap_px": 14,
     "main_max_chars_kr": 20,
     "sub_max_chars_kr": 28,
     "main_line_break_allowed": true,
@@ -57,8 +57,9 @@
     "position": "above_text",
     "gap": 12,
     "maxHeight": 20,
+    "imageScale": 0.8,
     "align": "center",
-    "_note": "출처 로고와 콜라보 로고가 동일 위치에 삽입. 둘 중 하나만 사용. 둘 다 업로드 시 콜라보 우선. 로고는 상단 마진(52px) 시작, 박스 높이 20px, 로고-서브카피 간격 12px. 로고가 있으면 텍스트 그룹이 로고+간격(32px)만큼 밀려 내려감."
+    "_note": "출처 로고와 콜라보 로고가 동일 위치에 삽입. 둘 중 하나만 사용. 둘 다 업로드 시 콜라보 우선. 로고는 상단 마진(52px) 시작. 박스 높이 20px(영역), 이미지는 박스의 80% 크기(16px)로 박스 안 가운데 정렬. 로고-서브카피 간격 12px. 텍스트 그룹이 박스(20)+간격(12)=32px 밀려 내려감."
   },
   "color_rules": {
     "page_bg": "#FFFFFF",

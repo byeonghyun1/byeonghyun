@@ -2154,7 +2154,10 @@ function renderToCanvas(presetId, preset, callback) {
       let logoDrawnH = 0, logoDrawnW = 0;
       if (logoImg && preset.logoBox) {
         const lb = preset.logoBox;
-        const logoScale = Math.min(lb.maxHeight / logoImg.height, 1);
+        // 박스 높이(maxHeight)는 영역, 이미지는 그 영역의 imageScale 비율로 들어감
+        const boxH = lb.maxHeight || 20;
+        const targetH = boxH * (lb.imageScale ?? 1);
+        const logoScale = Math.min(targetH / logoImg.height, 1);
         logoDrawnH = logoImg.height * logoScale;
         logoDrawnW = logoImg.width * logoScale;
         // 텍스트 centerY를 아래로 밀어서 로고+gap+텍스트 그룹 전체가 중앙에 오도록 조정
@@ -2175,9 +2178,10 @@ function renderToCanvas(presetId, preset, callback) {
         const effectiveSub = logoReplacesSub ? '' : state.subText;
         const comp = getCompositionDecision(presetId, state.mainText, effectiveSub);
         const textH = comp ? comp.mainSize : (preset.fonts.main.size || 72);
-        // 로고 Y: top_center 레이아웃이면 상단 마진 위치, 그 외엔 텍스트 중심 위로 gap만큼 띄움
+        // 로고 Y: top_center 레이아웃이면 상단 마진 + 박스 안 가운데 정렬, 그 외엔 텍스트 중심 위로 gap만큼 띄움
+        const lbBoxH = lb.maxHeight || 20;
         const logoY = (preset.layoutTemplate === 'top_center')
-          ? (preset.margins?.top ?? 0)
+          ? ((preset.margins?.top ?? 0) + (lbBoxH - logoDrawnH) / 2)
           : (adjustedCenterY - textH * 0.38 - lb.gap - logoDrawnH);
         // 로고 X: align 설정에 따라 결정
         let logoX;
