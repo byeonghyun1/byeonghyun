@@ -2399,9 +2399,24 @@ function measureTextWithSpacing(ctx, text, spacing) {
   return w;
 }
 
+// {} 마크업 보존하며 토큰 분리 — {abc}는 한 토큰, 그 외는 글자 단위
+function splitPreservingMarkup(text) {
+  const tokens = [];
+  let i = 0;
+  while (i < text.length) {
+    if (text[i] === '{') {
+      const end = text.indexOf('}', i + 1);
+      if (end !== -1) { tokens.push(text.slice(i, end + 1)); i = end + 1; continue; }
+    }
+    tokens.push(text[i]);
+    i++;
+  }
+  return tokens;
+}
+
 // 단어 단위 자동 줄바꿈 (CSS의 word-break: keep-all + overflow-wrap: break-word 효과)
 // - 공백으로 어절 분리 → 어절 단위로 줄에 채우다가 가용폭 초과 직전 줄바꿈
-// - 한 어절이 자체로 가용폭 초과 시 글자 단위로 자름
+// - 한 어절이 자체로 가용폭 초과 시 글자 단위로 자름 ({} 마크업 블록은 한 단위로 보호)
 // 반환: '\n'으로 연결된 문자열
 function wrapTextByWord(ctx, text, maxWidth, spacing) {
   if (!text) return '';
@@ -2413,16 +2428,16 @@ function wrapTextByWord(ctx, text, maxWidth, spacing) {
     if (measureTextWithSpacing(ctx, tryLine, spacing) <= maxWidth) {
       curLine = tryLine;
     } else {
-      // 어절이 자체로 가용폭 초과면 글자 단위로 자르기
+      // 어절이 자체로 가용폭 초과면 글자 단위로 자르기 ({} 블록은 한 단위로 보존)
       if (measureTextWithSpacing(ctx, word, spacing) > maxWidth) {
         if (curLine) { lines.push(curLine); curLine = ''; }
-        for (const ch of [...word]) {
-          const tryCh = curLine + ch;
-          if (measureTextWithSpacing(ctx, tryCh, spacing) <= maxWidth) {
-            curLine = tryCh;
+        for (const tok of splitPreservingMarkup(word)) {
+          const tryTok = curLine + tok;
+          if (measureTextWithSpacing(ctx, tryTok, spacing) <= maxWidth) {
+            curLine = tryTok;
           } else {
             if (curLine) lines.push(curLine);
-            curLine = ch;
+            curLine = tok;
           }
         }
       } else {
@@ -2461,7 +2476,15 @@ function getTextBlockBottomY(preset) {
   // 글자수 분기 결정 가져오기 (메인/서브 사이즈 + 박스 높이)
   const decision = getCompositionDecision(preset.id, state.mainText, state.subText) || {};
   const fittedMain = (decision.mainSize ?? preset.fonts.main.size ?? 72);
-  const isMultiLine = (state.mainText || '').includes('\n');
+  // isMultiLine 판별 — 수동 줄바꿈(\n) + 자동 줄바꿈(가용폭 초과) 모두 검사
+  let isMultiLine = (state.mainText || '').includes('\n');
+  if (!isMultiLine && preset.mainAutoWrap && WORD_WRAP_BANNERS.includes(preset.id) && state.mainText) {
+    const tmpCtx = document.createElement('canvas').getContext('2d');
+    tmpCtx.font = state.mainFont.weight + " " + fittedMain + "px " + state.mainFont.css;
+    const sp = preset.fonts.main.spacing * fittedMain;
+    const maxW = preset.w - (preset.margins?.left ?? 0) - (preset.margins?.right ?? 0);
+    if (measureTextWithSpacing(tmpCtx, state.mainText, sp) > maxW) isMultiLine = true;
+  }
   const mainBoxH = isMultiLine
     ? (decision.mainBoxH2line ?? fittedMain * 2)
     : (decision.mainBoxH ?? fittedMain);
@@ -2487,10 +2510,18 @@ function getWrappedMainText(ctx, text, preset, fontSize, spacing, maxWidth) {
   const wrapped = wrapTextByWord(ctx, text, maxWidth, spacing);
   ctx.restore();
   if (wrapped.split('\n').length <= 2) return wrapped;
-  // 폴백: 글자수 절반 분할 (2줄 강제)
+  // 폴백: 글자수 절반 분할 (2줄 강제) — 마크업 {} 안에서 자르지 않도록 보호
   const chars = [...text];
-  const mid = Math.ceil(chars.length / 2);
-  return chars.slice(0, mid).join('') + '\n' + chars.slice(mid).join('');
+  let cut = Math.ceil(chars.length / 2);
+  const before = chars.slice(0, cut).join('');
+  const lastOpen = before.lastIndexOf('{');
+  const lastClose = before.lastIndexOf('}');
+  if (lastOpen > lastClose) {
+    // 분할 위치가 열린 마크업 안 → 닫는 } 다음으로 확장
+    const closeAt = text.indexOf('}', before.length);
+    if (closeAt !== -1) cut = closeAt + 1;
+  }
+  return text.slice(0, cut) + '\n' + text.slice(cut);
 }
 
 // 자간을 적용한 텍스트 렌더링 (강조 컬러 지원)
