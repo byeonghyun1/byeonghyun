@@ -48,7 +48,7 @@
   },
 
   "logo_box": {
-    "maxHeight": 20,
+    "maxHeight": 22,
     "gap": 20,
     "align": "text_left",
     "_note": "로고 이미지 업로드 시 텍스트 위에 배치. maxHeight: 로고 최대 높이(px), gap: 로고-텍스트 간격(px), align: text_left=텍스트 좌측 끝 정렬, center=배너 중앙, left/right=마진 기준. logoBox가 없는 배너는 로고 기능 비활성화."

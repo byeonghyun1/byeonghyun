@@ -2149,9 +2149,10 @@ function renderToCanvas(presetId, preset, callback) {
       if (logoImg && preset.logoBox) {
         const lb = preset.logoBox;
         // 박스 높이(maxHeight)는 영역, 이미지는 그 영역의 imageScale 비율로 들어감
+        // Math.min(_,1) 제거 → 원본보다 작은 로고도 박스 크기에 맞춰 확대 (디자이너 의도 = 박스 사이즈로 강제)
         const boxH = lb.maxHeight || 20;
         const targetH = boxH * (lb.imageScale ?? 1);
-        const logoScale = Math.min(targetH / logoImg.height, 1);
+        const logoScale = targetH / logoImg.height;
         logoDrawnH = logoImg.height * logoScale;
         logoDrawnW = logoImg.width * logoScale;
         // 텍스트 centerY를 아래로 밀어서 로고+gap+텍스트 그룹 전체가 중앙에 오도록 조정

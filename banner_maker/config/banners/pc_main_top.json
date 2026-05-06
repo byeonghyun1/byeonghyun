@@ -21,11 +21,11 @@
     }
   },
   "logo_box": {
-    "maxHeight": 28,
+    "maxHeight": 26,
     "gap": 24,
     "align": "text_left",
     "replaces": "sub",
-    "_note": "콜라보 로고가 서브카피 위치에 배치. 로고 사용 시 서브카피 입력 비활성화. maxHeight: 로고 세로 고정 28px, gap: 로고-메인텍스트 간격 24px, align: text_left=텍스트 좌측 끝 정렬."
+    "_note": "콜라보 로고가 서브카피 위치에 배치. 로고 사용 시 서브카피 입력 비활성화. maxHeight: 로고 세로 고정 26px, gap: 로고-메인텍스트 간격 24px, align: text_left=텍스트 좌측 끝 정렬."
   },
   "image_box": {
     "width_ratio": 0.40,
