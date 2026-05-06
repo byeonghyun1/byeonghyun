@@ -1249,6 +1249,17 @@ function toggleCta() {
   state.ctaEnabled = !state.ctaEnabled;
   document.getElementById("ctaToggle").classList.toggle("on", state.ctaEnabled);
   document.getElementById("ctaOptions").classList.toggle("active", state.ctaEnabled);
+  // 토글 ON + CTA 텍스트가 비어있으면 기본값 "지원하기" 자동 적용 (사용자 수정/삭제 가능)
+  if (state.ctaEnabled && !state.ctaText) {
+    state.ctaText = "지원하기";
+    const ctaInput = document.getElementById("ctaText");
+    if (ctaInput) {
+      ctaInput.value = state.ctaText;
+      const ctaCount = document.getElementById("ctaCount");
+      if (ctaCount) ctaCount.textContent = state.ctaText.length;
+    }
+    if (typeof updateCtaChip === 'function') updateCtaChip();
+  }
   updatePreview();
 }
 
@@ -2024,14 +2035,23 @@ function drawCTA(ctx, preset) {
     const ctaFS = cfg.text_height_ratio
       ? ctaBarH * cfg.text_height_ratio
       : Math.min(preset.fonts.sub.size * 0.7, 24);
+    // 폰트/자간: JSON 설정 우선, 없으면 메인 폰트 사용
+    const fontFamily = cfg.font_family ? `'${cfg.font_family}', sans-serif` : state.mainFont.css;
+    const fontWeight = cfg.font_weight || "700";
+    const letterSpacing = cfg.letter_spacing
+      ? parsePercentSpacing(cfg.letter_spacing) * ctaFS
+      : 0;
     const ctaLabel = state.ctaText + " ›";
-    ctx.font = "700 " + ctaFS + "px " + state.mainFont.css;
+    ctx.font = fontWeight + " " + ctaFS + "px " + fontFamily;
     const ctaY = preset.h - ctaBarH;
     ctx.fillStyle = state.ctaColor;
     ctx.fillRect(0, ctaY, preset.w, ctaBarH);
     ctx.fillStyle = state.ctaTextColor;
     ctx.textAlign = "center";
+    const prevLS = ctx.letterSpacing || "0px";
+    ctx.letterSpacing = letterSpacing + "px";
     ctx.fillText(ctaLabel, preset.w / 2, ctaY + ctaBarH / 2 + ctaFS * 0.35);
+    ctx.letterSpacing = prevLS;
   }
 }
 

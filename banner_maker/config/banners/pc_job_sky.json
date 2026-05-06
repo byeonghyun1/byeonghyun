@@ -99,8 +99,11 @@
     "cta": {
       "supported": true,
       "style": "full_width",
-      "height_ratio": 0.10,
-      "text_height_ratio": 0.333
+      "height_ratio": 0.09,
+      "text_height_ratio": 0.333,
+      "font_family": "Pretendard",
+      "font_weight": "600",
+      "letter_spacing": "-2%"
     }
   },
   "few_shot_refs": [],
