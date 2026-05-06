@@ -6,8 +6,8 @@
   "dimensions": { "width": 1556, "height": 232 },
   "display_size": { "width": 778, "height": 116 },
   "layout": "horizontal",
-  "text_ratio": 0.55,
-  "img_ratio": 0.45,
+  "textRatio": 0.55,
+  "imgRatio": 0.45,
   "margins": { "left": 80, "right": 80, "top": 52, "bottom": 52 },
   "source_label": {
     "size_px": 16,
@@ -38,7 +38,7 @@
     "main": { "family": "Paperlogy", "weight": "7Bold", "size_px": 60, "letter_spacing": "-2%", "line_height": 1.2, "box_h_px": 72 },
     "sub": { "family": "Paperlogy", "weight": "5Medium", "size_px": 36, "letter_spacing": "-2%", "line_height": 1.2, "box_h_px": 44 }
   },
-  "min_font": 26,
+  "minFont": 26,
   "font_size_strict": true,
   "file": {
     "max_size_kb": 50,

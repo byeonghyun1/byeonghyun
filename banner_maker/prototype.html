@@ -323,7 +323,7 @@ body { font-family: 'Pretendard', -apple-system, sans-serif; background: #F5F5F7
             <button id="imgFitCrop" onclick="setImageFitMode('crop')" style="padding:4px 10px;border:1px solid #E5E7EB;background:#FFF;color:#666;border-radius:6px;cursor:pointer;font-size:11px;">crop</button>
           </div>
         </div>
-        <div id="imgFitHint" style="color:#888;font-size:11px;margin-bottom:8px;">contain: 이미지 전체 표시 · crop: 무게중심 기준 크롭</div>
+        <div id="imgFitHint" style="color:#888;font-size:11px;margin-bottom:8px;">contain: 이미지 전체 표시 · crop: 무게중심 기준 크롭 (자동 배치)</div>
         <!-- 수동 조정 (자동/수동) -->
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
           <span style="font-weight:500;color:#555;">위치 조정</span>
@@ -484,6 +484,7 @@ body { font-family: 'Pretendard', -apple-system, sans-serif; background: #F5F5F7
         <div class="toggle-switch" id="ctaToggle" onclick="toggleCta()"></div>
         <div class="cta-toggle-label">CTA 버튼 사용</div>
       </div>
+      <div style="margin-top:6px;font-size:11px;color:#888;line-height:1.5;">CTA 폰트는 배너별로 고정 (좌측 폰트 변경 영향 없음)</div>
       <div id="ctaUnsupportedNotice" style="display:none;margin-top:8px;padding:10px 12px;background:#FEF3F2;border-left:3px solid #E53E3E;font-size:12px;color:#7A2E2E;line-height:1.5;border-radius:4px;"></div>
       <div class="cta-options" id="ctaOptions">
         <div class="input-group" style="margin-bottom:0;">
@@ -642,10 +643,10 @@ function adaptBanner(json) {
         lineHeight: sub.line_height ?? null
       }
     },
-    minFont: json.minFont ?? json.min_font_size_px ?? 12,
+    minFont: json.min_font ?? json.minFont ?? json.min_font_size_px ?? 12,
     fontSizeStrict: json.font_size_strict === true, // true면 fitFontSize가 baseSize 그대로 반환 (축소 X)
-    textRatio: json.textRatio ?? (json.layout_pattern?.text_area ? 0.5 : 1),
-    imgRatio: json.imgRatio ?? 0,
+    textRatio: json.text_ratio ?? json.textRatio ?? (json.layout_pattern?.text_area ? 0.5 : 1),
+    imgRatio: json.img_ratio ?? json.imgRatio ?? 0,
     layout: json.layout ?? "horizontal",
     pageBg: json.color_rules?.page_bg,
     // ── 가이드 메타 (JSON에 있으면 렌더링이 따라감, 없으면 기존 동작) ──
@@ -672,8 +673,16 @@ function adaptBanner(json) {
     sourceLabelImage: json.source_label?.image_mode || null, // 출처 표기 이미지 모드 { enabled, width, top, right }
     ctaSupported: json.builder_io?.cta?.supported !== false, // false 명시 시만 차단
     ctaUnsupportedReason: json.builder_io?.cta?.reason || null,
-    // CTA 레이아웃 설정 (snake_case → 코드 그대로 사용)
-    ctaConfig: json.builder_io?.cta || null,
+    // CTA 레이아웃 설정 — snake_case → camelCase 명시 매핑 (다른 매핑들과 일관)
+    ctaConfig: json.builder_io?.cta ? {
+      style: json.builder_io.cta.style,
+      heightRatio: json.builder_io.cta.height_ratio,
+      textHeightRatio: json.builder_io.cta.text_height_ratio,
+      arrowSizeRatio: json.builder_io.cta.arrow_size_ratio,
+      fontFamily: json.builder_io.cta.font_family,
+      fontWeight: json.builder_io.cta.font_weight,
+      letterSpacing: json.builder_io.cta.letter_spacing
+    } : null,
     mainAutoWrap: json.copy?.main_auto_wrap === true,  // true면 메인 카피 가용폭 초과 시 자동 2줄 분할
     copyConstraints: json.copy || null,
     textColorRule: json.text_color_rule || null,
@@ -796,19 +805,20 @@ let state = {
   ctaText: "",
   ctaColor: "#1A1A1A",
   ctaTextColor: "#FFFFFF",
-  // 미리보기 카드 체크박스로 해제된 배너 ID 모음 (CTA 토글 ON 시에만 의미)
-  // 토글 OFF→ON 사이클마다 초기화 (모든 배너에 다시 적용된 상태로 시작)
-  ctaDisabledBanners: new Set(),
-  // 로고 미리보기 카드 체크박스로 해제된 배너 ID 모음 (로고 업로드 시 의미)
-  logoDisabledBanners: new Set(),
+  // 배너별 override 통합 — 현재 세션 동안 유지 (새로고침 시 초기화)
+  // ctaDisabled / logoDisabled: 미리보기 카드 체크박스로 해제된 배너 ID Set
+  // fitMode: 카드별 contain/crop override 객체 ({ presetId: 'crop' } 등)
+  // 새 "배너별 설정"이 생기면 여기에 추가만 하면 됨 (확장성)
+  perBannerOverrides: {
+    ctaDisabled: new Set(),
+    logoDisabled: new Set(),
+    fitMode: {}
+  },
   // 카피 배치 변형 (배너의 structure_variants 중 사용자가 선택한 id). null이면 첫 번째 사용.
   structureChoice: null,
   // 이미지 맞춤 모드: 'contain' (전체 표시) / 'crop' (콘텐츠 바운딩 박스 기준 크롭)
-  // 좌측 패널에서 일괄 설정 (기본값). 카드별 override는 imageFitModePerBanner에 기록
+  // 좌측 패널에서 일괄 설정 (기본값). 카드별 override는 perBannerOverrides.fitMode에 기록
   imageFitMode: 'contain',
-  // 배너별 fit 모드 override — 미리보기 카드의 contain/crop 토글로 설정
-  // 좌측 패널에서 fit 모드 변경 시 비워짐 (전역 일괄 재통일)
-  imageFitModePerBanner: {},
   // getContentBounds 결과 캐시 (이미지 변경 시에만 재계산)
   contentBoundsCache: null,
   // 배너별 학습 보정값 캐시. { [bannerId]: { scale_delta, offset_y_delta, offset_x_delta } }
@@ -1254,7 +1264,7 @@ function changeFont() {
 
 // 특정 배너의 effective 이미지 맞춤 모드 — 카드별 override 우선, 없으면 좌측 기본값
 function getEffectiveFitMode(presetId) {
-  return state.imageFitModePerBanner[presetId] || state.imageFitMode;
+  return state.perBannerOverrides.fitMode[presetId] || state.imageFitMode;
 }
 
 // 특정 배너에서 CTA가 활성 상태인지 (지원 + 토글 ON + 체크박스 해제 안 됨)
@@ -1262,7 +1272,7 @@ function isCtaActiveForBanner(preset) {
   return state.ctaEnabled
     && state.ctaText
     && preset && preset.ctaSupported !== false
-    && !state.ctaDisabledBanners.has(preset.id);
+    && !state.perBannerOverrides.ctaDisabled.has(preset.id);
 }
 
 function toggleCta() {
@@ -1270,8 +1280,7 @@ function toggleCta() {
   state.ctaEnabled = !state.ctaEnabled;
   document.getElementById("ctaToggle").classList.toggle("on", state.ctaEnabled);
   document.getElementById("ctaOptions").classList.toggle("active", state.ctaEnabled);
-  // 토글 cycle마다 ctaDisabledBanners 초기화 — 새로 켤 때 모든 배너 체크된 상태로 시작
-  state.ctaDisabledBanners = new Set();
+  // perBannerOverrides.ctaDisabled는 현재 세션 동안 유지 — 사용자가 의도적으로 끈 배너 기억 (로고 체크박스와 일관)
   // 토글 ON + CTA 텍스트가 비어있으면 기본값 "지원하기" 자동 적용 (사용자 수정/삭제 가능)
   if (state.ctaEnabled && !state.ctaText) {
     state.ctaText = "지원하기";
@@ -1333,7 +1342,7 @@ function selectStructure(id) {
 function setImageFitMode(mode) {
   state.imageFitMode = mode;
   // 좌측 패널에서 일괄 변경 시 카드별 override 초기화 → 모든 배너 일괄 재통일
-  state.imageFitModePerBanner = {};
+  state.perBannerOverrides.fitMode = {};
   syncImageFitUI(mode);
   // 의도: contain↔crop 전환 시 수동 조정값(위치·크기)을 리셋.
   // 이전 모드에서의 offset/scale이 새 모드에 맞지 않으므로 auto로 강제 초기화.
@@ -1427,6 +1436,8 @@ async function saveCalibration(bannerId, slot) {
   // slot 'left' = 보조 이미지(imageUrl2), slot 'right' 또는 없음 = 메인 이미지(imageUrl)
   const imgUrl = slot === 'left' ? state.imageUrl2 : state.imageUrl;
   if (!imgUrl) return; // 해당 이미지 없으면 저장 불필요
+  // crop 모드에서만 학습 (contain은 자동 배치 X → 학습 의미 없음)
+  if (getEffectiveFitMode(bannerId) !== 'crop') return;
 
   const transformFn = slot === 'left' ? getImageTransform2 : getImageTransform;
   const autoVals = state.cropAutoValues[bannerId] || { autoScale: 1.0, autoOffsetY: 0 };
@@ -1625,11 +1636,11 @@ function updatePreview() {
 
   if (!hasContent) return;
 
-  // 스크롤 튕김 방지 — 비우는 동안 영역 높이를 잠깐 고정 (200ms 후 해제)
+  // 스크롤 튕김 방지 — 비우는 동안 영역 높이를 잠깐 고정 (500ms 후 해제, 큰 이미지 대응)
   const prevH = previewList.offsetHeight;
   if (prevH > 0) {
     previewList.style.minHeight = prevH + "px";
-    setTimeout(() => { previewList.style.minHeight = ""; }, 200);
+    setTimeout(() => { previewList.style.minHeight = ""; }, 500);
   }
 
   // 미리보기 아이템 생성
@@ -1708,8 +1719,8 @@ function drawAnchorImage(ctx, img, box, preset, presetId) {
     const hPad = box.h_padding ?? 0;
     const zoneTop = textBottom + gap;
     // CTA 켜져 있으면 CTA 위까지가 영역, 아니면 하단 마진까지
-    const ctaActive = isCtaActiveForBanner(preset) && preset.ctaConfig?.height_ratio;
-    const ctaH = ctaActive ? preset.h * preset.ctaConfig.height_ratio : 0;
+    const ctaActive = isCtaActiveForBanner(preset) && preset.ctaConfig?.heightRatio;
+    const ctaH = ctaActive ? preset.h * preset.ctaConfig.heightRatio : 0;
     const zoneBottom = ctaH > 0
       ? preset.h - ctaH
       : preset.h - (preset.margins?.bottom ?? 0);
@@ -2055,17 +2066,17 @@ function drawCTA(ctx, preset) {
   if (isCtaActiveForBanner(preset)) {
     // 배너 JSON의 builder_io.cta 설정 우선, 없으면 폴백(기본 17% / sub*0.7)
     const cfg = preset.ctaConfig || {};
-    const ctaBarH = cfg.height_ratio
-      ? preset.h * cfg.height_ratio
+    const ctaBarH = cfg.heightRatio
+      ? preset.h * cfg.heightRatio
       : Math.max(preset.h * 0.17, 30);
-    const ctaFS = cfg.text_height_ratio
-      ? ctaBarH * cfg.text_height_ratio
+    const ctaFS = cfg.textHeightRatio
+      ? ctaBarH * cfg.textHeightRatio
       : Math.min(preset.fonts.sub.size * 0.7, 24);
     // 폰트/자간: JSON 설정 우선, 없으면 메인 폰트 사용
-    const fontFamily = cfg.font_family ? `'${cfg.font_family}', sans-serif` : state.mainFont.css;
-    const fontWeight = cfg.font_weight || "700";
-    const letterSpacing = cfg.letter_spacing
-      ? parsePercentSpacing(cfg.letter_spacing) * ctaFS
+    const fontFamily = cfg.fontFamily ? `'${cfg.fontFamily}', sans-serif` : state.mainFont.css;
+    const fontWeight = cfg.fontWeight || "700";
+    const letterSpacing = cfg.letterSpacing
+      ? parsePercentSpacing(cfg.letterSpacing) * ctaFS
       : 0;
     const ctaY = preset.h - ctaBarH;
     const centerY = ctaY + ctaBarH / 2;
@@ -2078,10 +2089,10 @@ function drawCTA(ctx, preset) {
     const prevBaseline = ctx.textBaseline;
     // textBaseline 'middle' — 폰트 사이즈 달라도 시각적 중심이 centerY에 맞음 (정렬 자동 보정)
     ctx.textBaseline = 'middle';
-    // 화살표는 텍스트 글자 visual height에 맞춰 시각적으로 같은 높이로 키움 (× 1.4)
+    // 화살표 폰트 사이즈 — JSON cfg.arrow_size_ratio 우선, 없으면 1.4 폴백
     const text = state.ctaText;
     const arrow = " ›";
-    const arrowFS = ctaFS * 1.4;
+    const arrowFS = ctaFS * (cfg.arrowSizeRatio ?? 1.4);
     // 폭 측정
     ctx.font = fontWeight + " " + ctaFS + "px " + fontFamily;
     ctx.letterSpacing = letterSpacing + "px";
@@ -2108,6 +2119,7 @@ function drawCTA(ctx, preset) {
 // 가이드: 이미지/텍스트/CTA는 마진 안쪽 영역에만 보임 (마진과 겹치는 부분은 클립으로 잘림).
 function renderToCanvas(presetId, preset, callback) {
   const canvas = document.createElement("canvas");
+  canvas.dataset.previewCanvas = "main"; // 식별자 — 미래에 wrapper 안 캔버스 여러 개일 때 대비
   canvas.width = preset.w;
   canvas.height = preset.h;
   const ctx = canvas.getContext("2d");
@@ -2213,7 +2225,7 @@ function renderToCanvas(presetId, preset, callback) {
     const logoSourceUrl = preset.logoBox?.mode === 'unified'
       ? (state.logoUrl || state.sourceLogoUrl)
       : state.logoUrl;
-    const hasLogo = preset.logoBox && logoSourceUrl && !state.logoDisabledBanners.has(presetId);
+    const hasLogo = preset.logoBox && logoSourceUrl && !state.perBannerOverrides.logoDisabled.has(presetId);
     const logoIdx = hasLogo ? urls.length : -1;
     if (hasLogo) urls.push(logoSourceUrl);
     // 출처 표기 이미지 (마지막에 추가)
@@ -2540,14 +2552,16 @@ function wrapTextByWord(ctx, text, maxWidth, spacing) {
   return lines.join('\n');
 }
 
-// 단어 단위 자동 줄바꿈을 적용할 배너 ID 목록
-// 추가 시 이 배열에만 ID 추가 — 코드 다른 곳 수정 불필요
-const WORD_WRAP_BANNERS = ['pc_job_sky'];
+// 자동 줄바꿈 적용 여부 — 배너 JSON의 main_auto_wrap 단일 검사로 통일
+// 새 배너에 자동 줄바꿈 적용 시 해당 JSON에 main_auto_wrap: true만 추가하면 됨
+function isWordWrapEnabled(preset) {
+  return !!(preset && preset.mainAutoWrap === true);
+}
 
 // 특정 배너에 로고가 실제 그려지는 상태인지 (logoBox 정의 + 로고 URL 있음 + 체크박스 해제 안 됨)
 function isLogoActiveForBanner(preset) {
   if (!preset || !preset.logoBox) return false;
-  if (state.logoDisabledBanners.has(preset.id)) return false;
+  if (state.perBannerOverrides.logoDisabled.has(preset.id)) return false;
   const url = preset.logoBox.mode === 'unified'
     ? (state.logoUrl || state.sourceLogoUrl)
     : state.logoUrl;
@@ -2563,10 +2577,16 @@ function getTopLayoutLogoOffset(preset) {
   return (lb.maxHeight || 20) + (lb.gap ?? 0);
 }
 
-// top_center 레이아웃에서 텍스트 그룹(로고+서브+메인)의 bottom Y 좌표를 계산
+// 텍스트 그룹(로고+서브+메인)의 bottom Y 좌표를 계산
 // 로고/서브/메인 유무에 따라 동적으로 계산 — image_box anchor=below_text 영역 산출에 사용
+// 추후 다른 layoutTemplate(예: center, left_align) 추가 시 여기에 분기 추가
 function getTextBlockBottomY(preset) {
-  if (preset.layoutTemplate !== 'top_center') return null;
+  // 현재는 top_center만 정확히 계산 가능. 다른 레이아웃은 폴백으로 캔버스 중앙 사용
+  if (preset.layoutTemplate !== 'top_center') {
+    // 폴백: below_text anchor 사용 가능하도록 캔버스 세로 중앙 반환
+    // (이상적이진 않으나 동작은 함 — 새 레이아웃 추가 시 이 함수에 분기 추가 권장)
+    return preset.h / 2;
+  }
   const topMargin = preset.margins?.top ?? 0;
   const logoOffset = getTopLayoutLogoOffset(preset);
   const startY = topMargin + logoOffset;
@@ -2575,7 +2595,7 @@ function getTextBlockBottomY(preset) {
   const fittedMain = (decision.mainSize ?? preset.fonts.main.size ?? 72);
   // isMultiLine 판별 — 수동 줄바꿈(\n) + 자동 줄바꿈(가용폭 초과) 모두 검사
   let isMultiLine = (state.mainText || '').includes('\n');
-  if (!isMultiLine && preset.mainAutoWrap && WORD_WRAP_BANNERS.includes(preset.id) && state.mainText) {
+  if (!isMultiLine && isWordWrapEnabled(preset) && state.mainText) {
     const tmpCtx = document.createElement('canvas').getContext('2d');
     tmpCtx.font = state.mainFont.weight + " " + fittedMain + "px " + state.mainFont.css;
     const sp = preset.fonts.main.spacing * fittedMain;
@@ -2596,9 +2616,9 @@ function getTextBlockBottomY(preset) {
 }
 
 // 메인카피 자동 줄바꿈 적용 (단어 단위 시도 → 2줄 초과 시 글자수 절반 분할 폴백)
-// preset.mainAutoWrap=true && WORD_WRAP_BANNERS에 있는 배너 && \n 없을 때만 동작
+// preset.mainAutoWrap=true && \n 없을 때만 동작 (단일 검사로 통일)
 function getWrappedMainText(ctx, text, preset, fontSize, spacing, maxWidth) {
-  if (!preset.mainAutoWrap || !WORD_WRAP_BANNERS.includes(preset.id)) return text;
+  if (!isWordWrapEnabled(preset)) return text;
   if (!text || text.includes('\n')) return text;
   ctx.save();
   ctx.font = state.mainFont.weight + " " + fontSize + "px " + state.mainFont.css;
@@ -2667,6 +2687,26 @@ const SCALE_MIN = 0.8, SCALE_MAX = 2.5;
 function scaleToSlider(s) { return Math.round(((s - SCALE_MIN) / (SCALE_MAX - SCALE_MIN)) * 100); }
 function sliderToScale(v) { return SCALE_MIN + (v / 100) * (SCALE_MAX - SCALE_MIN); }
 
+// 미리보기 카드의 캔버스만 다시 그리기 (슬라이더/체크박스/토글/드래그 공통)
+// canvasHolder.current를 새 캔버스로 교체 + 인터랙션 재부착
+function redrawSingleCanvas(presetId, preset, displayScale, canvasHolder, opts) {
+  opts = opts || {};
+  renderToCanvas(presetId, preset, (newCanvas) => {
+    newCanvas.style.width = (preset.w * displayScale) + "px";
+    newCanvas.style.height = (preset.h * displayScale) + "px";
+    newCanvas.style.display = "block";
+    if (opts.cursor) {
+      newCanvas.style.cursor = opts.cursor;
+    } else if (state.imageUrl) {
+      const t = getImageTransform(presetId);
+      newCanvas.style.cursor = t.mode === 'manual' ? 'grab' : 'pointer';
+    }
+    if (canvasHolder.current && canvasHolder.current.parentNode) canvasHolder.current.replaceWith(newCanvas);
+    canvasHolder.current = newCanvas;
+    if (state.imageUrl) attachImageInteractions(newCanvas, displayScale, presetId, canvasHolder);
+  });
+}
+
 // 슬라이더 라벨 상수 (다국어 변환 시 한 곳만 수정)
 const SLIDER_LABELS = { left: '좌측', right: '우측', single: '' };
 
@@ -2694,16 +2734,7 @@ function createScaleSlider(presetId, preset, displayScale, canvasHolder, label, 
     const v = parseFloat(e.target.value);
     updateBg(v);
     t.scale = sliderToScale(v);
-    // 캔버스만 다시 그림 — canvasHolder.current 사용 (체크박스와 공유)
-    renderToCanvas(presetId, preset, (newCanvas) => {
-      newCanvas.style.width = (preset.w * displayScale) + "px";
-      newCanvas.style.height = (preset.h * displayScale) + "px";
-      newCanvas.style.display = "block";
-      newCanvas.style.cursor = 'grab';
-      if (canvasHolder.current && canvasHolder.current.parentNode) canvasHolder.current.replaceWith(newCanvas);
-      canvasHolder.current = newCanvas;
-      if (state.imageUrl) attachImageInteractions(newCanvas, displayScale, presetId, canvasHolder);
-    });
+    redrawSingleCanvas(presetId, preset, displayScale, canvasHolder, { cursor: 'grab' });
   });
   return row;
 }
@@ -2721,29 +2752,17 @@ function createPreviewCheckbox(presetId, preset, displayScale, canvasHolder, lab
   checkbox.addEventListener('change', (e) => {
     if (e.target.checked) disabledSet.delete(presetId);
     else disabledSet.add(presetId);
-    // 캔버스만 다시 그림 (체크박스 DOM 유지) — canvasHolder.current 공유
-    renderToCanvas(presetId, preset, (newCanvas) => {
-      newCanvas.style.width = (preset.w * displayScale) + "px";
-      newCanvas.style.height = (preset.h * displayScale) + "px";
-      newCanvas.style.display = "block";
-      if (state.imageUrl) {
-        const t = getImageTransform(presetId);
-        newCanvas.style.cursor = t.mode === 'manual' ? 'grab' : 'pointer';
-      }
-      if (canvasHolder.current && canvasHolder.current.parentNode) canvasHolder.current.replaceWith(newCanvas);
-      canvasHolder.current = newCanvas;
-      if (state.imageUrl) attachImageInteractions(newCanvas, displayScale, presetId, canvasHolder);
-    });
+    redrawSingleCanvas(presetId, preset, displayScale, canvasHolder);
   });
   return label;
 }
 // CTA 적용/미적용 체크박스
 function createCtaCheckbox(presetId, preset, displayScale, canvasHolder) {
-  return createPreviewCheckbox(presetId, preset, displayScale, canvasHolder, 'CTA 적용', state.ctaDisabledBanners);
+  return createPreviewCheckbox(presetId, preset, displayScale, canvasHolder, 'CTA 적용', state.perBannerOverrides.ctaDisabled);
 }
 // 로고 적용/미적용 체크박스
 function createLogoCheckbox(presetId, preset, displayScale, canvasHolder) {
-  return createPreviewCheckbox(presetId, preset, displayScale, canvasHolder, '로고 적용', state.logoDisabledBanners);
+  return createPreviewCheckbox(presetId, preset, displayScale, canvasHolder, '로고 적용', state.perBannerOverrides.logoDisabled);
 }
 
 // 카드별 이미지 맞춤 모드 토글 (contain / crop) — 이미지 업로드 시 노출
@@ -2763,21 +2782,9 @@ function createFitModeToggle(presetId, preset, displayScale, canvasHolder) {
   };
   updateActive();
   const onPick = (newMode) => {
-    state.imageFitModePerBanner[presetId] = newMode;
+    state.perBannerOverrides.fitMode[presetId] = newMode;
     updateActive();
-    // 캔버스만 다시 그림 (canvasHolder 공유)
-    renderToCanvas(presetId, preset, (newCanvas) => {
-      newCanvas.style.width = (preset.w * displayScale) + "px";
-      newCanvas.style.height = (preset.h * displayScale) + "px";
-      newCanvas.style.display = "block";
-      if (state.imageUrl) {
-        const t = getImageTransform(presetId);
-        newCanvas.style.cursor = t.mode === 'manual' ? 'grab' : 'pointer';
-      }
-      if (canvasHolder.current && canvasHolder.current.parentNode) canvasHolder.current.replaceWith(newCanvas);
-      canvasHolder.current = newCanvas;
-      if (state.imageUrl) attachImageInteractions(newCanvas, displayScale, presetId, canvasHolder);
-    });
+    redrawSingleCanvas(presetId, preset, displayScale, canvasHolder);
   };
   containBtn.addEventListener('click', () => onPick('contain'));
   cropBtn.addEventListener('click', () => onPick('crop'));
@@ -2904,6 +2911,7 @@ function attachImageInteractions(canvas, displayScale, presetId, canvasHolder) {
     activeTransformFn(presetId).offset = { x: startOffsetX + dx, y: startOffsetY + dy };
     // 드래그 중에는 해당 캔버스만 다시 그림 (전체 updatePreview 안 함 — 깜빡임/스크롤 점프 방지)
     if (canvasHolder) {
+      // 드래그 중에는 attachImageInteractions 재부착 안 함 (이미 onMouseMove가 window에 등록돼있어서 OK)
       const preset = PRESETS[presetId];
       renderToCanvas(presetId, preset, (newCanvas) => {
         newCanvas.style.width = (preset.w * displayScale) + "px";

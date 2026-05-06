@@ -4,14 +4,14 @@
   "last_updated": "2026-04-27",
   "dimensions": { "width": 325, "height": 310 },
   "layout": "vertical",
-  "text_ratio": 0.5,
-  "img_ratio": 0.5,
+  "textRatio": 0.5,
+  "imgRatio": 0.5,
   "margins": { "left": 10, "right": 10, "top": 10, "bottom": 10 },
   "fonts": {
     "main": { "family": "Gmarket Sans", "weight": "Bold", "size_px": 28, "letter_spacing": "-2%" },
     "sub": { "family": "Gmarket Sans", "weight": "Medium", "size_px": 18, "letter_spacing": "-2%" }
   },
-  "min_font": 12,
+  "minFont": 12,
   "color_rules": {
     "required": "흰색 배경에서 가시성 있는 BG컬러 사용"
   },

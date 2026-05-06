@@ -12,9 +12,9 @@
   "dimensions": { "width": 0, "height": 0 },
   "display_size": null,
   "layout": "horizontal",
-  "text_ratio": 0.55,
-  "img_ratio": 0.45,
-  "min_font": 12,
+  "textRatio": 0.55,
+  "imgRatio": 0.45,
+  "minFont": 12,
 
   "file": {
     "max_size_kb": 30,

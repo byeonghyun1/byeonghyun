@@ -6,8 +6,8 @@
   "dimensions": { "width": 560, "height": 700 },
   "display_size": { "width": 280, "height": 350 },
   "layout": "vertical",
-  "text_ratio": 0.45,
-  "img_ratio": 0.55,
+  "textRatio": 0.45,
+  "imgRatio": 0.55,
   "margins": { "left": 44, "right": 44, "top": 52, "bottom": 62 },
   "fonts": {
     "main": { "family": "Paperlogy", "weight": "7Bold", "letter_spacing": "-2%", "line_height_percent": 108 },
@@ -25,7 +25,7 @@
     "line_height_percent": 108,
     "_note": "mode=individual: 메인은 글자수와 무관하게 72px 고정 (1줄 박스 80px / 2줄 박스 160px). 서브는 20자 기준 32/24px. 행간 108% (폰트 사이즈 대비)."
   },
-  "min_font": 24,
+  "minFont": 24,
   "font_size_strict": true,
   "copy": {
     "structure": "서브 1줄 + 메인 최대 2줄",

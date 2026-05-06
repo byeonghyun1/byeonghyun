@@ -8,8 +8,8 @@
   "dimensions": { "width": 2160, "height": 160 },
   "display_size": { "width": 1080, "height": 80 },
   "layout": "horizontal",
-  "text_ratio": 1,
-  "img_ratio": 0,
+  "textRatio": 1,
+  "imgRatio": 0,
 
   "margins": {
     "left": 20,
@@ -60,7 +60,7 @@
     "main_shrink": { "size_px": 64, "box_h_px": 76 },
     "sub_shrink": { "size_px": 64, "box_h_px": 76 }
   },
-  "min_font": 64,
+  "minFont": 64,
   "font_size_strict": false,
 
   "file": {
