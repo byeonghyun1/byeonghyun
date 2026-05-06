@@ -2223,17 +2223,24 @@ function renderToCanvas(presetId, preset, callback) {
       urls.push(state.imageUrl);
     }
     // 로고 이미지 (마지막에 추가, 인덱스 기억)
-    // logoBox.mode === 'unified': 출처/콜라보 한 자리에 들어감 (둘 다 있으면 콜라보 우선)
+    // logoBox.mode === 'unified': 출처/콜라보 한 자리에 들어감 (둘 다 있으면 출처 우선)
     const logoSourceUrl = preset.logoBox?.mode === 'unified'
-      ? (state.logoUrl || state.sourceLogoUrl)
+      ? (state.sourceLogoUrl || state.logoUrl)
       : state.logoUrl;
     const hasLogo = preset.logoBox && logoSourceUrl && !state.perBannerOverrides.logoDisabled.has(presetId);
     const logoIdx = hasLogo ? urls.length : -1;
     if (hasLogo) urls.push(logoSourceUrl);
     // 출처 표기 이미지 (마지막에 추가)
-    const hasSourceLogo = preset.sourceLabelImage?.enabled && state.sourceLogoUrl;
+    // sourceLabelImage 영역 — unified면 콜라보/출처 둘 중 하나(출처 우선), 일반 모드면 출처만
+    const sli = preset.sourceLabelImage;
+    const sourceAreaUrl = sli?.enabled ? (
+      sli.mode === 'unified'
+        ? (state.sourceLogoUrl || state.logoUrl)
+        : state.sourceLogoUrl
+    ) : null;
+    const hasSourceLogo = !!sourceAreaUrl && !state.perBannerOverrides.logoDisabled.has(presetId);
     const sourceLogoIdx = hasSourceLogo ? urls.length : -1;
-    if (hasSourceLogo) urls.push(state.sourceLogoUrl);
+    if (hasSourceLogo) urls.push(sourceAreaUrl);
 
     // 모든 이미지를 Promise로 로딩 (비동기 패턴 통합)
     Promise.all(urls.map(loadImg)).then(images => {
@@ -2334,27 +2341,29 @@ function renderToCanvas(presetId, preset, callback) {
         } else {
           logoX = preset.w / 2 - logoDrawnW / 2; // center 기본값
         }
-        // unified 모드 + 출처 로고 사용 시 sourceLogoInvert 적용, 그 외 collabLogoInvert
-        const isUnifiedSource = lb.mode === 'unified' && !state.logoUrl && state.sourceLogoUrl;
-        const invertOn = isUnifiedSource ? state.sourceLogoInvert : state.collabLogoInvert;
+        // unified 모드: 출처 우선이라 출처 있으면 sourceLogoInvert, 출처 없고 콜라보면 collabLogoInvert
+        const isUnifiedCollab = lb.mode === 'unified' && !state.sourceLogoUrl && state.logoUrl;
+        const invertOn = isUnifiedCollab ? state.collabLogoInvert : (lb.mode === 'unified' ? state.sourceLogoInvert : state.collabLogoInvert);
         const logoSrc = invertOn ? invertImage(logoImg, Math.round(logoDrawnW), Math.round(logoDrawnH)) : logoImg;
         ctx.drawImage(logoSrc, logoX, logoY, logoDrawnW, logoDrawnH);
       }
 
-      // 출처 표기 이미지 (우측 상단 고정 영역, 148px의 75% 크기 + 중앙 정렬)
+      // 출처 표기 이미지 (우측 상단 고정 영역, 영역의 80% 크기 + 중앙 정렬)
+      // unified 모드 + 출처 없고 콜라보만 있을 때는 콜라보 로고가 이 자리에 그려짐
       if (sourceLogoImg && preset.sourceLabelImage) {
         const sli = preset.sourceLabelImage;
-        const areaW = sli.width; // 고정 영역 가로 (148px)
+        const areaW = sli.width; // 고정 영역 가로
         const targetW = areaW * 0.80; // 영역의 80% 크기로 렌더링
         const scale = targetW / sourceLogoImg.width;
         const slW = sourceLogoImg.width * scale;
         const slH = sourceLogoImg.height * scale;
-        // 148px 영역의 좌측 끝 X = 배너 우측 - right여백 - 영역폭
         const areaX = preset.w - sli.right - areaW;
-        // 영역 내 중앙 정렬
         const slX = areaX + (areaW - slW) / 2;
         const slY = sli.top;
-        const slSrc = state.sourceLogoInvert ? invertImage(sourceLogoImg, Math.round(slW), Math.round(slH)) : sourceLogoImg;
+        // unified + 콜라보 사용 시 collabLogoInvert, 그 외(출처)는 sourceLogoInvert
+        const isUnifiedCollab = sli.mode === 'unified' && !state.sourceLogoUrl && state.logoUrl;
+        const invertOn = isUnifiedCollab ? state.collabLogoInvert : state.sourceLogoInvert;
+        const slSrc = invertOn ? invertImage(sourceLogoImg, Math.round(slW), Math.round(slH)) : sourceLogoImg;
         ctx.drawImage(slSrc, slX, slY, slW, slH);
       }
 
@@ -2560,14 +2569,30 @@ function isWordWrapEnabled(preset) {
   return !!(preset && preset.mainAutoWrap === true);
 }
 
-// 특정 배너에 로고가 실제 그려지는 상태인지 (logoBox 정의 + 로고 URL 있음 + 체크박스 해제 안 됨)
+// 특정 배너에 로고가 그려질 수 있는지 (logoBox 또는 sourceLabelImage(unified) + 로고 URL 있음)
+// 미리보기 카드 체크박스 노출 조건에도 사용
+function canDrawLogoForBanner(preset) {
+  if (!preset) return false;
+  // logoBox로 그려지는 콜라보 로고 (스카이 등) — unified면 출처 우선, 아니면 콜라보만
+  const hasViaLogoBox = !!(preset.logoBox && (
+    preset.logoBox.mode === 'unified'
+      ? (state.sourceLogoUrl || state.logoUrl)
+      : state.logoUrl
+  ));
+  // sourceLabelImage로 그려지는 우측 상단 로고 (커튼·메인탑 등)
+  const sli = preset.sourceLabelImage;
+  const hasViaSourceLabel = !!(sli?.enabled && (
+    sli.mode === 'unified'
+      ? (state.sourceLogoUrl || state.logoUrl)
+      : state.sourceLogoUrl
+  ));
+  return hasViaLogoBox || hasViaSourceLabel;
+}
+
+// 특정 배너에 로고가 실제 그려지는 상태인지 (canDraw + 체크박스 해제 안 됨)
 function isLogoActiveForBanner(preset) {
-  if (!preset || !preset.logoBox) return false;
-  if (state.perBannerOverrides.logoDisabled.has(preset.id)) return false;
-  const url = preset.logoBox.mode === 'unified'
-    ? (state.logoUrl || state.sourceLogoUrl)
-    : state.logoUrl;
-  return !!url;
+  if (!canDrawLogoForBanner(preset)) return false;
+  return !state.perBannerOverrides.logoDisabled.has(preset.id);
 }
 
 // top_center 레이아웃에서 로고가 있을 때 텍스트 시작 Y에 더해줄 오프셋 (로고 박스 + 간격)
@@ -2835,7 +2860,7 @@ function renderPreviewItem(container, presetId, preset, scale) {
     // CTA 체크박스: CTA 토글 ON + 지원 배너일 때만
     // Fit 모드 토글: 이미지 업로드 됐을 때만 (배너별 contain/crop override)
     if (previewItem) {
-      const showLogo = !!(preset.logoBox && (state.logoUrl || state.sourceLogoUrl));
+      const showLogo = canDrawLogoForBanner(preset);
       const showCta = !!(state.ctaEnabled && preset.ctaSupported !== false);
       const showFit = !!state.imageUrl;
       if (showLogo || showCta || showFit) {

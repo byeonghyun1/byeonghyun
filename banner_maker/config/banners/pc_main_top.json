@@ -25,18 +25,12 @@
     "position": "top_right",
     "image_mode": {
       "enabled": true,
+      "mode": "unified",
       "width": 152,
       "top": 16,
       "right": 16,
-      "_note": "출처 표기를 이미지로 대체. 피그마=캔버스 동일 좌표계. 가로 152px 고정, 위 16px, 우측 16px."
+      "_note": "출처 표기를 이미지로 대체. mode=unified: 콜라보 로고와 출처 로고가 동일 위치(우측 상단)에 표시. 둘 중 하나만 사용. 둘 다 업로드 시 출처 우선. 가로 152px 고정, 위 16px, 우측 16px."
     }
-  },
-  "logo_box": {
-    "max_height": 26,
-    "gap": 24,
-    "align": "text_left",
-    "replaces": "sub",
-    "_note": "콜라보 로고가 서브카피 위치에 배치. 로고 사용 시 서브카피 입력 비활성화. maxHeight: 로고 세로 고정 26px, gap: 로고-메인텍스트 간격 24px, align: text_left=텍스트 좌측 끝 정렬."
   },
   "image_box": {
     "width_ratio": 0.4,
