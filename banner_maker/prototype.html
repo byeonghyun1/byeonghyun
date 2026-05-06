@@ -798,6 +798,8 @@ let state = {
   // 미리보기 카드 체크박스로 해제된 배너 ID 모음 (CTA 토글 ON 시에만 의미)
   // 토글 OFF→ON 사이클마다 초기화 (모든 배너에 다시 적용된 상태로 시작)
   ctaDisabledBanners: new Set(),
+  // 로고 미리보기 카드 체크박스로 해제된 배너 ID 모음 (로고 업로드 시 의미)
+  logoDisabledBanners: new Set(),
   // 카피 배치 변형 (배너의 structure_variants 중 사용자가 선택한 id). null이면 첫 번째 사용.
   structureChoice: null,
   // 이미지 맞춤 모드: 'contain' (전체 표시) / 'crop' (콘텐츠 바운딩 박스 기준 크롭)
@@ -2192,7 +2194,7 @@ function renderToCanvas(presetId, preset, callback) {
     const logoSourceUrl = preset.logoBox?.mode === 'unified'
       ? (state.logoUrl || state.sourceLogoUrl)
       : state.logoUrl;
-    const hasLogo = preset.logoBox && logoSourceUrl;
+    const hasLogo = preset.logoBox && logoSourceUrl && !state.logoDisabledBanners.has(presetId);
     const logoIdx = hasLogo ? urls.length : -1;
     if (hasLogo) urls.push(logoSourceUrl);
     // 출처 표기 이미지 (마지막에 추가)
@@ -2522,15 +2524,22 @@ function wrapTextByWord(ctx, text, maxWidth, spacing) {
 // 추가 시 이 배열에만 ID 추가 — 코드 다른 곳 수정 불필요
 const WORD_WRAP_BANNERS = ['pc_job_sky'];
 
-// top_center 레이아웃에서 로고가 있을 때 텍스트 시작 Y에 더해줄 오프셋 (로고 박스 + 간격)
-// 로고 없거나 top_center 아닌 배너면 0 반환
-function getTopLayoutLogoOffset(preset) {
-  if (preset.layoutTemplate !== 'top_center' || !preset.logoBox) return 0;
-  const lb = preset.logoBox;
-  const hasLogoUrl = lb.mode === 'unified'
+// 특정 배너에 로고가 실제 그려지는 상태인지 (logoBox 정의 + 로고 URL 있음 + 체크박스 해제 안 됨)
+function isLogoActiveForBanner(preset) {
+  if (!preset || !preset.logoBox) return false;
+  if (state.logoDisabledBanners.has(preset.id)) return false;
+  const url = preset.logoBox.mode === 'unified'
     ? (state.logoUrl || state.sourceLogoUrl)
     : state.logoUrl;
-  if (!hasLogoUrl) return 0;
+  return !!url;
+}
+
+// top_center 레이아웃에서 로고가 있을 때 텍스트 시작 Y에 더해줄 오프셋 (로고 박스 + 간격)
+// 로고 없거나 비활성(체크박스 해제) 또는 top_center 아닌 배너면 0 반환
+function getTopLayoutLogoOffset(preset) {
+  if (preset.layoutTemplate !== 'top_center' || !preset.logoBox) return 0;
+  if (!isLogoActiveForBanner(preset)) return 0;
+  const lb = preset.logoBox;
   return (lb.maxHeight || 20) + (lb.gap ?? 0);
 }
 
@@ -2679,21 +2688,20 @@ function createScaleSlider(presetId, preset, displayScale, canvasHolder, label, 
   return row;
 }
 
-// CTA 적용/미적용 체크박스 (CTA 토글 ON + 지원 배너에서만 노출)
-function createCtaCheckbox(presetId, preset, displayScale, canvasHolder) {
-  const row = document.createElement("div");
-  row.style.cssText = "margin-bottom:10px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#555;";
-  const checked = !state.ctaDisabledBanners.has(presetId);
-  row.innerHTML =
-    '<label style="display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none;">' +
-      '<input type="checkbox" ' + (checked ? 'checked' : '') + ' style="cursor:pointer;width:14px;height:14px;accent-color:#2563EB;">' +
-      '<span>CTA 적용</span>' +
-    '</label>';
-  const checkbox = row.querySelector('input[type="checkbox"]');
+// 체크박스 label 공통 빌더 — 미리보기 카드 컨트롤 행에 들어감
+// 변경 시 disabledSet에서 add/remove + 캔버스 재렌더 (canvasHolder 공유)
+function createPreviewCheckbox(presetId, preset, displayScale, canvasHolder, labelText, disabledSet) {
+  const label = document.createElement("label");
+  label.style.cssText = "display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none;";
+  const checked = !disabledSet.has(presetId);
+  label.innerHTML =
+    '<input type="checkbox" ' + (checked ? 'checked' : '') + ' style="cursor:pointer;width:14px;height:14px;accent-color:#2563EB;">' +
+    '<span>' + labelText + '</span>';
+  const checkbox = label.querySelector('input[type="checkbox"]');
   checkbox.addEventListener('change', (e) => {
-    if (e.target.checked) state.ctaDisabledBanners.delete(presetId);
-    else state.ctaDisabledBanners.add(presetId);
-    // 캔버스만 다시 그림 (체크박스 DOM 유지)
+    if (e.target.checked) disabledSet.delete(presetId);
+    else disabledSet.add(presetId);
+    // 캔버스만 다시 그림 (체크박스 DOM 유지) — canvasHolder.current 공유
     renderToCanvas(presetId, preset, (newCanvas) => {
       newCanvas.style.width = (preset.w * displayScale) + "px";
       newCanvas.style.height = (preset.h * displayScale) + "px";
@@ -2707,7 +2715,15 @@ function createCtaCheckbox(presetId, preset, displayScale, canvasHolder) {
       if (state.imageUrl) attachImageInteractions(newCanvas, displayScale, presetId);
     });
   });
-  return row;
+  return label;
+}
+// CTA 적용/미적용 체크박스
+function createCtaCheckbox(presetId, preset, displayScale, canvasHolder) {
+  return createPreviewCheckbox(presetId, preset, displayScale, canvasHolder, 'CTA 적용', state.ctaDisabledBanners);
+}
+// 로고 적용/미적용 체크박스
+function createLogoCheckbox(presetId, preset, displayScale, canvasHolder) {
+  return createPreviewCheckbox(presetId, preset, displayScale, canvasHolder, '로고 적용', state.logoDisabledBanners);
 }
 
 // 미리보기용: Canvas를 축소해서 표시 + 마진 오버레이 + (수동 모드 시) 크기 슬라이더
@@ -2744,9 +2760,19 @@ function renderPreviewItem(container, presetId, preset, scale) {
     const canvasHolder = { current: canvas };
     const previewItem = container.parentElement; // .preview-item 카드
 
-    // CTA 적용/미적용 체크박스 (CTA 토글 ON + 지원 배너) — 캔버스 위에 위치
-    if (state.ctaEnabled && preset.ctaSupported !== false && previewItem) {
-      previewItem.insertBefore(createCtaCheckbox(presetId, preset, scale, canvasHolder), container);
+    // 캔버스 위 컨트롤 행 — 로고 체크박스(왼) + CTA 체크박스(오)
+    // 로고 체크박스: logoBox 정의 + 로고(콜라보 또는 출처) 업로드 됐을 때만
+    // CTA 체크박스: CTA 토글 ON + 지원 배너일 때만
+    if (previewItem) {
+      const showLogo = !!(preset.logoBox && (state.logoUrl || state.sourceLogoUrl));
+      const showCta = !!(state.ctaEnabled && preset.ctaSupported !== false);
+      if (showLogo || showCta) {
+        const ctrlRow = document.createElement("div");
+        ctrlRow.style.cssText = "margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:16px;font-size:12px;color:#555;";
+        if (showLogo) ctrlRow.appendChild(createLogoCheckbox(presetId, preset, scale, canvasHolder));
+        if (showCta)  ctrlRow.appendChild(createCtaCheckbox(presetId, preset, scale, canvasHolder));
+        previewItem.insertBefore(ctrlRow, container);
+      }
     }
 
     // 크기 조절 슬라이더 (수동 모드일 때만 — 캔버스 아래 노출)
