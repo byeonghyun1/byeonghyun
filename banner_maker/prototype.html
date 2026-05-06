@@ -1821,7 +1821,17 @@ function drawText(ctx, preset, presetId, textColor, textX, textAlign, maxTextW, 
       // 상단 정렬(top_center): 상단 마진부터 시작. 기본: 세로 중앙 정렬.
       const isTopLayout = preset.layoutTemplate === 'top_center';
       const topMargin = preset.margins?.top ?? 0;
-      const startY = isTopLayout ? topMargin : cy - blockH / 2;
+      // 로고가 있고 top_center 레이아웃이면 텍스트 시작 Y를 (로고 박스 + 간격)만큼 밀어 내림
+      const logoOffsetForText = (() => {
+        if (!isTopLayout || !preset.logoBox) return 0;
+        const lb = preset.logoBox;
+        const hasLogoUrl = lb.mode === 'unified'
+          ? (state.logoUrl || state.sourceLogoUrl)
+          : state.logoUrl;
+        if (!hasLogoUrl) return 0;
+        return (lb.maxHeight || 20) + (lb.gap ?? 0);
+      })();
+      const startY = isTopLayout ? (topMargin + logoOffsetForText) : cy - blockH / 2;
 
       const baselineInBox = (boxH, fontSize) => (boxH + fontSize * 0.7) / 2;
       const mainTop = state.structureChoice === 'main_top_sub_bottom';
@@ -2079,9 +2089,13 @@ function renderToCanvas(presetId, preset, callback) {
       urls.push(state.imageUrl);
     }
     // 로고 이미지 (마지막에 추가, 인덱스 기억)
-    const hasLogo = preset.logoBox && state.logoUrl;
+    // logoBox.mode === 'unified': 출처/콜라보 한 자리에 들어감 (둘 다 있으면 콜라보 우선)
+    const logoSourceUrl = preset.logoBox?.mode === 'unified'
+      ? (state.logoUrl || state.sourceLogoUrl)
+      : state.logoUrl;
+    const hasLogo = preset.logoBox && logoSourceUrl;
     const logoIdx = hasLogo ? urls.length : -1;
-    if (hasLogo) urls.push(state.logoUrl);
+    if (hasLogo) urls.push(logoSourceUrl);
     // 출처 표기 이미지 (마지막에 추가)
     const hasSourceLogo = preset.sourceLabelImage?.enabled && state.sourceLogoUrl;
     const sourceLogoIdx = hasSourceLogo ? urls.length : -1;
@@ -2161,8 +2175,10 @@ function renderToCanvas(presetId, preset, callback) {
         const effectiveSub = logoReplacesSub ? '' : state.subText;
         const comp = getCompositionDecision(presetId, state.mainText, effectiveSub);
         const textH = comp ? comp.mainSize : (preset.fonts.main.size || 72);
-        // 로고 Y: adjustedCenterY(텍스트 중심) 위에 gap만큼 띄워서 배치
-        const logoY = adjustedCenterY - textH * 0.38 - lb.gap - logoDrawnH;
+        // 로고 Y: top_center 레이아웃이면 상단 마진 위치, 그 외엔 텍스트 중심 위로 gap만큼 띄움
+        const logoY = (preset.layoutTemplate === 'top_center')
+          ? (preset.margins?.top ?? 0)
+          : (adjustedCenterY - textH * 0.38 - lb.gap - logoDrawnH);
         // 로고 X: align 설정에 따라 결정
         let logoX;
         if (lb.align === 'text_left') {
@@ -2174,7 +2190,10 @@ function renderToCanvas(presetId, preset, callback) {
         } else {
           logoX = preset.w / 2 - logoDrawnW / 2; // center 기본값
         }
-        const logoSrc = state.collabLogoInvert ? invertImage(logoImg, Math.round(logoDrawnW), Math.round(logoDrawnH)) : logoImg;
+        // unified 모드 + 출처 로고 사용 시 sourceLogoInvert 적용, 그 외 collabLogoInvert
+        const isUnifiedSource = lb.mode === 'unified' && !state.logoUrl && state.sourceLogoUrl;
+        const invertOn = isUnifiedSource ? state.sourceLogoInvert : state.collabLogoInvert;
+        const logoSrc = invertOn ? invertImage(logoImg, Math.round(logoDrawnW), Math.round(logoDrawnH)) : logoImg;
         ctx.drawImage(logoSrc, logoX, logoY, logoDrawnW, logoDrawnH);
       }
 
