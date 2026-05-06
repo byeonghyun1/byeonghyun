@@ -8,7 +8,9 @@
   "display_size": null,
   "file": {
     "max_size_kb": 30,
-    "extensions": ["text"],
+    "extensions": [
+      "text"
+    ],
     "rounding": false,
     "border": false
   },
@@ -18,13 +20,35 @@
     "emphasis_position": "bottom"
   },
   "rules": [
-    { "type": "필수", "text": "텍스트 노출 전용 (이미지 사용 불가)" },
-    { "type": "필수", "text": "텍스트 최대 2줄 준수" },
-    { "type": "필수", "text": "1줄당 15자 이하 준수" },
-    { "type": "권장", "text": "강조해야하는 문구는 하단 배치 지향" }
+    {
+      "type": "필수",
+      "text": "텍스트 노출 전용 (이미지 사용 불가)"
+    },
+    {
+      "type": "필수",
+      "text": "텍스트 최대 2줄 준수"
+    },
+    {
+      "type": "필수",
+      "text": "1줄당 15자 이하 준수"
+    },
+    {
+      "type": "권장",
+      "text": "강조해야하는 문구는 하단 배치 지향"
+    }
   ],
   "tbd": [
     "폰트 스펙 보강 필요 (presets에 누락)",
     "audience / few_shot_refs / builder_io 등 빌더 메타 보강 필요"
-  ]
+  ],
+  "fonts": {
+    "main": {
+      "family": "Paperlogy",
+      "weight": "7Bold"
+    },
+    "sub": {
+      "family": "Paperlogy",
+      "weight": "4Regular"
+    }
+  }
 }

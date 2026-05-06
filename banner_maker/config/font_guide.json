@@ -19,8 +19,9 @@
       ]
     },
     "sub_copy": {
-      "default": { "family": "Paperlogy", "weight": "5Medium" },
+      "default": { "family": "Paperlogy", "weight": "4Regular" },
       "options": [
+        { "family": "Paperlogy", "weight": "4Regular", "css_family": "Paperlogy-4Regular", "css_weight": 400 },
         { "family": "Paperlogy", "weight": "5Medium", "css_family": "Paperlogy-5Medium", "css_weight": 500 },
         { "family": "Gmarket Sans", "weight": "Medium", "css_family": "GmarketSansMedium", "css_weight": 500 },
         { "family": "Pretendard", "weight": "Regular", "css_family": "Pretendard", "css_weight": 400 }
@@ -46,7 +47,7 @@
     {
       "family": "Paperlogy",
       "category": "gothic",
-      "available_weights": ["5Medium", "7Bold"],
+      "available_weights": ["4Regular", "5Medium", "7Bold"],
       "usage": "사용자가 폰트 토글로 선택 시",
       "description": "선택 옵션 폰트"
     },

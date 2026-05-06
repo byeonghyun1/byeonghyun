@@ -1,50 +1,84 @@
 {
   "_NOTE": "신규 배너 추가 시 이 파일을 복사 후 _NOTE 키 삭제. 파일명·id는 {platform}_{location} 형식 (예: pc_main_top, m_app_splash, ext_*).",
-  "_REQUIRED_KEYS": ["id", "name", "dimensions", "margins", "fonts.main.size_px"],
-  "_OPTIONAL_KEYS": ["display_size", "fonts.sub", "color_rules", "layout_pattern", "few_shot_refs", "builder_io", "character_policy"],
+  "_REQUIRED_KEYS": [
+    "id",
+    "name",
+    "dimensions",
+    "margins",
+    "fonts.main.size_px"
+  ],
+  "_OPTIONAL_KEYS": [
+    "display_size",
+    "fonts.sub",
+    "color_rules",
+    "layout_pattern",
+    "few_shot_refs",
+    "builder_io",
+    "character_policy"
+  ],
   "_AFTER_ADDING": "config/banners/_index.json의 banners 및 ui_visible 배열에도 ID 추가 필수 (UI에 안 띄울 거면 ui_visible 제외)",
-
   "id": "TEMPLATE_BANNER_ID",
   "name": "표시 이름",
   "last_updated": "YYYY-MM-DD",
   "location": "PC > 어디 어디",
-
-  "dimensions": { "width": 0, "height": 0 },
+  "dimensions": {
+    "width": 0,
+    "height": 0
+  },
   "display_size": null,
   "layout": "horizontal",
   "text_ratio": 0.55,
   "img_ratio": 0.45,
   "min_font": 12,
-
   "file": {
     "max_size_kb": 30,
-    "extensions": ["jpg", "jpeg", "gif", "png"],
+    "extensions": [
+      "jpg",
+      "jpeg",
+      "gif",
+      "png"
+    ],
     "rounding": false,
     "border": false
   },
-
-  "margins": { "left": 0, "right": 0, "top": 0, "bottom": 0 },
-
+  "margins": {
+    "left": 0,
+    "right": 0,
+    "top": 0,
+    "bottom": 0
+  },
   "source_label": {
     "size_px": 8,
     "position": "top_right"
   },
-
   "fonts": {
-    "main": { "family": "Gmarket Sans", "weight": "Bold", "size_px": 0, "letter_spacing": "-2%" },
-    "sub": { "family": "Gmarket Sans", "weight": "Medium", "size_px": 0, "letter_spacing": "-2%" }
+    "main": {
+      "family": "Paperlogy",
+      "weight": "7Bold",
+      "size_px": 0,
+      "letter_spacing": "-2%"
+    },
+    "sub": {
+      "family": "Paperlogy",
+      "weight": "4Regular",
+      "size_px": 0,
+      "letter_spacing": "-2%"
+    }
   },
-
   "color_rules": {
     "page_bg": "#FFFFFF",
     "required": "주변 배경과 구분되는 BG Color 사용"
   },
-
   "rules": [
-    { "type": "필수", "text": "..." },
-    { "type": "권장", "text": "..." }
+    {
+      "type": "필수",
+      "text": "..."
+    },
+    {
+      "type": "권장",
+      "text": "..."
+    }
   ],
-
   "tbd": [
     "audience / few_shot_refs / builder_io 등 빌더 메타 보강 필요"
   ]

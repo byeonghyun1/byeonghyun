@@ -4,24 +4,26 @@
   "last_updated": "2026-04-29",
   "location": "PC > 메인 최 상단",
   "source": "Figma Agent-Test > PC Main Curtain Banner",
-
-  "dimensions": { "width": 2160, "height": 160 },
-  "display_size": { "width": 1080, "height": 80 },
+  "dimensions": {
+    "width": 2160,
+    "height": 160
+  },
+  "display_size": {
+    "width": 1080,
+    "height": 80
+  },
   "layout": "horizontal",
   "text_ratio": 1,
   "img_ratio": 0,
-
   "margins": {
     "left": 20,
     "right": 20,
     "top": 40,
     "bottom": 40
   },
-
   "safe_zone": {
     "description": "좌우 20px은 세이프존 (콘텐츠 배치 금지). 텍스트는 상단 40px ~ 하단 40px 범위 내 중앙정렬 배치."
   },
-
   "source_label": {
     "family": "Gmarket Sans",
     "weight": "Medium",
@@ -36,7 +38,6 @@
       "_note": "출처 표기를 이미지로 대체. 피그마=캔버스 동일 좌표계(2160x160). 가로 148px 고정, 위 20px, 우측 28px."
     }
   },
-
   "image_box": {
     "usage": "optional",
     "description": "텍스트와 이미지가 묶여서 중앙에 정렬되는 구조. 이미지는 텍스트 좌측 또는 우측에 배치 가능.",
@@ -46,57 +47,97 @@
     "dual_image": true,
     "_note": "이미지 상하 패딩 8px. 텍스트-이미지 간격 24px. 텍스트+이미지 그룹이 배너 중앙에 정렬됨. dual_image: 좌/우 이미지 2개 배치 가능."
   },
-
   "logo_box": {
     "max_height": 22,
     "gap": 20,
     "align": "text_left",
     "_note": "로고 이미지 업로드 시 텍스트 위에 배치. maxHeight: 로고 최대 높이(px), gap: 로고-텍스트 간격(px), align: text_left=텍스트 좌측 끝 정렬, center=배너 중앙, left/right=마진 기준. logoBox가 없는 배너는 로고 기능 비활성화."
   },
-
   "fonts": {
-    "main": { "family": "Paperlogy", "weight": "7Bold", "size_px": 72, "letter_spacing": "-2%", "line_height": 1.2, "box_h_px": 88 },
-    "sub": { "family": "Paperlogy", "weight": "5Medium", "size_px": 72, "letter_spacing": "-2%", "line_height": 1.2, "box_h_px": 88 },
-    "main_shrink": { "size_px": 64, "box_h_px": 76 },
-    "sub_shrink": { "size_px": 64, "box_h_px": 76 }
+    "main": {
+      "family": "Paperlogy",
+      "weight": "7Bold",
+      "size_px": 72,
+      "letter_spacing": "-2%",
+      "line_height": 1.2,
+      "box_h_px": 88
+    },
+    "sub": {
+      "family": "Paperlogy",
+      "weight": "4Regular",
+      "size_px": 72,
+      "letter_spacing": "-2%",
+      "line_height": 1.2,
+      "box_h_px": 88
+    },
+    "main_shrink": {
+      "size_px": 64,
+      "box_h_px": 76
+    },
+    "sub_shrink": {
+      "size_px": 64,
+      "box_h_px": 76
+    }
   },
   "min_font": 64,
   "font_size_strict": false,
-
   "file": {
     "max_size_kb": 30,
-    "extensions": ["jpg", "jpeg", "gif", "png"],
+    "extensions": [
+      "jpg",
+      "jpeg",
+      "gif",
+      "png"
+    ],
     "rounding": false,
     "border": false
   },
-
   "color_rules": {
     "page_bg": "#FFFFFF",
-    "banned_bg": ["검정"],
+    "banned_bg": [
+      "검정"
+    ],
     "required": "파일명에 배경 컬러코드 기입 필수",
     "reason": "BI와 인접한 위치이므로 검정 배경 금지"
   },
-
   "audience": {
-    "targets": ["구직자", "사장님"],
+    "targets": [
+      "구직자",
+      "사장님"
+    ],
     "description": "알바몬 메인 방문자는 구직자(알바생)와 사장님(자영업자)을 모두 포함. 광고 컨텍스트에 맞춰 두 청자 중 하나 또는 양쪽을 향하도록 카피·비주얼을 잡는다.",
     "case_distribution": {
-      "구직자": ["case_1_ssul", "case_3_conference"],
-      "사장님": ["case_2_chicken", "case_5_watermelon"],
-      "구직자+사장님": ["case_4_ax_report", "case_6_eagles"]
+      "구직자": [
+        "case_1_ssul",
+        "case_3_conference"
+      ],
+      "사장님": [
+        "case_2_chicken",
+        "case_5_watermelon"
+      ],
+      "구직자+사장님": [
+        "case_4_ax_report",
+        "case_6_eagles"
+      ]
     }
   },
-
   "font_size_rules": {
     "mode": "total",
     "default_type": "horizontal_sub_main",
     "rules": [
-      { "condition": "total <= 28", "main_size": 72, "sub_size": 72 },
-      { "condition": "total > 28", "main_size": 64, "sub_size": 64 }
+      {
+        "condition": "total <= 28",
+        "main_size": 72,
+        "sub_size": 72
+      },
+      {
+        "condition": "total > 28",
+        "main_size": 64,
+        "sub_size": 64
+      }
     ],
     "_note": "mode=total: 메인+서브 합산 글자수 기준. 28자 이하 72px, 초과 64px."
   },
-
   "copy": {
     "structure": "메인 단독 1줄 또는 서브+메인 가로 1줄 조합",
     "text_gap_px": 24,
@@ -110,7 +151,6 @@
       "main": "행동 유도·핵심 메시지·임팩트"
     }
   },
-
   "text_color_rule": {
     "method": "luminance_based",
     "threshold": 0.5,
@@ -120,7 +160,6 @@
     "emphasis_allowed": true,
     "emphasis_note": "메인 카피 일부 단어에 강조색 사용 가능 (case_1: 빨강, case_2: 노랑, case_3: 보라)"
   },
-
   "text_rules": {
     "align": "center",
     "origin": "배너 중앙 (width/2, height/2) 기준, 좌우로 뻗어나가는 구조",
@@ -131,13 +170,11 @@
       "horizontal_sub_main": "중앙 기준, 서브(좌) + 메인(우) 또는 맥락에 따라 위치 변경 가능"
     }
   },
-
   "layout_pattern": {
     "default_template": "center_align",
     "text_area": "중앙 정렬 (텍스트+이미지 그룹)",
     "visual_area": "이미지는 텍스트와 묶여 좌측 또는 우측에 배치 (선택사항)"
   },
-
   "character_policy": {
     "subject": "알바몬 마스코트 (MONI) 등 캐릭터",
     "usage": "conditional",
@@ -148,7 +185,6 @@
     ],
     "prohibited": "조건과 무관한 단순 장식 사용 지양"
   },
-
   "few_shot_refs": [
     {
       "id": "case_1_ssul",
@@ -232,30 +268,46 @@
       "has_image": true
     }
   ],
-
   "structure_variants": [
     {
       "id": "sub_left_main_right",
       "description": "서브(좌) + 메인(우). 기본 순서. 서브카피로 맥락을 먼저 제시한 뒤 메인카피로 임팩트.",
-      "examples": ["case_1_ssul", "case_2_chicken", "case_4_ax_report"]
+      "examples": [
+        "case_1_ssul",
+        "case_2_chicken",
+        "case_4_ax_report"
+      ]
     },
     {
       "id": "main_left_sub_right",
       "description": "메인(좌) + 서브(우). 메인카피를 먼저 던져 시선을 잡고, 서브카피로 부연.",
-      "examples": ["case_5_watermelon", "case_6_eagles"]
+      "examples": [
+        "case_5_watermelon",
+        "case_6_eagles"
+      ]
     }
   ],
-
   "auto_decision_rules": {
     "composition_rule": [
-      { "if": "서브카피 없음", "then": "single_main (메인 단독 1줄, 72px Bold)" },
-      { "if": "서브카피 있음 && 합계 ≤ 28자", "then": "horizontal_sub_main (가로 1줄, 둘 다 72px)" },
-      { "if": "서브카피 있음 && 합계 > 28자", "then": "horizontal_sub_main (가로 1줄, 둘 다 64px)" }
+      {
+        "if": "서브카피 없음",
+        "then": "single_main (메인 단독 1줄, 72px Bold)"
+      },
+      {
+        "if": "서브카피 있음 && 합계 ≤ 28자",
+        "then": "horizontal_sub_main (가로 1줄, 둘 다 72px)"
+      },
+      {
+        "if": "서브카피 있음 && 합계 > 28자",
+        "then": "horizontal_sub_main (가로 1줄, 둘 다 64px)"
+      }
     ],
-    "font_weight_rule": { "main": "Bold (항상)", "sub": "Medium (항상)" },
+    "font_weight_rule": {
+      "main": "Bold (항상)",
+      "sub": "Medium (항상)"
+    },
     "position_rule": "맥락에 따라 메인/서브 좌우 위치 변경 가능"
   },
-
   "builder_io": {
     "input_mapping": {
       "UserInput.texts.headline": "text_placements[0] (slot=headline)",
@@ -268,18 +320,40 @@
       "reason": "커튼 배너는 카피 자체가 행동 유도이므로 별도 CTA 버튼 비권장"
     }
   },
-
   "rules": [
-    { "type": "필수", "text": "파일명에 배경 컬러코드 기입 필수" },
-    { "type": "필수", "text": "출처 표기 24px (우측상단, Gmarket Sans Medium)" },
-    { "type": "필수", "text": "자간 -2% 고정" },
-    { "type": "필수", "text": "텍스트+이미지 그룹 중앙정렬" },
-    { "type": "필수", "text": "이미지 상하 패딩 8px" },
-    { "type": "금지", "text": "BG 블랙 컬러 사용 불가" },
-    { "type": "금지", "text": "좌우 20px 세이프존 내 콘텐츠 배치 금지" },
-    { "type": "필수", "text": "텍스트는 상단 40px ~ 하단 40px 범위 내 중앙정렬 배치" }
+    {
+      "type": "필수",
+      "text": "파일명에 배경 컬러코드 기입 필수"
+    },
+    {
+      "type": "필수",
+      "text": "출처 표기 24px (우측상단, Gmarket Sans Medium)"
+    },
+    {
+      "type": "필수",
+      "text": "자간 -2% 고정"
+    },
+    {
+      "type": "필수",
+      "text": "텍스트+이미지 그룹 중앙정렬"
+    },
+    {
+      "type": "필수",
+      "text": "이미지 상하 패딩 8px"
+    },
+    {
+      "type": "금지",
+      "text": "BG 블랙 컬러 사용 불가"
+    },
+    {
+      "type": "금지",
+      "text": "좌우 20px 세이프존 내 콘텐츠 배치 금지"
+    },
+    {
+      "type": "필수",
+      "text": "텍스트는 상단 40px ~ 하단 40px 범위 내 중앙정렬 배치"
+    }
   ],
-
   "tbd": [
     "광고 심의 금지 워딩 사전 (자료 확보 시 추가)",
     "강조색 사용 가이드라인 구체화"

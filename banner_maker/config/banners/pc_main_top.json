@@ -3,12 +3,23 @@
   "name": "메인 탑 배너",
   "last_updated": "2026-04-28",
   "location": "PC > 알바몬 메인 좌측",
-  "dimensions": { "width": 1556, "height": 232 },
-  "display_size": { "width": 778, "height": 116 },
+  "dimensions": {
+    "width": 1556,
+    "height": 232
+  },
+  "display_size": {
+    "width": 778,
+    "height": 116
+  },
   "layout": "horizontal",
   "text_ratio": 0.55,
   "img_ratio": 0.45,
-  "margins": { "left": 80, "right": 80, "top": 52, "bottom": 52 },
+  "margins": {
+    "left": 80,
+    "right": 80,
+    "top": 52,
+    "bottom": 52
+  },
   "source_label": {
     "size_px": 16,
     "position": "top_right",
@@ -28,21 +39,40 @@
     "_note": "콜라보 로고가 서브카피 위치에 배치. 로고 사용 시 서브카피 입력 비활성화. maxHeight: 로고 세로 고정 26px, gap: 로고-메인텍스트 간격 24px, align: text_left=텍스트 좌측 끝 정렬."
   },
   "image_box": {
-    "width_ratio": 0.40,
+    "width_ratio": 0.4,
     "height_ratio": 0.95,
     "anchor": "right_center",
     "v_padding": 8,
     "_note": "이미지 자동 배치 권장값. 사용자가 빌더 UI에서 imageScale·anchor로 미세 조정 가능"
   },
   "fonts": {
-    "main": { "family": "Paperlogy", "weight": "7Bold", "size_px": 60, "letter_spacing": "-2%", "line_height": 1.2, "box_h_px": 72 },
-    "sub": { "family": "Paperlogy", "weight": "5Medium", "size_px": 36, "letter_spacing": "-2%", "line_height": 1.2, "box_h_px": 44 }
+    "main": {
+      "family": "Paperlogy",
+      "weight": "7Bold",
+      "size_px": 60,
+      "letter_spacing": "-2%",
+      "line_height": 1.2,
+      "box_h_px": 72
+    },
+    "sub": {
+      "family": "Paperlogy",
+      "weight": "4Regular",
+      "size_px": 36,
+      "letter_spacing": "-2%",
+      "line_height": 1.2,
+      "box_h_px": 44
+    }
   },
   "min_font": 26,
   "font_size_strict": true,
   "file": {
     "max_size_kb": 50,
-    "extensions": ["jpg", "jpeg", "gif", "png"],
+    "extensions": [
+      "jpg",
+      "jpeg",
+      "gif",
+      "png"
+    ],
     "rounding": false,
     "border": false
   },
@@ -51,20 +81,35 @@
     "required": "메인 페이지(흰 #FFFFFF)와 구분되는 Background Color 사용"
   },
   "audience": {
-    "targets": ["구직자", "사장님"],
+    "targets": [
+      "구직자",
+      "사장님"
+    ],
     "description": "알바몬 메인 방문자는 구직자(알바생)와 사장님(자영업자)을 모두 포함. 광고 컨텍스트에 맞춰 두 청자 중 하나 또는 양쪽을 향하도록 카피·비주얼을 잡는다.",
     "case_distribution": {
-      "구직자": ["case_1_jjin", "case_3_expedition", "case_4_albatour"],
-      "사장님": ["case_2_kbank"]
+      "구직자": [
+        "case_1_jjin",
+        "case_3_expedition",
+        "case_4_albatour"
+      ],
+      "사장님": [
+        "case_2_kbank"
+      ]
     }
   },
   "copy": {
     "structure": "서브 1줄 + 메인 1줄",
     "line_gap_px": 12,
     "main_max_chars_kr": 17,
-    "main_recommended_chars_kr": [13, 17],
+    "main_recommended_chars_kr": [
+      13,
+      17
+    ],
     "sub_max_chars_kr": 14,
-    "sub_recommended_chars_kr": [8, 13],
+    "sub_recommended_chars_kr": [
+      8,
+      13
+    ],
     "main_line_break_allowed": false,
     "tone": {
       "sub": "맥락·후크·인용·캠페인명",
@@ -167,17 +212,24 @@
       "image_path": "assets/few_shot_refs/pc_main_top/case_6_eagles_ticketing.png"
     }
   ],
-
   "structure_variants": [
     {
       "id": "sub_top_main_bottom",
       "description": "서브(위) + 메인(아래). 기본 구조. 카피 컨셉이 \"맥락 → 결론\" 흐름일 때.",
-      "examples": ["case_1_jjin", "case_2_kbank", "case_3_expedition", "case_4_albatour", "case_6_eagles_ticketing"]
+      "examples": [
+        "case_1_jjin",
+        "case_2_kbank",
+        "case_3_expedition",
+        "case_4_albatour",
+        "case_6_eagles_ticketing"
+      ]
     },
     {
       "id": "main_top_sub_bottom",
       "description": "메인(위) + 서브(아래). 메인 카피를 후크로 먼저 던지고, 서브로 부연 설명할 때.",
-      "examples": ["case_5_eagles_million"]
+      "examples": [
+        "case_5_eagles_million"
+      ]
     }
   ],
   "builder_io": {
@@ -193,12 +245,30 @@
     }
   },
   "rules": [
-    { "type": "필수", "text": "메인 페이지(흰 #FFFFFF)와 구분되는 BG Color 사용" },
-    { "type": "필수", "text": "이미지 외곽에 테두리 삽입 불가" },
-    { "type": "필수", "text": "최종파일 라운딩 없이 전달" },
-    { "type": "권장", "text": "서브 1줄 + 메인 1줄 권장" },
-    { "type": "권장", "text": "메인 13~17자 / 서브 8~13자 (한글 기준)" },
-    { "type": "권장", "text": "최소 폰트: 26px" }
+    {
+      "type": "필수",
+      "text": "메인 페이지(흰 #FFFFFF)와 구분되는 BG Color 사용"
+    },
+    {
+      "type": "필수",
+      "text": "이미지 외곽에 테두리 삽입 불가"
+    },
+    {
+      "type": "필수",
+      "text": "최종파일 라운딩 없이 전달"
+    },
+    {
+      "type": "권장",
+      "text": "서브 1줄 + 메인 1줄 권장"
+    },
+    {
+      "type": "권장",
+      "text": "메인 13~17자 / 서브 8~13자 (한글 기준)"
+    },
+    {
+      "type": "권장",
+      "text": "최소 폰트: 26px"
+    }
   ],
   "tbd": [
     "광고 심의 금지 워딩 사전 (자료 확보 시 추가)",

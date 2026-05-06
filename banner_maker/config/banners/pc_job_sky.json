@@ -3,24 +3,63 @@
   "name": "공고 스카이 배너",
   "last_updated": "2026-05-04",
   "location": "PC > 공고 상세 우측",
-  "dimensions": { "width": 560, "height": 700 },
-  "display_size": { "width": 280, "height": 350 },
+  "dimensions": {
+    "width": 560,
+    "height": 700
+  },
+  "display_size": {
+    "width": 280,
+    "height": 350
+  },
   "layout": "vertical",
   "text_ratio": 0.45,
   "img_ratio": 0.55,
-  "margins": { "left": 44, "right": 44, "top": 52, "bottom": 62 },
+  "margins": {
+    "left": 44,
+    "right": 44,
+    "top": 52,
+    "bottom": 62
+  },
   "fonts": {
-    "main": { "family": "Paperlogy", "weight": "7Bold", "letter_spacing": "-2%", "line_height_percent": 108 },
-    "sub": { "family": "Paperlogy", "weight": "5Medium", "letter_spacing": "-2%", "line_height_percent": 108 }
+    "main": {
+      "family": "Paperlogy",
+      "weight": "7Bold",
+      "letter_spacing": "-2%",
+      "line_height_percent": 108
+    },
+    "sub": {
+      "family": "Paperlogy",
+      "weight": "4Regular",
+      "letter_spacing": "-2%",
+      "line_height_percent": 108
+    }
   },
   "font_size_rules": {
     "mode": "individual",
     "default_type": "vertical_sub_main",
     "rules": [
-      { "condition": "main <= 7", "main_size": 72, "main_box_h": 80, "main_box_h_2line": 160 },
-      { "condition": "main > 7", "main_size": 72, "main_box_h": 80, "main_box_h_2line": 160 },
-      { "condition": "sub <= 20", "sub_size": 32, "sub_box_h": 32 },
-      { "condition": "sub > 20", "sub_size": 24, "sub_box_h": 24 }
+      {
+        "condition": "main <= 7",
+        "main_size": 72,
+        "main_box_h": 80,
+        "main_box_h_2line": 160
+      },
+      {
+        "condition": "main > 7",
+        "main_size": 72,
+        "main_box_h": 80,
+        "main_box_h_2line": 160
+      },
+      {
+        "condition": "sub <= 20",
+        "sub_size": 32,
+        "sub_box_h": 32
+      },
+      {
+        "condition": "sub > 20",
+        "sub_size": 24,
+        "sub_box_h": 24
+      }
     ],
     "line_height_percent": 108,
     "_note": "mode=individual: 메인은 글자수와 무관하게 72px 고정 (1줄 박스 80px / 2줄 박스 160px). 서브는 20자 기준 32/24px. 행간 108% (폰트 사이즈 대비)."
@@ -74,7 +113,9 @@
     "required": "흰 배경에서 가시성 있는 BG컬러 사용"
   },
   "audience": {
-    "targets": ["구직자"],
+    "targets": [
+      "구직자"
+    ],
     "description": "공고 상세 페이지 방문자 대상"
   },
   "structure_variants": [
@@ -109,11 +150,26 @@
   },
   "few_shot_refs": [],
   "rules": [
-    { "type": "필수", "text": "흰 배경에서 가시성 있는 BG컬러 사용" },
-    { "type": "필수", "text": "텍스트 상단 중앙 정렬 고정" },
-    { "type": "필수", "text": "메인 카피 최대 2줄, 서브 카피 줄바꿈 불가" },
-    { "type": "권장", "text": "메인 16자 / 서브 28자 이내" },
-    { "type": "권장", "text": "최소 폰트: 24px" }
+    {
+      "type": "필수",
+      "text": "흰 배경에서 가시성 있는 BG컬러 사용"
+    },
+    {
+      "type": "필수",
+      "text": "텍스트 상단 중앙 정렬 고정"
+    },
+    {
+      "type": "필수",
+      "text": "메인 카피 최대 2줄, 서브 카피 줄바꿈 불가"
+    },
+    {
+      "type": "권장",
+      "text": "메인 16자 / 서브 28자 이내"
+    },
+    {
+      "type": "권장",
+      "text": "최소 폰트: 24px"
+    }
   ],
   "tbd": [
     "이미지 영역 상세 규정 (추후 추가)",

@@ -2,23 +2,53 @@
   "id": "pc_company_left",
   "name": "기업 좌측 배너",
   "last_updated": "2026-04-27",
-  "dimensions": { "width": 200, "height": 275 },
+  "dimensions": {
+    "width": 200,
+    "height": 275
+  },
   "layout": "vertical",
   "text_ratio": 0.5,
   "img_ratio": 0.5,
-  "margins": { "left": 10, "right": 10, "top": 10, "bottom": 10 },
+  "margins": {
+    "left": 10,
+    "right": 10,
+    "top": 10,
+    "bottom": 10
+  },
   "fonts": {
-    "main": { "family": "Gmarket Sans", "weight": "Bold", "size_px": 22, "letter_spacing": "-2%" },
-    "sub": { "family": "Gmarket Sans", "weight": "Medium", "size_px": 14, "letter_spacing": "-2%" }
+    "main": {
+      "family": "Paperlogy",
+      "weight": "7Bold",
+      "size_px": 22,
+      "letter_spacing": "-2%"
+    },
+    "sub": {
+      "family": "Paperlogy",
+      "weight": "4Regular",
+      "size_px": 14,
+      "letter_spacing": "-2%"
+    }
   },
   "min_font": 12,
   "color_rules": {
     "required": "흰 배경에서 가시성 있는 BG컬러 사용"
   },
   "rules": [
-    { "type": "필수", "text": "흰 배경에서 가시성 있는 BG컬러 사용" },
-    { "type": "권장", "text": "서브 1줄 + 메인 1줄 권장" },
-    { "type": "권장", "text": "여백 10px" },
-    { "type": "권장", "text": "최소 폰트: 12px" }
+    {
+      "type": "필수",
+      "text": "흰 배경에서 가시성 있는 BG컬러 사용"
+    },
+    {
+      "type": "권장",
+      "text": "서브 1줄 + 메인 1줄 권장"
+    },
+    {
+      "type": "권장",
+      "text": "여백 10px"
+    },
+    {
+      "type": "권장",
+      "text": "최소 폰트: 12px"
+    }
   ]
 }

@@ -419,7 +419,8 @@ body { font-family: 'Pretendard', -apple-system, sans-serif; background: #F5F5F7
         <div class="font-select-row">
           <label>서브 카피</label>
           <select id="subFontSelect" onchange="changeFont()">
-            <option value="Paperlogy-5Medium" data-weight="500" selected>Paperlogy 5 Medium</option>
+            <option value="Paperlogy-4Regular" data-weight="400" selected>Paperlogy 4 Regular</option>
+            <option value="Paperlogy-5Medium" data-weight="500">Paperlogy 5 Medium</option>
             <option value="GmarketSansMedium" data-weight="500">Gmarket Sans Medium</option>
             <option value="Pretendard" data-weight="400">Pretendard Regular</option>
           </select>
@@ -751,8 +752,9 @@ const FONT_SYSTEM = {
     ]
   },
   sub: {
-    default: { family: "Paperlogy-5Medium", label: "Paperlogy 5 Medium", weight: "500", css: "'Paperlogy-5Medium', sans-serif" },
+    default: { family: "Paperlogy-4Regular", label: "Paperlogy 4 Regular", weight: "400", css: "'Paperlogy-4Regular', sans-serif" },
     options: [
+      { family: "Paperlogy-4Regular", label: "Paperlogy 4 Regular", weight: "400", css: "'Paperlogy-4Regular', sans-serif" },
       { family: "Paperlogy-5Medium", label: "Paperlogy 5 Medium", weight: "500", css: "'Paperlogy-5Medium', sans-serif" },
       { family: "GmarketSansMedium", label: "Gmarket Sans Medium", weight: "normal", css: "'GmarketSansMedium', sans-serif" },
       { family: "Pretendard", label: "Pretendard Regular", weight: 400, css: "'Pretendard', sans-serif" }

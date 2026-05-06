@@ -4,24 +4,51 @@
   "last_updated": "2026-04-28",
   "location": "E-mail",
   "type": "html_email",
-  "dimensions": { "width": 700, "max_height": 1500 },
+  "dimensions": {
+    "width": 700,
+    "max_height": 1500
+  },
   "display_size": null,
   "delivery_method": "서버 등록 후 URL로 전달",
   "min_font_size_px": 12,
   "file": {
     "max_size_kb": null,
-    "extensions": ["html"],
+    "extensions": [
+      "html"
+    ],
     "rounding": false,
     "border": false
   },
   "rules": [
-    { "type": "필수", "text": "700 × 1500 이내 사이즈에 맞춰 통이미지로 전달" },
-    { "type": "필수", "text": "메일 발송 시 제목에 (광고) 표기 필수" },
-    { "type": "필수", "text": "잡코리아 AD 뉴스레터 품에 엮어서 발송" },
-    { "type": "권장", "text": "캠페인에 따라 소재 사전 검수가 필요할 수 있음" }
+    {
+      "type": "필수",
+      "text": "700 × 1500 이내 사이즈에 맞춰 통이미지로 전달"
+    },
+    {
+      "type": "필수",
+      "text": "메일 발송 시 제목에 (광고) 표기 필수"
+    },
+    {
+      "type": "필수",
+      "text": "잡코리아 AD 뉴스레터 품에 엮어서 발송"
+    },
+    {
+      "type": "권장",
+      "text": "캠페인에 따라 소재 사전 검수가 필요할 수 있음"
+    }
   ],
   "tbd": [
     "폰트 스펙 보강 필요 (presets에 누락)",
     "audience / few_shot_refs / builder_io 등 빌더 메타 보강 필요"
-  ]
+  ],
+  "fonts": {
+    "main": {
+      "family": "Paperlogy",
+      "weight": "7Bold"
+    },
+    "sub": {
+      "family": "Paperlogy",
+      "weight": "4Regular"
+    }
+  }
 }
