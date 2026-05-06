@@ -313,7 +313,34 @@ body { font-family: 'Pretendard', -apple-system, sans-serif; background: #F5F5F7
           <input type="file" id="fileInput2" accept="image/*" style="display:none">
         </div>
       </div>
+      <!-- 이미지 조정 (이미지가 업로드되었을 때만 노출) — 키비주얼 이미지 직하단 -->
+      <div id="imageControls" style="display:none;margin-top:12px;padding:12px;background:#F9FAFB;border-radius:8px;font-size:12px;">
+        <!-- 이미지 맞춤 모드 (contain / crop) -->
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+          <span style="font-weight:500;color:#555;">이미지 맞춤</span>
+          <div style="margin-left:auto;display:flex;gap:4px;">
+            <button id="imgFitContain" onclick="setImageFitMode('contain')" style="padding:4px 10px;border:1px solid #2563EB;background:#2563EB;color:#FFF;border-radius:6px;cursor:pointer;font-size:11px;">contain</button>
+            <button id="imgFitCrop" onclick="setImageFitMode('crop')" style="padding:4px 10px;border:1px solid #E5E7EB;background:#FFF;color:#666;border-radius:6px;cursor:pointer;font-size:11px;">crop</button>
+          </div>
+        </div>
+        <div id="imgFitHint" style="color:#888;font-size:11px;margin-bottom:8px;">contain: 이미지 전체 표시 · crop: 무게중심 기준 크롭</div>
+        <!-- 수동 조정 (자동/수동) -->
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+          <span style="font-weight:500;color:#555;">위치 조정</span>
+          <div style="margin-left:auto;display:flex;gap:4px;">
+            <button id="imgModeAuto" onclick="setImageMode('auto')" style="padding:4px 10px;border:1px solid #2563EB;background:#2563EB;color:#FFF;border-radius:6px;cursor:pointer;font-size:11px;">자동</button>
+            <button id="imgModeManual" onclick="setImageMode('manual')" style="padding:4px 10px;border:1px solid #E5E7EB;background:#FFF;color:#666;border-radius:6px;cursor:pointer;font-size:11px;">수동</button>
+          </div>
+        </div>
+        <div id="imgManualPanel" style="display:none;color:#666;line-height:1.6;">
+          <div>· 미리보기에서 <strong>드래그</strong> = 위치 이동</div>
+          <div>· 미리보기 아래 <strong>슬라이더</strong> = 크기 조절 (0~100, 등비율)</div>
+          <div style="margin-top:6px;color:#888;font-size:11px;">각 미리보기마다 독립 조정 · 위 버튼은 선택된 모든 배너에 일괄 적용</div>
+          <button onclick="resetImageTransform()" style="margin-top:8px;padding:6px 12px;border:1px solid #E5E7EB;background:#FFF;color:#555;border-radius:6px;cursor:pointer;font-size:11px;">↺ 위치·크기 초기화</button>
+        </div>
+      </div>
       <!-- 로고 이미지 섹션 (토글, 모든 배너에서 UI 표시. config가 없는 배너에서는 렌더링에만 미반영) -->
+      <!-- 위치: 이미지 조정 영역 아래로 이동 (이미지 맞춤이 키비주얼 이미지 직하단에 오도록) -->
       <div id="logoSectionWrap" style="display:none;margin-top:20px;">
         <div class="section-title">로고 이미지</div>
         <div class="font-toggle-row">
@@ -347,32 +374,6 @@ body { font-family: 'Pretendard', -apple-system, sans-serif; background: #F5F5F7
               <span style="font-size:11px;color:#555;">컬러 반전</span>
             </div>
           </div>
-        </div>
-      </div>
-      <!-- 이미지 조정 (이미지가 업로드되었을 때만 노출) -->
-      <div id="imageControls" style="display:none;margin-top:12px;padding:12px;background:#F9FAFB;border-radius:8px;font-size:12px;">
-        <!-- 이미지 맞춤 모드 (contain / crop) -->
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-          <span style="font-weight:500;color:#555;">이미지 맞춤</span>
-          <div style="margin-left:auto;display:flex;gap:4px;">
-            <button id="imgFitContain" onclick="setImageFitMode('contain')" style="padding:4px 10px;border:1px solid #2563EB;background:#2563EB;color:#FFF;border-radius:6px;cursor:pointer;font-size:11px;">contain</button>
-            <button id="imgFitCrop" onclick="setImageFitMode('crop')" style="padding:4px 10px;border:1px solid #E5E7EB;background:#FFF;color:#666;border-radius:6px;cursor:pointer;font-size:11px;">crop</button>
-          </div>
-        </div>
-        <div id="imgFitHint" style="color:#888;font-size:11px;margin-bottom:8px;">contain: 이미지 전체 표시 · crop: 무게중심 기준 크롭</div>
-        <!-- 수동 조정 (자동/수동) -->
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-          <span style="font-weight:500;color:#555;">위치 조정</span>
-          <div style="margin-left:auto;display:flex;gap:4px;">
-            <button id="imgModeAuto" onclick="setImageMode('auto')" style="padding:4px 10px;border:1px solid #2563EB;background:#2563EB;color:#FFF;border-radius:6px;cursor:pointer;font-size:11px;">자동</button>
-            <button id="imgModeManual" onclick="setImageMode('manual')" style="padding:4px 10px;border:1px solid #E5E7EB;background:#FFF;color:#666;border-radius:6px;cursor:pointer;font-size:11px;">수동</button>
-          </div>
-        </div>
-        <div id="imgManualPanel" style="display:none;color:#666;line-height:1.6;">
-          <div>· 미리보기에서 <strong>드래그</strong> = 위치 이동</div>
-          <div>· 미리보기 아래 <strong>슬라이더</strong> = 크기 조절 (0~100, 등비율)</div>
-          <div style="margin-top:6px;color:#888;font-size:11px;">각 미리보기마다 독립 조정 · 위 버튼은 선택된 모든 배너에 일괄 적용</div>
-          <button onclick="resetImageTransform()" style="margin-top:8px;padding:6px 12px;border:1px solid #E5E7EB;background:#FFF;color:#555;border-radius:6px;cursor:pointer;font-size:11px;">↺ 위치·크기 초기화</button>
         </div>
       </div>
     </div>
