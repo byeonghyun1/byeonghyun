@@ -795,6 +795,9 @@ let state = {
   ctaText: "",
   ctaColor: "#1A1A1A",
   ctaTextColor: "#FFFFFF",
+  // 미리보기 카드 체크박스로 해제된 배너 ID 모음 (CTA 토글 ON 시에만 의미)
+  // 토글 OFF→ON 사이클마다 초기화 (모든 배너에 다시 적용된 상태로 시작)
+  ctaDisabledBanners: new Set(),
   // 카피 배치 변형 (배너의 structure_variants 중 사용자가 선택한 id). null이면 첫 번째 사용.
   structureChoice: null,
   // 이미지 맞춤 모드: 'contain' (전체 표시) / 'crop' (콘텐츠 바운딩 박스 기준 크롭)
@@ -1242,13 +1245,21 @@ function changeFont() {
   updatePreview();
 }
 
+// 특정 배너에서 CTA가 활성 상태인지 (지원 + 토글 ON + 체크박스 해제 안 됨)
+function isCtaActiveForBanner(preset) {
+  return state.ctaEnabled
+    && state.ctaText
+    && preset && preset.ctaSupported !== false
+    && !state.ctaDisabledBanners.has(preset.id);
+}
+
 function toggleCta() {
-  // 비권장 배너가 선택되어 있으면 토글 무시
-  const blocked = state.selectedSizes.filter(id => PRESETS[id]?.ctaSupported === false);
-  if (blocked.length > 0) return;
+  // 모든 배너 선택에서 토글 가능 (지원 안 하는 배너는 자동으로 영향 없음)
   state.ctaEnabled = !state.ctaEnabled;
   document.getElementById("ctaToggle").classList.toggle("on", state.ctaEnabled);
   document.getElementById("ctaOptions").classList.toggle("active", state.ctaEnabled);
+  // 토글 cycle마다 ctaDisabledBanners 초기화 — 새로 켤 때 모든 배너 체크된 상태로 시작
+  state.ctaDisabledBanners = new Set();
   // 토글 ON + CTA 텍스트가 비어있으면 기본값 "지원하기" 자동 적용 (사용자 수정/삭제 가능)
   if (state.ctaEnabled && !state.ctaText) {
     state.ctaText = "지원하기";
@@ -1489,29 +1500,23 @@ function resetImageTransform() {
   updatePreview();
 }
 
-// 선택된 배너의 ctaSupported 점검 → 비권장 시 토글 강제 OFF + 안내
+// 선택된 배너 중 CTA 비권장 배너에 대한 안내 표시 (토글은 항상 활성)
+// 비권장 배너에는 어떤 영향도 가지 않으며, 미리보기 카드 체크박스도 노출 안 됨
 function updateCtaAvailability() {
   const blocked = state.selectedSizes.filter(id => PRESETS[id]?.ctaSupported === false);
   const toggle = document.getElementById("ctaToggle");
   const notice = document.getElementById("ctaUnsupportedNotice");
-
+  // 토글은 비권장 섞여도 항상 활성화
+  toggle.style.opacity = "";
+  toggle.style.cursor = "";
   if (blocked.length > 0) {
-    if (state.ctaEnabled) {
-      state.ctaEnabled = false;
-      toggle.classList.remove("on");
-      document.getElementById("ctaOptions").classList.remove("active");
-    }
-    toggle.style.opacity = "0.4";
-    toggle.style.cursor = "not-allowed";
     const reasons = blocked.map(id => {
       const p = PRESETS[id];
       return '<strong>' + p.name + '</strong>: ' + (p.ctaUnsupportedReason || 'CTA 비권장');
     }).join('<br>');
-    notice.innerHTML = '⚠️ 선택한 배너에 CTA가 비권장입니다.<br>' + reasons;
+    notice.innerHTML = 'ℹ️ 다음 배너는 CTA 비권장이라 토글을 켜도 영향 없음.<br>' + reasons;
     notice.style.display = "block";
   } else {
-    toggle.style.opacity = "";
-    toggle.style.cursor = "";
     notice.style.display = "none";
   }
 }
@@ -1682,7 +1687,7 @@ function drawAnchorImage(ctx, img, box, preset, presetId) {
     const hPad = box.h_padding ?? 0;
     const zoneTop = textBottom + gap;
     // CTA 켜져 있으면 CTA 위까지가 영역, 아니면 하단 마진까지
-    const ctaActive = state.ctaEnabled && state.ctaText && preset.ctaSupported !== false && preset.ctaConfig?.height_ratio;
+    const ctaActive = isCtaActiveForBanner(preset) && preset.ctaConfig?.height_ratio;
     const ctaH = ctaActive ? preset.h * preset.ctaConfig.height_ratio : 0;
     const zoneBottom = ctaH > 0
       ? preset.h - ctaH
@@ -2026,7 +2031,7 @@ function drawText(ctx, preset, presetId, textColor, textX, textAlign, maxTextW, 
 
 // ===== CTA 렌더링 (renderToCanvas에서 분리) =====
 function drawCTA(ctx, preset) {
-  if (state.ctaEnabled && state.ctaText && preset.ctaSupported !== false) {
+  if (isCtaActiveForBanner(preset)) {
     // 배너 JSON의 builder_io.cta 설정 우선, 없으면 폴백(기본 17% / sub*0.7)
     const cfg = preset.ctaConfig || {};
     const ctaBarH = cfg.height_ratio
@@ -2041,17 +2046,39 @@ function drawCTA(ctx, preset) {
     const letterSpacing = cfg.letter_spacing
       ? parsePercentSpacing(cfg.letter_spacing) * ctaFS
       : 0;
-    const ctaLabel = state.ctaText + " ›";
-    ctx.font = fontWeight + " " + ctaFS + "px " + fontFamily;
     const ctaY = preset.h - ctaBarH;
+    const centerY = ctaY + ctaBarH / 2;
+    // 배경
     ctx.fillStyle = state.ctaColor;
     ctx.fillRect(0, ctaY, preset.w, ctaBarH);
     ctx.fillStyle = state.ctaTextColor;
-    ctx.textAlign = "center";
+    ctx.textAlign = "left";
     const prevLS = ctx.letterSpacing || "0px";
+    const prevBaseline = ctx.textBaseline;
+    // textBaseline 'middle' — 폰트 사이즈 달라도 시각적 중심이 centerY에 맞음 (정렬 자동 보정)
+    ctx.textBaseline = 'middle';
+    // 화살표는 텍스트 글자 visual height에 맞춰 시각적으로 같은 높이로 키움 (× 1.4)
+    const text = state.ctaText;
+    const arrow = " ›";
+    const arrowFS = ctaFS * 1.4;
+    // 폭 측정
+    ctx.font = fontWeight + " " + ctaFS + "px " + fontFamily;
     ctx.letterSpacing = letterSpacing + "px";
-    ctx.fillText(ctaLabel, preset.w / 2, ctaY + ctaBarH / 2 + ctaFS * 0.35);
+    const textW = ctx.measureText(text).width;
+    ctx.font = fontWeight + " " + arrowFS + "px " + fontFamily;
+    const arrowW = ctx.measureText(arrow).width;
+    const totalW = textW + arrowW;
+    const startX = (preset.w - totalW) / 2;
+    // 텍스트 그리기
+    ctx.font = fontWeight + " " + ctaFS + "px " + fontFamily;
+    ctx.letterSpacing = letterSpacing + "px";
+    ctx.fillText(text, startX, centerY);
+    // 화살표 그리기 (시각적 중심이 centerY에 자동 맞춤)
+    ctx.font = fontWeight + " " + arrowFS + "px " + fontFamily;
+    ctx.letterSpacing = "0px";
+    ctx.fillText(arrow, startX + textW, centerY);
     ctx.letterSpacing = prevLS;
+    ctx.textBaseline = prevBaseline;
   }
 }
 
@@ -2618,7 +2645,7 @@ const SLIDER_LABELS = { left: '좌측', right: '우측', single: '' };
 // label: '' (단일) | '좌측' | '우측'
 // canvasRef: 교체 대상 canvas의 직접 참조 (wrapper.querySelector 가정 제거)
 // transformFn: getImageTransform | getImageTransform2
-function createScaleSlider(presetId, preset, displayScale, canvasRef, label, transformFn) {
+function createScaleSlider(presetId, preset, displayScale, canvasHolder, label, transformFn) {
   const t = transformFn(presetId);
   const row = document.createElement("div");
   row.style.cssText = "margin-top:10px;display:flex;align-items:center;gap:10px;justify-content:center;font-size:11px;color:#888;";
@@ -2630,25 +2657,53 @@ function createScaleSlider(presetId, preset, displayScale, canvasRef, label, tra
     '<input type="range" class="scale-slider" min="0" max="100" step="1" value="' + initVal + '" style="flex:1;max-width:280px;">' +
     '<span style="min-width:24px;">100</span>';
   const slider = row.querySelector('input[type="range"]');
-  // 진행 채움 배경 동적 갱신
   const updateBg = (v) => {
     slider.style.background = `linear-gradient(to right, #2563EB ${v}%, #E5E7EB ${v}%)`;
   };
   updateBg(initVal);
-  // 교체된 canvas를 추적 (input 이벤트가 여러 번 발생해도 항상 최신 canvas를 가리킴)
-  let currentCanvas = canvasRef;
   slider.addEventListener('input', (e) => {
     const v = parseFloat(e.target.value);
     updateBg(v);
     t.scale = sliderToScale(v);
-    // 캔버스만 다시 그림 (슬라이더 DOM은 유지) — 드래그 중 끊김 방지
+    // 캔버스만 다시 그림 — canvasHolder.current 사용 (체크박스와 공유)
     renderToCanvas(presetId, preset, (newCanvas) => {
       newCanvas.style.width = (preset.w * displayScale) + "px";
       newCanvas.style.height = (preset.h * displayScale) + "px";
       newCanvas.style.display = "block";
       newCanvas.style.cursor = 'grab';
-      if (currentCanvas && currentCanvas.parentNode) currentCanvas.replaceWith(newCanvas);
-      currentCanvas = newCanvas;
+      if (canvasHolder.current && canvasHolder.current.parentNode) canvasHolder.current.replaceWith(newCanvas);
+      canvasHolder.current = newCanvas;
+      if (state.imageUrl) attachImageInteractions(newCanvas, displayScale, presetId);
+    });
+  });
+  return row;
+}
+
+// CTA 적용/미적용 체크박스 (CTA 토글 ON + 지원 배너에서만 노출)
+function createCtaCheckbox(presetId, preset, displayScale, canvasHolder) {
+  const row = document.createElement("div");
+  row.style.cssText = "margin-bottom:10px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#555;";
+  const checked = !state.ctaDisabledBanners.has(presetId);
+  row.innerHTML =
+    '<label style="display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none;">' +
+      '<input type="checkbox" ' + (checked ? 'checked' : '') + ' style="cursor:pointer;width:14px;height:14px;accent-color:#2563EB;">' +
+      '<span>CTA 적용</span>' +
+    '</label>';
+  const checkbox = row.querySelector('input[type="checkbox"]');
+  checkbox.addEventListener('change', (e) => {
+    if (e.target.checked) state.ctaDisabledBanners.delete(presetId);
+    else state.ctaDisabledBanners.add(presetId);
+    // 캔버스만 다시 그림 (체크박스 DOM 유지)
+    renderToCanvas(presetId, preset, (newCanvas) => {
+      newCanvas.style.width = (preset.w * displayScale) + "px";
+      newCanvas.style.height = (preset.h * displayScale) + "px";
+      newCanvas.style.display = "block";
+      if (state.imageUrl) {
+        const t = getImageTransform(presetId);
+        newCanvas.style.cursor = t.mode === 'manual' ? 'grab' : 'pointer';
+      }
+      if (canvasHolder.current && canvasHolder.current.parentNode) canvasHolder.current.replaceWith(newCanvas);
+      canvasHolder.current = newCanvas;
       if (state.imageUrl) attachImageInteractions(newCanvas, displayScale, presetId);
     });
   });
@@ -2685,18 +2740,26 @@ function renderPreviewItem(container, presetId, preset, scale) {
 
     container.appendChild(wrapper);
 
+    // 슬라이더와 체크박스가 공유할 캔버스 참조 (한쪽이 교체해도 다른 쪽이 최신을 봄)
+    const canvasHolder = { current: canvas };
+    const previewItem = container.parentElement; // .preview-item 카드
+
+    // CTA 적용/미적용 체크박스 (CTA 토글 ON + 지원 배너) — 캔버스 위에 위치
+    if (state.ctaEnabled && preset.ctaSupported !== false && previewItem) {
+      previewItem.insertBefore(createCtaCheckbox(presetId, preset, scale, canvasHolder), container);
+    }
+
     // 크기 조절 슬라이더 (수동 모드일 때만 — 캔버스 아래 노출)
     // 단일 이미지: 슬라이더 1개 / 듀얼 모드 + 양쪽 이미지 모두 있음: 슬라이더 2개 (좌/우)
-    const previewItem = container.parentElement; // .preview-item 카드
     const t = getImageTransform(presetId);
     const isManual = state.imageUrl && t.mode === 'manual';
     if (isManual && previewItem) {
       const dual = isDualImageModeForBanner(presetId) && state.imageUrl && state.imageUrl2;
       if (dual) {
-        previewItem.appendChild(createScaleSlider(presetId, preset, scale, canvas, SLIDER_LABELS.left,  getImageTransform2));
-        previewItem.appendChild(createScaleSlider(presetId, preset, scale, canvas, SLIDER_LABELS.right, getImageTransform));
+        previewItem.appendChild(createScaleSlider(presetId, preset, scale, canvasHolder, SLIDER_LABELS.left,  getImageTransform2));
+        previewItem.appendChild(createScaleSlider(presetId, preset, scale, canvasHolder, SLIDER_LABELS.right, getImageTransform));
       } else {
-        previewItem.appendChild(createScaleSlider(presetId, preset, scale, canvas, SLIDER_LABELS.single, getImageTransform));
+        previewItem.appendChild(createScaleSlider(presetId, preset, scale, canvasHolder, SLIDER_LABELS.single, getImageTransform));
       }
     }
   });
