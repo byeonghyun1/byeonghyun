@@ -1654,6 +1654,44 @@ function drawAnchorImage(ctx, img, box, preset, presetId) {
   const ox = t.mode === 'manual' ? t.offset.x : 0;
   const oy = t.mode === 'manual' ? t.offset.y : 0;
 
+  // ── below_text anchor: 텍스트 영역 끝 + text_gap_px 아래 영역에 contain + 콘텐츠 visual center 정렬 ──
+  if (box.anchor === 'below_text') {
+    const textBottom = getTextBlockBottomY(preset);
+    if (textBottom == null) return; // top_center 아닌 배너에서 잘못 사용된 경우 안전 종료
+    const gap = box.text_gap_px ?? 30;
+    const hPad = box.h_padding ?? 0;
+    const zoneTop = textBottom + gap;
+    const zoneBottom = preset.h - (preset.margins?.bottom ?? 0);
+    const zoneLeft = (preset.margins?.left ?? 0) + hPad;
+    const zoneRight = preset.w - (preset.margins?.right ?? 0) - hPad;
+    const zoneW = zoneRight - zoneLeft;
+    const zoneH = zoneBottom - zoneTop;
+    if (zoneW <= 0 || zoneH <= 0) return;
+
+    // 콘텐츠 bounds(알파 기준) 계산 — 빈 공간 제외한 실제 보이는 영역
+    if (!state.contentBoundsCache) state.contentBoundsCache = getContentBounds(img);
+    const bounds = state.contentBoundsCache;
+
+    // contain: 콘텐츠 bounds가 영역 안에 들어가도록 비율 유지 축소
+    const baseScale = Math.min(zoneW / bounds.contentW, zoneH / bounds.contentH);
+    const finalScale = baseScale * userScale;
+    const drawnW = img.width * finalScale;
+    const drawnH = img.height * finalScale;
+    state.cropAutoValues[presetId] = { autoScale: finalScale, autoOffsetY: 0 };
+
+    // 콘텐츠 visual center를 영역 중앙에 맞춤
+    // 이미지 좌상단 위치 = 영역중앙 - (콘텐츠중심 좌표 * scale)
+    const contentCenterX = (bounds.left + bounds.right) / 2;
+    const contentCenterY = (bounds.top + bounds.bottom) / 2;
+    const zoneCenterX = (zoneLeft + zoneRight) / 2;
+    const zoneCenterY = (zoneTop + zoneBottom) / 2;
+    const drawX = zoneCenterX - contentCenterX * finalScale + ox;
+    const drawY = zoneCenterY - contentCenterY * finalScale + oy;
+
+    ctx.drawImage(img, drawX, drawY, drawnW, drawnH);
+    return;
+  }
+
   if (state.imageFitMode === 'crop') {
     if (!state.contentBoundsCache) state.contentBoundsCache = getContentBounds(img);
     const bounds = state.contentBoundsCache;
@@ -2411,6 +2449,30 @@ function getTopLayoutLogoOffset(preset) {
     : state.logoUrl;
   if (!hasLogoUrl) return 0;
   return (lb.maxHeight || 20) + (lb.gap ?? 0);
+}
+
+// top_center 레이아웃에서 텍스트 그룹(로고+서브+메인)의 bottom Y 좌표를 계산
+// 로고/서브/메인 유무에 따라 동적으로 계산 — image_box anchor=below_text 영역 산출에 사용
+function getTextBlockBottomY(preset) {
+  if (preset.layoutTemplate !== 'top_center') return null;
+  const topMargin = preset.margins?.top ?? 0;
+  const logoOffset = getTopLayoutLogoOffset(preset);
+  const startY = topMargin + logoOffset;
+  // 글자수 분기 결정 가져오기 (메인/서브 사이즈 + 박스 높이)
+  const decision = getCompositionDecision(preset.id, state.mainText, state.subText) || {};
+  const fittedMain = (decision.mainSize ?? preset.fonts.main.size ?? 72);
+  const isMultiLine = (state.mainText || '').includes('\n');
+  const mainBoxH = isMultiLine
+    ? (decision.mainBoxH2line ?? fittedMain * 2)
+    : (decision.mainBoxH ?? fittedMain);
+  const hasSub = !!state.subText;
+  if (hasSub) {
+    const fittedSub = (decision.subSize ?? preset.fonts.sub.size ?? 32);
+    const subBoxH = decision.subBoxH ?? preset.fonts.sub.boxH ?? fittedSub;
+    const lineGap = preset.verticalLineGap ?? Math.max(12, Math.round(fittedSub * 0.6));
+    return startY + subBoxH + lineGap + mainBoxH;
+  }
+  return startY + mainBoxH;
 }
 
 // 메인카피 자동 줄바꿈 적용 (단어 단위 시도 → 2줄 초과 시 글자수 절반 분할 폴백)

@@ -50,7 +50,14 @@
   "layout_pattern": {
     "default_template": "top_center",
     "text_area": "상단 중앙 고정",
-    "visual_area": "하단 (추후 상세 정의)"
+    "visual_area": "하단 (텍스트 영역 끝 + 30px ~ 하단 마진까지)"
+  },
+  "image_box": {
+    "anchor": "below_text",
+    "text_gap_px": 30,
+    "h_padding": 0,
+    "fit": "contain_focal",
+    "_note": "텍스트 영역 끝부터 text_gap_px(30) 아래에 이미지 영역 시작. 영역 = (텍스트 bottom + 30) ~ (캔버스 h - margins.bottom). 가로 = (margins.left + h_padding) ~ (preset.w - margins.right - h_padding). fit=contain_focal: 영역 안에 비율 유지하며 contain. 콘텐츠 bounds(알파 채널 기준)의 visual center를 영역 중앙에 정렬. 사용자 수동 조정값(드래그+슬라이더)은 자동 배치 위에 추가 보정으로 적용."
   },
   "logo_box": {
     "mode": "unified",
