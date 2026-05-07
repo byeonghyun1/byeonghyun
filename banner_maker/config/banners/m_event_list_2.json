@@ -1,0 +1,68 @@
+{
+  "id": "m_event_list_2",
+  "name": "이벤트 리스트 2 배너",
+  "last_updated": "2026-05-07",
+  "location": "모바일 > 이벤트 리스트 2번",
+  "dimensions": {
+    "width": 238,
+    "height": 140
+  },
+  "layout": "horizontal",
+  "text_ratio": 0.55,
+  "img_ratio": 0.45,
+  "margins": {
+    "left": 0,
+    "right": 0,
+    "top": 0,
+    "bottom": 0
+  },
+  "fonts": {
+    "main": {
+      "family": "Paperlogy",
+      "weight": "7Bold",
+      "size_px": 0,
+      "letter_spacing": "-2%"
+    },
+    "sub": {
+      "family": "Paperlogy",
+      "weight": "4Regular",
+      "size_px": 0,
+      "letter_spacing": "-2%"
+    }
+  },
+  "min_font": 12,
+  "font_size_strict": true,
+  "copy": {
+    "structure": "서브 1줄 + 메인 1줄",
+    "sub_supported": false,
+    "main_line_break_allowed": true,
+    "main_auto_wrap": true
+  },
+  "layout_pattern": {
+    "default_template": "top_center",
+    "text_area": "상단 중앙 고정",
+    "visual_area": "텍스트 아래"
+  },
+  "image_box": {
+    "anchor": "below_text",
+    "text_gap_px": 20,
+    "h_padding": 0,
+    "fit": "contain_focal",
+    "crop_clip_in_auto": false
+  },
+  "builder_io": {
+    "cta": {
+      "supported": false,
+      "reason": "이벤트 리스트 배너는 짧은 카피 노출 영역으로 별도 CTA 버튼 비권장"
+    }
+  },
+  "color_rules": {
+    "page_bg": "#FFFFFF",
+    "required": "주변 배경과 구분되는 BG Color 사용"
+  },
+  "rules": [],
+  "tbd": [
+    "서브 카피 미지원 — fonts.sub은 placeholder",
+    "마진·폰트 사이즈·box_h_px·line_height·main_max_chars_kr 등 가이드 수치 보강 필요"
+  ]
+}

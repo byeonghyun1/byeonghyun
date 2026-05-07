@@ -848,10 +848,9 @@ function renderSizeGrid(visibleIds) {
 
 function ratioLabelOf(w, h) {
   if (!w || !h) return '특수';
-  const r = w / h;
-  if (r > 2) return '가로형';
-  if (r < 0.8) return '세로형';
-  if (r > 1.2) return '가로형';
+  // 정방형은 정확히 정사각형(w === h)만. 그 외는 세로/가로 명확히 구분.
+  if (w < h) return '세로형';
+  if (w > h) return '가로형';
   return '정방형';
 }
 
