@@ -1,7 +1,7 @@
 {
   "id": "pc_login_right",
   "name": "로그인 우측 배너",
-  "last_updated": "2026-04-27",
+  "last_updated": "2026-05-07",
   "dimensions": {
     "width": 325,
     "height": 310
@@ -12,15 +12,17 @@
   "margins": {
     "left": 10,
     "right": 10,
-    "top": 10,
+    "top": 40,
     "bottom": 10
   },
   "fonts": {
     "main": {
       "family": "Paperlogy",
       "weight": "7Bold",
-      "size_px": 28,
-      "letter_spacing": "-2%"
+      "size_px": 32,
+      "letter_spacing": "-2%",
+      "line_height": 1.2,
+      "box_h_px": 38
     },
     "sub": {
       "family": "Paperlogy",
@@ -30,6 +32,14 @@
     }
   },
   "min_font": 12,
+  "copy": {
+    "line_gap_px": 4
+  },
+  "source_label": {
+    "top": 8,
+    "right": 8,
+    "box_h": 12
+  },
   "color_rules": {
     "required": "흰색 배경에서 가시성 있는 BG컬러 사용"
   },
