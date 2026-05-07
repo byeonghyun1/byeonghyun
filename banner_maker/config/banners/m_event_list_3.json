@@ -1,0 +1,68 @@
+{
+  "id": "m_event_list_3",
+  "name": "이벤트 리스트 3 배너",
+  "last_updated": "2026-05-07",
+  "location": "모바일 > 이벤트 리스트 3번",
+  "dimensions": {
+    "width": 210,
+    "height": 140
+  },
+  "layout": "horizontal",
+  "text_ratio": 0.55,
+  "img_ratio": 0.45,
+  "margins": {
+    "left": 20,
+    "right": 20,
+    "top": 24,
+    "bottom": 0
+  },
+  "fonts": {
+    "main": {
+      "family": "Paperlogy",
+      "weight": "7Bold",
+      "size_px": 24,
+      "letter_spacing": "-2%",
+      "line_height": 1.2,
+      "box_h_px": 29
+    },
+    "sub": {
+      "family": "Paperlogy",
+      "weight": "4Regular",
+      "size_px": 0,
+      "letter_spacing": "-2%"
+    }
+  },
+  "min_font": 12,
+  "font_size_strict": true,
+  "copy": {
+    "sub_supported": false,
+    "main_max_chars_kr": 16,
+    "main_line_break_allowed": true,
+    "main_auto_wrap": true
+  },
+  "layout_pattern": {
+    "default_template": "top_center",
+    "text_area": "상단 중앙 고정",
+    "visual_area": "텍스트 아래"
+  },
+  "image_box": {
+    "anchor": "below_text",
+    "text_gap_px": 20,
+    "h_padding": 0,
+    "fit": "contain_focal",
+    "crop_clip_in_auto": false,
+    "scale_min": 0.4
+  },
+  "builder_io": {
+    "cta": {
+      "supported": false,
+      "reason": "이벤트 리스트 배너는 짧은 카피 노출 영역으로 별도 CTA 버튼 비권장"
+    }
+  },
+  "color_rules": {
+    "page_bg": "#FFFFFF",
+    "required": "주변 배경과 구분되는 BG Color 사용"
+  },
+  "rules": [],
+  "tbd": []
+}
