@@ -1,0 +1,42 @@
+{
+  "id": "m_event_list_1",
+  "name": "이벤트 리스트 1 배너",
+  "last_updated": "2026-05-07",
+  "location": "모바일 > 이벤트 리스트 1번",
+  "dimensions": {
+    "width": 288,
+    "height": 206
+  },
+  "layout": "horizontal",
+  "text_ratio": 0.55,
+  "img_ratio": 0.45,
+  "margins": {
+    "left": 0,
+    "right": 0,
+    "top": 0,
+    "bottom": 0
+  },
+  "fonts": {
+    "main": {
+      "family": "Paperlogy",
+      "weight": "7Bold",
+      "size_px": 0,
+      "letter_spacing": "-2%"
+    },
+    "sub": {
+      "family": "Paperlogy",
+      "weight": "4Regular",
+      "size_px": 0,
+      "letter_spacing": "-2%"
+    }
+  },
+  "min_font": 12,
+  "color_rules": {
+    "page_bg": "#FFFFFF",
+    "required": "주변 배경과 구분되는 BG Color 사용"
+  },
+  "rules": [],
+  "tbd": [
+    "마진·폰트 사이즈·layout_pattern·image_box·copy 등 가이드 수치 보강 필요"
+  ]
+}

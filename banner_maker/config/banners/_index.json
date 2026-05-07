@@ -12,13 +12,15 @@
     "pc_company_left",
     "m_app_splash",
     "m_sub_banner",
+    "m_event_list_1",
     "email_target"
   ],
   "ui_visible": [
     "pc_main_curtain",
     "pc_main_top",
     "pc_job_sky",
-    "pc_login_right"
+    "pc_login_right",
+    "m_event_list_1"
   ],
   "ui_hidden_reason": {
     "pc_recruit_bottom": "가이드 규정 추가 후 노출 예정",
