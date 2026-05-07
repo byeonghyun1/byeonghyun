@@ -40,6 +40,17 @@
     "right": 8,
     "box_h": 12
   },
+  "layout_pattern": {
+    "default_template": "top_center",
+    "text_area": "상단 중앙 고정",
+    "visual_area": "텍스트 아래"
+  },
+  "image_box": {
+    "anchor": "below_text",
+    "text_gap_px": 20,
+    "h_padding": 0,
+    "fit": "contain_focal"
+  },
   "color_rules": {
     "required": "흰색 배경에서 가시성 있는 BG컬러 사용"
   },
