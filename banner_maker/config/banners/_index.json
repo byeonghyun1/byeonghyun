@@ -17,12 +17,12 @@
   "ui_visible": [
     "pc_main_curtain",
     "pc_main_top",
-    "pc_job_sky"
+    "pc_job_sky",
+    "pc_login_right"
   ],
   "ui_hidden_reason": {
     "pc_recruit_bottom": "가이드 규정 추가 후 노출 예정",
     "pc_recruit_bottom_text": "텍스트 전용 — 빌더 미지원 (텍스트 입력만)",
-    "pc_login_right": "가이드 규정 추가 후 노출 예정",
     "pc_search_right": "가이드 규정 추가 후 노출 예정",
     "pc_company_left": "가이드 규정 추가 후 노출 예정",
     "m_sub_banner": "가이드 규정 추가 후 노출 예정",
