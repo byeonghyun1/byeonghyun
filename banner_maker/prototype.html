@@ -307,11 +307,15 @@ body { font-family: 'Pretendard', -apple-system, sans-serif; background: #F5F5F7
 }
 .text-edit-body { padding: 20px; display: flex; flex-direction: column; gap: 14px; }
 .text-edit-body label { font-size: 13px; font-weight: 500; color: #555; margin-bottom: 4px; display: block; }
-.text-edit-body input {
+.text-edit-body input,
+.text-edit-body textarea {
   width: 100%; padding: 10px 12px; border: 1px solid #E5E7EB; border-radius: 6px;
   font-size: 14px; outline: none; box-sizing: border-box;
+  font-family: inherit; line-height: 1.4;
 }
-.text-edit-body input:focus { border-color: #2563EB; }
+.text-edit-body textarea { min-height: 60px; resize: vertical; }
+.text-edit-body input:focus,
+.text-edit-body textarea:focus { border-color: #2563EB; }
 .text-edit-counter { font-size: 12px; color: #888; margin-top: 4px; text-align: right; }
 .text-edit-counter.over { color: #E53E3E; }
 .text-edit-footer {
@@ -487,6 +491,7 @@ body { font-family: 'Pretendard', -apple-system, sans-serif; background: #F5F5F7
           배너 데이터 로딩 중...
         </div>
       </div>
+      <div style="color:#FF6363;font-size:12px;margin-top:8px;">* 이벤트리스트 배너는 서브카피를 지원하지 않습니다.</div>
       <div class="size-select-hint">여러 사이즈를 동시에 선택하여 비교할 수 있습니다</div>
     </div>
 
@@ -610,8 +615,8 @@ body { font-family: 'Pretendard', -apple-system, sans-serif; background: #F5F5F7
     </div>
     <div class="text-edit-body">
       <div>
-        <label for="textEditMain">메인 카피</label>
-        <input type="text" id="textEditMain" placeholder="이 카드만 적용할 메인 카피">
+        <label for="textEditMain">메인 카피 (Enter로 줄바꿈)</label>
+        <textarea id="textEditMain" placeholder="이 카드만 적용할 메인 카피"></textarea>
         <div class="text-edit-counter" id="textEditMainCounter"></div>
       </div>
       <div>
@@ -3129,6 +3134,14 @@ function openTextEditModal(presetId, preset, displayScale, canvasHolder, anchorE
   subEl.value  = (o.sub  !== undefined && o.sub  !== null) ? o.sub  : state.subText;
   document.getElementById('textEditTitle').textContent = `${preset.name} — 카드별 텍스트 편집`;
 
+  // 줄바꿈 허용 여부 — copy.main_line_break_allowed === true일 때만 허용
+  // (미명시 또는 false → 차단. 메인탑·커튼 등 한 줄 고정 배너에서 줄바꿈 입력 자동 제거)
+  const mainLineBreakAllowed = preset.copyConstraints?.main_line_break_allowed === true;
+  const mainLabel = document.querySelector('label[for="textEditMain"]');
+  if (mainLabel) {
+    mainLabel.textContent = mainLineBreakAllowed ? '메인 카피 (Enter로 줄바꿈)' : '메인 카피';
+  }
+
   // 글자수 카운터 + input 이벤트
   const mainMax = preset.copyConstraints?.main_max_chars_kr;
   const subMax = preset.copyConstraints?.sub_max_chars_kr;
@@ -3156,7 +3169,14 @@ function openTextEditModal(presetId, preset, displayScale, canvasHolder, anchorE
     else state.perBannerOverrides.text[presetId] = { main, sub };
     if (canvasHolder) redrawSingleCanvas(presetId, preset, displayScale, canvasHolder);
   };
-  newMain.addEventListener('input', () => { updateCounter(newMain, mainCounter, mainMax); applyLive(); });
+  newMain.addEventListener('input', () => {
+    // 한 줄 고정 배너: \n 자동 제거 (Enter 입력·붙여넣기 모두 커버)
+    if (!mainLineBreakAllowed && newMain.value.includes('\n')) {
+      newMain.value = newMain.value.replace(/\n/g, '');
+    }
+    updateCounter(newMain, mainCounter, mainMax);
+    applyLive();
+  });
   newSub.addEventListener('input', () => { updateCounter(newSub, subCounter, subMax); applyLive(); });
 
   document.getElementById('textEditOverlay').classList.add('open');
