@@ -1,0 +1,24 @@
+{
+  "banner_id": "m_event_list_2",
+  "samples": [],
+  "average": {},
+  "samples_contain": [
+    {
+      "date": "2026-05-07",
+      "fit_mode": "contain",
+      "auto_scale": 0.056973293768546,
+      "final_scale": 0.8,
+      "auto_offset_y": 0,
+      "final_offset_y": -12,
+      "scale_delta": -0.2,
+      "offset_y_delta": -12,
+      "offset_x_delta": 4
+    }
+  ],
+  "average_contain": {
+    "scale_delta": -0.2,
+    "offset_y_delta": -12.0,
+    "offset_x_delta": 4.0,
+    "sample_count": 1
+  }
+}

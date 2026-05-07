@@ -3038,10 +3038,13 @@ const SLIDER_LABELS = { left: '좌측', right: '우측', single: '' };
 // transformFn: getImageTransform | getImageTransform2
 function createScaleSlider(presetId, preset, displayScale, canvasHolder, label, transformFn) {
   const t = transformFn(presetId);
+  // 배너별 scale 범위 (image_box.scale_min/scale_max 명시 시 우선, 없으면 전역 default)
+  const scaleMin = preset.imageBox?.scale_min ?? SCALE_MIN;
+  const scaleMax = preset.imageBox?.scale_max ?? SCALE_MAX;
   const row = document.createElement("div");
   row.style.cssText = "margin-top:10px;display:flex;align-items:center;gap:10px;justify-content:center;font-size:11px;color:#888;";
   const labelHtml = label ? `<span style="min-width:28px;color:#555;">${label}</span>` : '';
-  const initVal = scaleToSlider(t.scale);
+  const initVal = Math.round(((t.scale - scaleMin) / (scaleMax - scaleMin)) * 100);
   row.innerHTML =
     labelHtml +
     '<span style="min-width:14px;text-align:right;">0</span>' +
@@ -3055,7 +3058,7 @@ function createScaleSlider(presetId, preset, displayScale, canvasHolder, label, 
   slider.addEventListener('input', (e) => {
     const v = parseFloat(e.target.value);
     updateBg(v);
-    t.scale = sliderToScale(v);
+    t.scale = scaleMin + (v / 100) * (scaleMax - scaleMin);
     redrawSingleCanvas(presetId, preset, displayScale, canvasHolder, { cursor: 'grab' });
   });
   return row;
