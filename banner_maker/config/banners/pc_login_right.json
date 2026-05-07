@@ -12,7 +12,8 @@
   "margins": {
     "left": 10,
     "right": 10,
-    "top": 40,
+    "top": 25,
+    "top_with_source_logo": 40,
     "bottom": 10
   },
   "fonts": {
@@ -45,7 +46,15 @@
   "source_label": {
     "top": 8,
     "right": 8,
-    "box_h": 12
+    "box_h": 12,
+    "image_mode": {
+      "enabled": true,
+      "mode": "unified",
+      "width": 72,
+      "height": 12,
+      "top": 8,
+      "right": 8
+    }
   },
   "layout_pattern": {
     "default_template": "top_center",

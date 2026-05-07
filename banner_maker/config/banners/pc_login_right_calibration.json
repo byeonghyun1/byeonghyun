@@ -1,0 +1,24 @@
+{
+  "banner_id": "pc_login_right",
+  "samples": [],
+  "average": {},
+  "samples_contain": [
+    {
+      "date": "2026-05-07",
+      "fit_mode": "contain",
+      "auto_scale": 0.16728486646884272,
+      "final_scale": 0.902,
+      "auto_offset_y": 0,
+      "final_offset_y": -11,
+      "scale_delta": -0.098,
+      "offset_y_delta": -11,
+      "offset_x_delta": 3
+    }
+  ],
+  "average_contain": {
+    "scale_delta": -0.098,
+    "offset_y_delta": -11.0,
+    "offset_x_delta": 3.0,
+    "sample_count": 1
+  }
+}

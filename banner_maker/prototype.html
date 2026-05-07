@@ -2020,8 +2020,9 @@ function drawText(ctx, preset, presetId, textColor, textX, textAlign, maxTextW, 
       const blockH = subBoxH + lineGap + mainBoxH;
       // 상단 정렬(top_center): 상단 마진부터 시작. 기본: 세로 중앙 정렬.
       // 로고가 있고 top_center면 텍스트 시작 Y를 (로고 박스 + 간격)만큼 밀어 내림
+      // 출처 이미지 활성 여부에 따라 margins.top 동적 분기 (margins.top_with_source_logo)
       const isTopLayout = preset.layoutTemplate === 'top_center';
-      const topMargin = preset.margins?.top ?? 0;
+      const topMargin = getEffectiveTopMargin(preset);
       const logoOffsetForText = getTopLayoutLogoOffset(preset);
       const startY = isTopLayout ? (topMargin + logoOffsetForText) : cy - blockH / 2;
 
@@ -2497,13 +2498,25 @@ function renderToCanvas(presetId, preset, callback, opts = {}) {
       if (sourceLogoImg && preset.sourceLabelImage) {
         const sli = preset.sourceLabelImage;
         const areaW = sli.width; // 고정 영역 가로
-        const targetW = areaW * 0.80; // 영역의 80% 크기로 렌더링
-        const scale = targetW / sourceLogoImg.width;
-        const slW = sourceLogoImg.width * scale;
-        const slH = sourceLogoImg.height * scale;
+        const areaH = sli.height; // 영역 세로 (있으면 contain 모드)
+
+        // 두 모드 분기:
+        // (a) sli.height 있음 → 영역(areaW × areaH) contain + 가로·세로 중앙 정렬 (pc_login_right 등)
+        // (b) sli.height 없음 → 가로 80% 기준 + 가로 중앙 (메인탑 기존 패턴)
+        let slW, slH;
+        if (areaH) {
+          const scale = Math.min(areaW / sourceLogoImg.width, areaH / sourceLogoImg.height);
+          slW = sourceLogoImg.width * scale;
+          slH = sourceLogoImg.height * scale;
+        } else {
+          const targetW = areaW * 0.80;
+          const scale = targetW / sourceLogoImg.width;
+          slW = sourceLogoImg.width * scale;
+          slH = sourceLogoImg.height * scale;
+        }
         const areaX = preset.w - sli.right - areaW;
-        const slX = areaX + (areaW - slW) / 2;
-        const slY = sli.top;
+        const slX = areaX + (areaW - slW) / 2; // 가로 중앙
+        const slY = areaH ? sli.top + (areaH - slH) / 2 : sli.top; // 세로 중앙(영역 정의 시) / 위정렬(기존)
         // unified + 콜라보 사용 시 collabLogoInvert, 그 외(출처)는 sourceLogoInvert
         const isUnifiedCollab = sli.mode === 'unified' && !state.sourceLogoUrl && state.logoUrl;
         const invertOn = isUnifiedCollab ? state.collabLogoInvert : state.sourceLogoInvert;
@@ -2735,6 +2748,28 @@ function canDrawLogoForBanner(preset) {
 function isLogoActiveForBanner(preset) {
   if (!canDrawLogoForBanner(preset)) return false;
   return !state.perBannerOverrides.logoDisabled.has(preset.id);
+}
+
+// 출처 표기 이미지(sourceLabelImage)가 실제로 그려지는 상태인지
+// 텍스트 마진 동적 분기(margins.top_with_source_logo)에 사용
+function isSourceLogoActive(preset) {
+  const sli = preset?.sourceLabelImage;
+  if (!sli?.enabled) return false;
+  const url = sli.mode === 'unified'
+    ? (state.sourceLogoUrl || state.logoUrl)
+    : state.sourceLogoUrl;
+  if (!url) return false;
+  return !state.perBannerOverrides.logoDisabled.has(preset.id);
+}
+
+// 출처 이미지 활성 여부에 따라 동적 상단 마진 반환
+// margins.top_with_source_logo 명시된 배너는 출처 이미지 있을 때 그 값, 없으면 margins.top
+function getEffectiveTopMargin(preset) {
+  const m = preset.margins || {};
+  if (m.top_with_source_logo != null && isSourceLogoActive(preset)) {
+    return m.top_with_source_logo;
+  }
+  return m.top ?? 0;
 }
 
 // top_center 레이아웃에서 로고가 있을 때 텍스트 시작 Y에 더해줄 오프셋 (로고 박스 + 간격)
