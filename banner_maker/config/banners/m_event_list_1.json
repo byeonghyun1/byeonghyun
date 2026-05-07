@@ -35,7 +35,11 @@
   "min_font": 12,
   "font_size_strict": true,
   "copy": {
-    "structure": "서브 1줄 + 메인 1줄"
+    "structure": "서브 1줄 + 메인 1줄",
+    "sub_supported": false,
+    "main_max_chars_kr": 16,
+    "main_line_break_allowed": true,
+    "main_auto_wrap": true
   },
   "layout_pattern": {
     "default_template": "top_center",

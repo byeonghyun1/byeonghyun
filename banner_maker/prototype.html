@@ -1382,11 +1382,15 @@ function changeFont() {
 
 // 특정 배너의 effective 텍스트 — 카드별 override 있으면 그것 사용, 없으면 사이드바 전역 텍스트
 // 카드별 텍스트 편집 모달에서 저장된 값을 렌더 시 자동 반영
+// copy.sub_supported === false인 배너는 sub을 항상 빈 문자열로 강제 (사이드바·override 모두 무시)
 function getEffectiveTexts(presetId) {
+  const preset = PRESETS[presetId];
   const o = state.perBannerOverrides.text?.[presetId];
+  const subSupported = preset?.copyConstraints?.sub_supported !== false;
   return {
     main: (o?.main !== undefined && o?.main !== null) ? o.main : state.mainText,
-    sub:  (o?.sub  !== undefined && o?.sub  !== null) ? o.sub  : state.subText
+    sub:  !subSupported ? '' :
+          ((o?.sub  !== undefined && o?.sub  !== null) ? o.sub  : state.subText)
   };
 }
 
@@ -3140,6 +3144,20 @@ function openTextEditModal(presetId, preset, displayScale, canvasHolder, anchorE
   const mainLabel = document.querySelector('label[for="textEditMain"]');
   if (mainLabel) {
     mainLabel.textContent = mainLineBreakAllowed ? '메인 카피 (Enter로 줄바꿈)' : '메인 카피';
+  }
+
+  // 서브 카피 미지원 배너 — 서브 input 비활성화 + label·placeholder 안내
+  const subSupported = preset.copyConstraints?.sub_supported !== false;
+  const subLabel = document.querySelector('label[for="textEditSub"]');
+  if (!subSupported) {
+    subEl.disabled = true;
+    subEl.value = '';
+    subEl.placeholder = '이 배너는 서브 카피를 지원하지 않습니다';
+    if (subLabel) subLabel.textContent = '서브 카피 (미지원)';
+  } else {
+    subEl.disabled = false;
+    subEl.placeholder = '이 카드만 적용할 서브 카피';
+    if (subLabel) subLabel.textContent = '서브 카피';
   }
 
   // 글자수 카운터 + input 이벤트
