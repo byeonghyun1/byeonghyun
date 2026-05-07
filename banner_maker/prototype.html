@@ -1769,8 +1769,8 @@ function drawAnchorImage(ctx, img, box, preset, presetId) {
     const drawX = zoneCenterX - contentCenterX * finalScale + ox + offsetXDelta;
     const drawY = zoneCenterY - contentCenterY * finalScale + oy + offsetYDelta;
 
-    if (fm === 'crop') {
-      // crop: 영역 밖으로 나가는 픽셀 잘라내기
+    if (fm === 'crop' && t.mode !== 'manual') {
+      // auto + crop: 영역 밖 잘라내기 (텍스트 영역 보호)
       ctx.save();
       ctx.beginPath();
       ctx.rect(zoneLeft, zoneTop, zoneW, zoneH);
@@ -1778,6 +1778,7 @@ function drawAnchorImage(ctx, img, box, preset, presetId) {
       ctx.drawImage(img, drawX, drawY, drawnW, drawnH);
       ctx.restore();
     } else {
+      // manual 모드 또는 contain: 자유롭게 — 사용자 수동 조정 시 텍스트 겹침/상단 배치 의도 가능
       ctx.drawImage(img, drawX, drawY, drawnW, drawnH);
     }
     return;
