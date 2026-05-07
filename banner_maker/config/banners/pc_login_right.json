@@ -2,6 +2,7 @@
   "id": "pc_login_right",
   "name": "로그인 우측 배너",
   "last_updated": "2026-05-07",
+  "location": "PC > 로그인 페이지 우측",
   "dimensions": {
     "width": 325,
     "height": 310

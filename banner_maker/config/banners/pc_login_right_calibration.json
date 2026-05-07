@@ -13,12 +13,86 @@
       "scale_delta": -0.098,
       "offset_y_delta": -11,
       "offset_x_delta": 3
+    },
+    {
+      "date": "2026-05-07",
+      "fit_mode": "contain",
+      "auto_scale": 0.19801041246290801,
+      "final_scale": 0.919,
+      "auto_offset_y": 0,
+      "final_offset_y": 8,
+      "scale_delta": -0.1711,
+      "offset_y_delta": -3,
+      "offset_x_delta": 7
+    },
+    {
+      "date": "2026-05-07",
+      "fit_mode": "contain",
+      "auto_scale": 0.19269915727002968,
+      "final_scale": 1.072,
+      "auto_offset_y": 0,
+      "final_offset_y": -5,
+      "scale_delta": -0.0723,
+      "offset_y_delta": -12,
+      "offset_x_delta": 3
     }
   ],
   "average_contain": {
-    "scale_delta": -0.098,
-    "offset_y_delta": -11.0,
+    "scale_delta": -0.1138,
+    "offset_y_delta": -8.67,
+    "offset_x_delta": 4.33,
+    "sample_count": 3
+  },
+  "samples_crop": [
+    {
+      "date": "2026-05-07",
+      "fit_mode": "crop",
+      "auto_scale": 0.22648083623693382,
+      "final_scale": 0.8,
+      "auto_offset_y": 0,
+      "final_offset_y": 13,
+      "scale_delta": -0.2,
+      "offset_y_delta": 13,
+      "offset_x_delta": 6
+    },
+    {
+      "date": "2026-05-07",
+      "fit_mode": "crop",
+      "auto_scale": 0.2581881533101046,
+      "final_scale": 1.1400000000000001,
+      "auto_offset_y": 0,
+      "final_offset_y": 5,
+      "scale_delta": -0.088,
+      "offset_y_delta": 18,
+      "offset_x_delta": 3
+    },
+    {
+      "date": "2026-05-07",
+      "fit_mode": "crop",
+      "auto_scale": 0.2515432055749129,
+      "final_scale": 1.038,
+      "auto_offset_y": 0,
+      "final_offset_y": -8,
+      "scale_delta": -0.1115,
+      "offset_y_delta": 8,
+      "offset_x_delta": 2
+    },
+    {
+      "date": "2026-05-07",
+      "fit_mode": "crop",
+      "auto_scale": 0.26306020905923344,
+      "final_scale": 1.072,
+      "auto_offset_y": 0,
+      "final_offset_y": -8,
+      "scale_delta": -0.0708,
+      "offset_y_delta": 5,
+      "offset_x_delta": 1
+    }
+  ],
+  "average_crop": {
+    "scale_delta": -0.1176,
+    "offset_y_delta": 11.0,
     "offset_x_delta": 3.0,
-    "sample_count": 1
+    "sample_count": 4
   }
 }

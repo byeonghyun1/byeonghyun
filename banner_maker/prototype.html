@@ -282,6 +282,63 @@ body { font-family: 'Pretendard', -apple-system, sans-serif; background: #F5F5F7
   background: transparent; border: none; height: 4px;
 }
 .scale-slider:focus { outline: none; }
+
+/* ===== 카드별 텍스트 편집 모달 ===== */
+.text-edit-overlay {
+  display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.5);
+  z-index: 1000; align-items: center; justify-content: center;
+}
+.text-edit-overlay.open { display: flex; }
+.text-edit-modal {
+  background: #FFF; border-radius: 12px; width: 480px; max-width: 90vw;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  display: flex; flex-direction: column;
+}
+.text-edit-header {
+  padding: 18px 20px; border-bottom: 1px solid #E5E7EB;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.text-edit-header h3 { margin: 0; font-size: 16px; font-weight: 600; color: #171717; }
+.text-edit-header .close-btn {
+  background: none; border: none; cursor: pointer; font-size: 22px;
+  color: #888; padding: 0; line-height: 1;
+}
+.text-edit-body { padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+.text-edit-body label { font-size: 13px; font-weight: 500; color: #555; margin-bottom: 4px; display: block; }
+.text-edit-body input {
+  width: 100%; padding: 10px 12px; border: 1px solid #E5E7EB; border-radius: 6px;
+  font-size: 14px; outline: none; box-sizing: border-box;
+}
+.text-edit-body input:focus { border-color: #2563EB; }
+.text-edit-counter { font-size: 12px; color: #888; margin-top: 4px; text-align: right; }
+.text-edit-counter.over { color: #E53E3E; }
+.text-edit-footer {
+  padding: 14px 20px; border-top: 1px solid #E5E7EB;
+  display: flex; gap: 8px; justify-content: flex-end;
+}
+.text-edit-footer button {
+  padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 13px;
+  border: 1px solid transparent;
+}
+.text-edit-footer .btn-reset {
+  background: #FFF; border-color: #E5E7EB; color: #666; margin-right: auto;
+}
+.text-edit-footer .btn-cancel { background: #FFF; border-color: #E5E7EB; color: #555; }
+.text-edit-footer .btn-save { background: #2563EB; color: #FFF; }
+/* 미리보기 카드 펜 아이콘 (텍스트 편집 버튼) */
+.text-edit-icon {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px; border-radius: 6px; cursor: pointer;
+  background: #F3F4F6; color: #555; font-size: 14px; border: 1px solid #E5E7EB;
+}
+.text-edit-icon:hover { background: #E5E7EB; }
+.text-edit-icon.has-override {
+  background: #DBEAFE; color: #2563EB; border-color: #2563EB;
+}
+.text-edit-icon.has-override::after {
+  content: ''; position: relative; top: -8px; right: -2px;
+  width: 6px; height: 6px; background: #2563EB; border-radius: 50%; display: inline-block;
+}
 </style>
 </head>
 <body>
@@ -543,6 +600,33 @@ body { font-family: 'Pretendard', -apple-system, sans-serif; background: #F5F5F7
     </div>
 
     <button class="btn-download" id="downloadBtn" disabled onclick="downloadAllBanners()">PNG 다운로드</button>
+  </div>
+</div>
+
+<!-- 카드별 텍스트 편집 모달 -->
+<div class="text-edit-overlay" id="textEditOverlay" onclick="closeTextEditModal(event)">
+  <div class="text-edit-modal" onclick="event.stopPropagation()">
+    <div class="text-edit-header">
+      <h3 id="textEditTitle">카드별 텍스트 편집</h3>
+      <button class="close-btn" onclick="closeTextEditModal()">&times;</button>
+    </div>
+    <div class="text-edit-body">
+      <div>
+        <label for="textEditMain">메인 카피</label>
+        <input type="text" id="textEditMain" placeholder="이 카드만 적용할 메인 카피">
+        <div class="text-edit-counter" id="textEditMainCounter"></div>
+      </div>
+      <div>
+        <label for="textEditSub">서브 카피</label>
+        <input type="text" id="textEditSub" placeholder="이 카드만 적용할 서브 카피">
+        <div class="text-edit-counter" id="textEditSubCounter"></div>
+      </div>
+    </div>
+    <div class="text-edit-footer">
+      <button class="btn-reset" onclick="resetTextEdit()">기본값 사용</button>
+      <button class="btn-cancel" onclick="closeTextEditModal()">취소</button>
+      <button class="btn-save" onclick="saveTextEdit()">저장</button>
+    </div>
   </div>
 </div>
 
@@ -841,7 +925,10 @@ let state = {
     ctaDisabled: new Set(),
     logoDisabled: new Set(),
     fitMode: {},
-    structure: {}
+    structure: {},
+    // 카드별 텍스트 override — 사이드바(전역)와 별개로 특정 카드만 다른 카피 적용
+    // { presetId: { main, sub } }. 키 없으면 사이드바 전역 텍스트 사용
+    text: {}
   },
   // 카피 배치는 perBannerOverrides.structure에 배너별로 저장 (전역 단일 값 폐기)
   // 이미지 맞춤 모드: 'contain' (전체 표시) / 'crop' (콘텐츠 바운딩 박스 기준 크롭)
@@ -1288,6 +1375,16 @@ function changeFont() {
   state.subFont = FONT_SYSTEM.sub.options.find(f => f.family === subOpt.value) || FONT_SYSTEM.sub.default;
 
   updatePreview();
+}
+
+// 특정 배너의 effective 텍스트 — 카드별 override 있으면 그것 사용, 없으면 사이드바 전역 텍스트
+// 카드별 텍스트 편집 모달에서 저장된 값을 렌더 시 자동 반영
+function getEffectiveTexts(presetId) {
+  const o = state.perBannerOverrides.text?.[presetId];
+  return {
+    main: (o?.main !== undefined && o?.main !== null) ? o.main : state.mainText,
+    sub:  (o?.sub  !== undefined && o?.sub  !== null) ? o.sub  : state.subText
+  };
 }
 
 // 특정 배너의 effective 이미지 맞춤 모드 — 카드별 override 우선, 없으면 좌측 기본값
@@ -1894,11 +1991,13 @@ function drawText(ctx, preset, presetId, textColor, textX, textAlign, maxTextW, 
   ctx.fillStyle = textColor;
   // gi = { left, right, single } — 이미지 배치 데이터 (파라미터로 전달, state 오염 방지)
   gi = gi || { left: null, right: null, single: null };
-  // overrideSubText: 특정 배너에서 서브카피를 대체할 때 사용 (replaces: "sub" 등). undefined면 state.subText 사용.
-  const effectiveSubText = (overrideSubText !== undefined) ? overrideSubText : state.subText;
+  // 카드별 텍스트 override 우선 적용 (없으면 사이드바 전역 텍스트)
+  const { main: effectiveMainText, sub: cardSubText } = getEffectiveTexts(presetId);
+  // overrideSubText: 특정 배너에서 서브카피를 대체할 때 사용 (replaces: "sub" 등). undefined면 카드 effective sub.
+  const effectiveSubText = (overrideSubText !== undefined) ? overrideSubText : cardSubText;
   let textGroupLeftX = textX; // 텍스트 그룹 좌측 끝 X (로고 정렬에 사용)
 
-  const decision = getCompositionDecision(presetId, state.mainText, effectiveSubText);
+  const decision = getCompositionDecision(presetId, effectiveMainText, effectiveSubText);
 
   if (decision) {
     // ===== 자동 구성 기반 렌더링 (textX/textAlign 기준 — 좌측정렬 또는 중앙) =====
@@ -1912,10 +2011,10 @@ function drawText(ctx, preset, presetId, textColor, textX, textAlign, maxTextW, 
       const giS = gi.single || null;
       const IMG_GAP = preset.imageBox?.image_gap ?? (preset.textGap || 24);
 
-      if (state.mainText) {
+      if (effectiveMainText) {
         // ── auto line-wrap: 단어 단위 줄바꿈 (preset.mainAutoWrap === true 배너만) ──
         const renderText = getWrappedMainText(
-          ctx, state.mainText, preset, decision.mainSize,
+          ctx, effectiveMainText, preset, decision.mainSize,
           preset.fonts.main.spacing * decision.mainSize, maxTextW
         );
 
@@ -1995,11 +2094,11 @@ function drawText(ctx, preset, presetId, textColor, textX, textAlign, maxTextW, 
 
     } else if (decision.type === 'vertical_sub_main') {
       const fittedSub = fitFontSize(effectiveSubText, decision.subSize, state.subFont.css, state.subFont.weight, preset.fonts.sub.spacing);
-      const fittedMain = fitFontSize(state.mainText, decision.mainSize, state.mainFont.css, state.mainFont.weight, preset.fonts.main.spacing);
+      const fittedMain = fitFontSize(effectiveMainText, decision.mainSize, state.mainFont.css, state.mainFont.weight, preset.fonts.main.spacing);
 
-      // ── auto line-wrap: 단어 단위 줄바꿈 (WORD_WRAP_BANNERS 등록 배너만) ──
+      // ── auto line-wrap: 단어 단위 줄바꿈 (preset.mainAutoWrap === true 배너만) ──
       const mainRenderText = getWrappedMainText(
-        ctx, state.mainText || '', preset, fittedMain,
+        ctx, effectiveMainText || '', preset, fittedMain,
         preset.fonts.main.spacing * fittedMain, maxTextW
       );
 
@@ -2100,8 +2199,8 @@ function drawText(ctx, preset, presetId, textColor, textX, textAlign, maxTextW, 
 
     } else if (decision.type === 'horizontal_sub_main') {
       const swapped = getEffectiveStructure(preset) === 'main_left_sub_right';
-      const leftText  = swapped ? state.mainText : effectiveSubText;
-      const rightText = swapped ? effectiveSubText  : state.mainText;
+      const leftText  = swapped ? effectiveMainText : effectiveSubText;
+      const rightText = swapped ? effectiveSubText  : effectiveMainText;
       const leftSize  = swapped ? decision.mainSize : decision.subSize;
       const rightSize = swapped ? decision.subSize  : decision.mainSize;
       const leftFont  = swapped ? state.mainFont : state.subFont;
@@ -2174,7 +2273,7 @@ function drawText(ctx, preset, presetId, textColor, textX, textAlign, maxTextW, 
   } else {
     // ===== 기본 렌더링 (decision 없는 배너) =====
     const fittedSub = fitFontSize(effectiveSubText, preset.fonts.sub.size, state.subFont.css, state.subFont.weight, preset.fonts.sub.spacing);
-    const fittedMain = fitFontSize(state.mainText, preset.fonts.main.size, state.mainFont.css, state.mainFont.weight, preset.fonts.main.spacing);
+    const fittedMain = fitFontSize(effectiveMainText, preset.fonts.main.size, state.mainFont.css, state.mainFont.weight, preset.fonts.main.spacing);
 
     if (effectiveSubText) {
       ctx.save();
@@ -2183,11 +2282,11 @@ function drawText(ctx, preset, presetId, textColor, textX, textAlign, maxTextW, 
       drawTextWithSpacing(ctx, effectiveSubText, textX, centerY - fittedMain * 0.3, subSpacing, textAlign);
       ctx.restore();
     }
-    if (state.mainText) {
+    if (effectiveMainText) {
       ctx.save();
       ctx.font = state.mainFont.weight + " " + fittedMain + "px " + state.mainFont.css;
       const mainSpacing = preset.fonts.main.spacing * fittedMain;
-      drawTextWithSpacing(ctx, state.mainText, textX, centerY + fittedMain * 0.5, mainSpacing, textAlign);
+      drawTextWithSpacing(ctx, effectiveMainText, textX, centerY + fittedMain * 0.5, mainSpacing, textAlign);
       ctx.restore();
     }
   }
@@ -2466,8 +2565,10 @@ function renderToCanvas(presetId, preset, callback, opts = {}) {
       // 로고 그리기 (drawText 이후 — 텍스트 좌측 X 좌표 기반 배치)
       if (logoImg && preset.logoBox) {
         const lb = preset.logoBox;
-        const effectiveSub = logoReplacesSub ? '' : state.subText;
-        const comp = getCompositionDecision(presetId, state.mainText, effectiveSub);
+        // 카드별 텍스트 override 우선 적용
+        const { main: cardMain, sub: cardSub } = getEffectiveTexts(presetId);
+        const effectiveSub = logoReplacesSub ? '' : cardSub;
+        const comp = getCompositionDecision(presetId, cardMain, effectiveSub);
         const textH = comp ? comp.mainSize : (preset.fonts.main.size || 72);
         // 로고 Y: top_center 레이아웃이면 상단 마진 + 박스 안 가운데 정렬, 그 외엔 텍스트 중심 위로 gap만큼 띄움
         const lbBoxH = lb.maxHeight || 20;
@@ -2791,25 +2892,28 @@ function getTextBlockBottomY(preset) {
     // (이상적이진 않으나 동작은 함 — 새 레이아웃 추가 시 이 함수에 분기 추가 권장)
     return preset.h / 2;
   }
-  const topMargin = preset.margins?.top ?? 0;
+  // 출처 이미지 활성 여부 따라 동적 상단 마진 (margins.top_with_source_logo)
+  const topMargin = getEffectiveTopMargin(preset);
   const logoOffset = getTopLayoutLogoOffset(preset);
   const startY = topMargin + logoOffset;
+  // 카드별 텍스트 override 우선 (없으면 사이드바 전역)
+  const { main: cardMain, sub: cardSub } = getEffectiveTexts(preset.id);
   // 글자수 분기 결정 가져오기 (메인/서브 사이즈 + 박스 높이)
-  const decision = getCompositionDecision(preset.id, state.mainText, state.subText) || {};
+  const decision = getCompositionDecision(preset.id, cardMain, cardSub) || {};
   const fittedMain = (decision.mainSize ?? preset.fonts.main.size ?? 72);
   // isMultiLine 판별 — 수동 줄바꿈(\n) + 자동 줄바꿈(가용폭 초과) 모두 검사
-  let isMultiLine = (state.mainText || '').includes('\n');
-  if (!isMultiLine && isWordWrapEnabled(preset) && state.mainText) {
+  let isMultiLine = (cardMain || '').includes('\n');
+  if (!isMultiLine && isWordWrapEnabled(preset) && cardMain) {
     const tmpCtx = document.createElement('canvas').getContext('2d');
     tmpCtx.font = state.mainFont.weight + " " + fittedMain + "px " + state.mainFont.css;
     const sp = preset.fonts.main.spacing * fittedMain;
     const maxW = preset.w - (preset.margins?.left ?? 0) - (preset.margins?.right ?? 0);
-    if (measureTextWithSpacing(tmpCtx, state.mainText, sp) > maxW) isMultiLine = true;
+    if (measureTextWithSpacing(tmpCtx, cardMain, sp) > maxW) isMultiLine = true;
   }
   const mainBoxH = isMultiLine
     ? (decision.mainBoxH2line ?? fittedMain * 2)
     : (decision.mainBoxH ?? fittedMain);
-  const hasSub = !!state.subText;
+  const hasSub = !!cardSub;
   if (hasSub) {
     const fittedSub = (decision.subSize ?? preset.fonts.sub.size ?? 32);
     const subBoxH = decision.subBoxH ?? preset.fonts.sub.boxH ?? fittedSub;
@@ -2969,6 +3073,88 @@ function createLogoCheckbox(presetId, preset, displayScale, canvasHolder) {
   return createPreviewCheckbox(presetId, preset, displayScale, canvasHolder, '로고 적용', state.perBannerOverrides.logoDisabled);
 }
 
+// ===== 카드별 텍스트 편집 버튼 (펜 아이콘) + 모달 =====
+// 펜 아이콘 클릭 시 모달 open. override 있는 카드는 시각적으로 표시.
+let _textEditCtx = null; // { presetId, preset, displayScale, canvasHolder }
+
+function createTextEditButton(presetId, preset, displayScale, canvasHolder) {
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'text-edit-icon';
+  btn.title = '이 카드만 다른 카피 적용';
+  btn.innerHTML = '✎';
+  if (state.perBannerOverrides.text?.[presetId]) btn.classList.add('has-override');
+  btn.addEventListener('click', () => openTextEditModal(presetId, preset, displayScale, canvasHolder));
+  return btn;
+}
+
+function openTextEditModal(presetId, preset, displayScale, canvasHolder) {
+  _textEditCtx = { presetId, preset, displayScale, canvasHolder };
+  const o = state.perBannerOverrides.text?.[presetId] || {};
+  // 입력 초기값: override 있으면 그것, 없으면 사이드바 전역
+  const mainEl = document.getElementById('textEditMain');
+  const subEl = document.getElementById('textEditSub');
+  mainEl.value = o.main !== undefined && o.main !== null ? o.main : state.mainText;
+  subEl.value  = o.sub  !== undefined && o.sub  !== null ? o.sub  : state.subText;
+  document.getElementById('textEditTitle').textContent = `${preset.name} — 카드별 텍스트 편집`;
+  // 글자수 카운터 초기 갱신 + input 이벤트 바인딩
+  const mainMax = preset.copyConstraints?.main_max_chars_kr;
+  const subMax = preset.copyConstraints?.sub_max_chars_kr;
+  const updateCounter = (el, counterEl, max) => {
+    const len = stripEmphasis(el.value).length;
+    counterEl.textContent = max ? `${len}/${max}` : `${len}`;
+    counterEl.classList.toggle('over', max != null && len > max);
+  };
+  const mainCounter = document.getElementById('textEditMainCounter');
+  const subCounter = document.getElementById('textEditSubCounter');
+  updateCounter(mainEl, mainCounter, mainMax);
+  updateCounter(subEl, subCounter, subMax);
+  // 기존 리스너 제거 후 새로 등록 (모달 재오픈 누적 방지)
+  const newMain = mainEl.cloneNode(true);
+  const newSub = subEl.cloneNode(true);
+  mainEl.parentNode.replaceChild(newMain, mainEl);
+  subEl.parentNode.replaceChild(newSub, subEl);
+  newMain.addEventListener('input', () => updateCounter(newMain, mainCounter, mainMax));
+  newSub.addEventListener('input', () => updateCounter(newSub, subCounter, subMax));
+
+  document.getElementById('textEditOverlay').classList.add('open');
+  newMain.focus();
+}
+
+function closeTextEditModal(event) {
+  // overlay 클릭 시만 닫기 (이벤트 버블링으로 들어옴) — 모달 내부 클릭은 stopPropagation
+  if (event && event.target.id !== 'textEditOverlay' && event.currentTarget.id !== 'textEditOverlay') {
+    document.getElementById('textEditOverlay').classList.remove('open');
+    _textEditCtx = null;
+    return;
+  }
+  document.getElementById('textEditOverlay').classList.remove('open');
+  _textEditCtx = null;
+}
+
+function saveTextEdit() {
+  if (!_textEditCtx) return;
+  const { presetId } = _textEditCtx;
+  const main = document.getElementById('textEditMain').value;
+  const sub = document.getElementById('textEditSub').value;
+  // 둘 다 비어있으면 override 제거 (전역 디폴트로 복귀)
+  if (!main && !sub) {
+    delete state.perBannerOverrides.text[presetId];
+  } else {
+    state.perBannerOverrides.text[presetId] = { main, sub };
+  }
+  closeTextEditModal();
+  updatePreview();
+}
+
+function resetTextEdit() {
+  if (!_textEditCtx) return;
+  const { presetId } = _textEditCtx;
+  delete state.perBannerOverrides.text[presetId];
+  closeTextEditModal();
+  updatePreview();
+}
+
 // 카피 배치 SVG 아이콘 생성 — variant id에 따라 메인/서브 박스 위치 시각화
 // vertical 레이아웃: 위/아래로 배치, horizontal: 좌/우로 배치
 function makeStructureIconSvg(variantId, isVertical) {
@@ -3107,7 +3293,9 @@ function renderPreviewItem(container, presetId, preset, scale) {
       const showCta = !!(state.ctaEnabled && preset.ctaSupported !== false);
       const showFit = !!state.imageUrl;
       const showStructure = (preset.structureVariants || []).length >= 2;
-      if (showLogo || showCta || showFit || showStructure) {
+      // 텍스트 편집 펜 아이콘은 항상 노출 (이 카드만 별도 카피 적용)
+      const showTextEdit = true;
+      if (showLogo || showCta || showFit || showStructure || showTextEdit) {
         const ctrlRow = document.createElement("div");
         ctrlRow.style.cssText = "margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:16px;font-size:12px;color:#555;flex-wrap:wrap;";
         if (showLogo) ctrlRow.appendChild(createLogoCheckbox(presetId, preset, scale, canvasHolder));
@@ -3117,6 +3305,7 @@ function renderPreviewItem(container, presetId, preset, scale) {
           const structToggle = createStructureToggle(presetId, preset, scale, canvasHolder);
           if (structToggle) ctrlRow.appendChild(structToggle);
         }
+        if (showTextEdit) ctrlRow.appendChild(createTextEditButton(presetId, preset, scale, canvasHolder));
         previewItem.insertBefore(ctrlRow, container);
       }
     }
