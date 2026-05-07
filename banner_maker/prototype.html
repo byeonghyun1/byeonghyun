@@ -1959,12 +1959,28 @@ function drawText(ctx, preset, presetId, textColor, textX, textAlign, maxTextW, 
         ctx.restore();
       };
 
+      // 카피 배치 — 두 케이스 모두 visual gap = lineGap (글자 시각 끝 기준)
+      // 박스 위/아래 여백이 비대칭이라 박스 단위 거리는 카피 배치별로 어긋남 → 시각 단위로 통일
       if (mainTop) {
+        // 메인 위 / 서브 아래
         drawMainBlock(startY);
-        drawSubLine(startY + mainBoxH + lineGap + baselineInBox(subBoxH, fittedSub));
+        // 메인 마지막 줄 baseline → visual bottom (baseline + descent ≈ fittedMain*0.15)
+        const mainLastBase = isMultiLine
+          ? startY + baselineInBox(fittedMain, fittedMain) + (mainLines.length - 1) * mainLineHeight
+          : startY + baselineInBox(mainBoxH, fittedMain);
+        const mainVB = mainLastBase + fittedMain * 0.15;
+        // 서브 baseline = mainVB + lineGap + 서브 ascent (baseline 위로 글자 높이)
+        drawSubLine(mainVB + lineGap + fittedSub * 0.7);
       } else {
-        drawSubLine(startY + baselineInBox(subBoxH, fittedSub));
-        drawMainBlock(startY + subBoxH + lineGap);
+        // 서브 위 / 메인 아래
+        const subBase = startY + baselineInBox(subBoxH, fittedSub);
+        drawSubLine(subBase);
+        const subVB = subBase + fittedSub * 0.15;
+        // 메인 박스 시작 = subVB + lineGap - 메인 박스 위 여백 (글자 visual top이 subVB+lineGap에 오도록)
+        const mainTopPad = isMultiLine
+          ? fittedMain * 0.15  // 2줄: baselineInBox(fittedMain, fittedMain) 사용 시 위 여백
+          : (mainBoxH - fittedMain * 0.7) / 2;  // 1줄
+        drawMainBlock(subVB + lineGap - mainTopPad);
       }
 
     } else if (decision.type === 'horizontal_sub_main') {
