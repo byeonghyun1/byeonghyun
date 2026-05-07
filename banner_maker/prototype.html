@@ -1687,6 +1687,29 @@ function loadImg(url) {
   });
 }
 
+// ===== Calibration 학습값 헬퍼 — 모든 fitMode 분기에서 호출 필수 =====
+// ⚠️ 새 배너·새 렌더 분기를 추가할 때 이 헬퍼를 반드시 호출해야 학습값이 자동 반영됨.
+// 사용 패턴:
+//   const { fm, cal, scaleDelta, offsetXDelta, offsetYDelta } = getCalibrationBoost(presetId, slotSuffix);
+//   - finalScale = baseScale * userScale * (1 + scaleDelta)
+//   - drawX = baseX + ox + offsetXDelta
+//   - drawY = baseY + oy + offsetYDelta
+// slotSuffix 규칙: 듀얼 이미지 배너만 '_L'/'_R', 단일 이미지는 '' (빈 문자열).
+// 캐시 키 규칙: '{presetId}_{fitMode}{slotSuffix}' → 없으면 옛 호환 키 '{presetId}{slotSuffix}'로 폴백.
+function getCalibrationBoost(presetId, slotSuffix = '') {
+  const fm = getEffectiveFitMode(presetId);
+  const newKey = presetId + '_' + fm + slotSuffix;
+  const oldKey = presetId + slotSuffix;
+  const cal = state.calibrationCache[newKey] || state.calibrationCache[oldKey] || {};
+  return {
+    fm,
+    cal,
+    scaleDelta: cal.scale_delta || 0,
+    offsetXDelta: cal.offset_x_delta || 0,
+    offsetYDelta: cal.offset_y_delta || 0
+  };
+}
+
 // ===== anchor 기반 이미지 배치 (투명 이미지, right_center/left_center 등) =====
 function drawAnchorImage(ctx, img, box, preset, presetId) {
   const t = getImageTransform(presetId);
@@ -1703,8 +1726,8 @@ function drawAnchorImage(ctx, img, box, preset, presetId) {
     const hPad = box.h_padding ?? 0;
     const zoneTop = textBottom + gap;
 
-    // fitMode 분리 (contain/crop) — zone 계산에서도 사용
-    const fm = getEffectiveFitMode(presetId);
+    // 학습값 + fitMode 가져오기 (헬퍼 사용 — fm은 zone 계산에도 사용됨)
+    const { fm, scaleDelta, offsetXDelta, offsetYDelta } = getCalibrationBoost(presetId);
 
     // CTA 켜져 있으면 CTA 위까지가 영역, 아니면 하단 마진까지
     // crop 모드: 좌·우·하단 마진 무시 (CTA 영역만 보호) — 이미지가 캔버스 끝까지 채워짐
@@ -1726,12 +1749,6 @@ function drawAnchorImage(ctx, img, box, preset, presetId) {
     // 콘텐츠 bounds(알파 기준) 계산 — 빈 공간 제외한 실제 보이는 영역
     if (!state.contentBoundsCache) state.contentBoundsCache = getContentBounds(img);
     const bounds = state.contentBoundsCache;
-
-    // calibration 학습값 적용 (모드별 분리 캐시)
-    const cal = state.calibrationCache[presetId + '_' + fm] || state.calibrationCache[presetId] || {};
-    const scaleDelta = cal.scale_delta || 0;
-    const offsetXDelta = cal.offset_x_delta || 0;
-    const offsetYDelta = cal.offset_y_delta || 0;
 
     // contain: 콘텐츠가 영역 안에 들어가도록 (Math.min) — 빈 공간 생김
     // crop:    콘텐츠가 영역을 가득 채우도록 (Math.max) — 영역 밖은 잘림
@@ -1766,24 +1783,26 @@ function drawAnchorImage(ctx, img, box, preset, presetId) {
     return;
   }
 
-  if (getEffectiveFitMode(presetId) === 'crop') {
+  // 학습값 가져오기 (헬퍼 사용 — contain/crop 자동 분리)
+  const { fm: fmA, cal: calA, scaleDelta: sdA, offsetXDelta: oxdA, offsetYDelta: oydA } = getCalibrationBoost(presetId);
+
+  if (fmA === 'crop') {
     if (!state.contentBoundsCache) state.contentBoundsCache = getContentBounds(img);
     const bounds = state.contentBoundsCache;
-    // fitMode별 분리 캐시 우선, 없으면 기존 호환 키 폴백
-    const fm = getEffectiveFitMode(presetId);
-    const cal = state.calibrationCache[presetId + '_' + fm] || state.calibrationCache[presetId] || {};
     const baseH = preset.h * (box.height_ratio || 0.85) - vPad * 2;
-    const crop = computeCropTransform(img, bounds, baseH, cal, userScale, vPad);
+    const crop = computeCropTransform(img, bounds, baseH, calA, userScale, vPad);
     state.cropAutoValues[presetId] = { autoScale: crop.cropScale, autoOffsetY: crop.topOffset };
     const pos = anchorToXY(box.anchor, preset, crop.scaledW, crop.scaledH, vPad);
     ctx.drawImage(img, pos.x + ox + crop.calOffsetX, crop.topOffset + oy, crop.scaledW, crop.scaledH);
   } else {
+    // contain 모드: 학습값(scaleDelta/offsetXDelta/offsetYDelta) 직접 적용
     const zoneW = preset.w * (box.width_ratio || preset.imgRatio) * userScale;
     const zoneH = (preset.h * (box.height_ratio || 0.85) - vPad * 2) * userScale;
-    const s = Math.min(zoneW / img.width, zoneH / img.height);
+    const s = Math.min(zoneW / img.width, zoneH / img.height) * (1 + sdA);
     const dw = img.width * s, dh = img.height * s;
+    state.cropAutoValues[presetId] = { autoScale: s, autoOffsetY: 0 };
     const pos = anchorToXY(box.anchor, preset, dw, dh, vPad);
-    ctx.drawImage(img, pos.x + ox, pos.y + oy, dw, dh);
+    ctx.drawImage(img, pos.x + ox + oxdA, pos.y + oy + oydA, dw, dh);
   }
 }
 
@@ -1794,14 +1813,19 @@ function drawFullImage(ctx, img, preset, presetId) {
   const ox = t.mode === 'manual' ? t.offset.x : 0;
   const oy = t.mode === 'manual' ? t.offset.y : 0;
 
-  if (getEffectiveFitMode(presetId) === 'crop') {
-    const coverScale = Math.max(preset.w / img.width, preset.h / img.height) * userScale;
+  // 학습값 가져오기 (헬퍼 사용 — contain/crop 자동 분리)
+  const { fm, scaleDelta, offsetXDelta, offsetYDelta } = getCalibrationBoost(presetId);
+
+  if (fm === 'crop') {
+    const coverScale = Math.max(preset.w / img.width, preset.h / img.height) * userScale * (1 + scaleDelta);
     const dw = img.width * coverScale, dh = img.height * coverScale;
-    ctx.drawImage(img, (preset.w - dw) / 2 + ox, (preset.h - dh) / 2 + oy, dw, dh);
+    state.cropAutoValues[presetId] = { autoScale: coverScale, autoOffsetY: 0 };
+    ctx.drawImage(img, (preset.w - dw) / 2 + ox + offsetXDelta, (preset.h - dh) / 2 + oy + offsetYDelta, dw, dh);
   } else {
-    const containScale = Math.min(preset.w / img.width, preset.h / img.height) * userScale;
+    const containScale = Math.min(preset.w / img.width, preset.h / img.height) * userScale * (1 + scaleDelta);
     const dw = img.width * containScale, dh = img.height * containScale;
-    ctx.drawImage(img, (preset.w - dw) / 2 + ox, (preset.h - dh) / 2 + oy, dw, dh);
+    state.cropAutoValues[presetId] = { autoScale: containScale, autoOffsetY: 0 };
+    ctx.drawImage(img, (preset.w - dw) / 2 + ox + offsetXDelta, (preset.h - dh) / 2 + oy + offsetYDelta, dw, dh);
   }
 }
 
@@ -2235,16 +2259,15 @@ function renderToCanvas(presetId, preset, callback) {
     const oy = t.mode === 'manual' ? t.offset.y : 0;
     const gap = box.image_gap ?? (preset.textGap || 24);
 
-    if (getEffectiveFitMode(presetId) === 'crop') {
+    // 학습값 가져오기 (헬퍼 사용 — contain/crop + slot 자동 분리)
+    // 슬롯 매핑: isRight=false → 메인 이미지(우측 = '_R' slot), isRight=true → 보조 이미지(좌측 = '_L' slot)
+    const slotSuffix = isRight ? '_L' : (isDualImageModeForBanner(presetId) ? '_R' : '');
+    const { fm, cal, scaleDelta, offsetXDelta, offsetYDelta } = getCalibrationBoost(presetId, slotSuffix);
+
+    if (fm === 'crop') {
       const boundsKey = isRight ? 'contentBoundsCache2' : 'contentBoundsCache';
       if (!state[boundsKey]) state[boundsKey] = getContentBounds(img);
       const bounds = state[boundsKey];
-      // fitMode + slot 조합 캐시 키 (없으면 기존 호환 키 폴백)
-      const fm = getEffectiveFitMode(presetId);
-      const slotSuffix = isRight ? '_L' : (isDualImageModeForBanner(presetId) ? '_R' : '');
-      const newKey = presetId + '_' + fm + slotSuffix;
-      const oldKey = presetId + slotSuffix;
-      const cal = state.calibrationCache[newKey] || state.calibrationCache[oldKey] || {};
       const availH = preset.h - vPad;
       const crop = computeCropTransform(img, bounds, availH, cal, userScale, vPad);
       state.cropAutoValues[presetId] = { autoScale: crop.cropScale, autoOffsetY: crop.topOffset };
@@ -2253,11 +2276,13 @@ function renderToCanvas(presetId, preset, callback) {
         ox: ox + crop.calOffsetX, oy: oy + crop.topOffset
       };
     } else {
+      // contain 모드: 학습값(scaleDelta/offsetXDelta/offsetYDelta) 직접 적용
       const baseScale = Math.min(maxImgH / img.height, 1);
-      const finalScale = baseScale * userScale;
+      const finalScale = baseScale * userScale * (1 + scaleDelta);
+      state.cropAutoValues[presetId] = { autoScale: finalScale, autoOffsetY: 0 };
       return {
         img, w: img.width * finalScale, h: img.height * finalScale, vPad, isCrop: false, gap,
-        ox, oy
+        ox: ox + offsetXDelta, oy: oy + offsetYDelta
       };
     }
   }
