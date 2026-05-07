@@ -15,6 +15,7 @@
     "m_event_list_1",
     "m_event_list_2",
     "m_event_list_3",
+    "m_event_list_4",
     "email_target"
   ],
   "ui_visible": [
@@ -24,7 +25,8 @@
     "pc_login_right",
     "m_event_list_1",
     "m_event_list_2",
-    "m_event_list_3"
+    "m_event_list_3",
+    "m_event_list_4"
   ],
   "ui_hidden_reason": {
     "pc_recruit_bottom": "가이드 규정 추가 후 노출 예정",

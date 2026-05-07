@@ -1,0 +1,24 @@
+{
+  "banner_id": "m_event_list_4",
+  "samples": [],
+  "average": {},
+  "samples_crop": [
+    {
+      "date": "2026-05-07",
+      "fit_mode": "crop",
+      "auto_scale": 0.3144529616724739,
+      "final_scale": 0.778,
+      "auto_offset_y": 0,
+      "final_offset_y": 20,
+      "scale_delta": -0.222,
+      "offset_y_delta": 20,
+      "offset_x_delta": 9
+    }
+  ],
+  "average_crop": {
+    "scale_delta": -0.222,
+    "offset_y_delta": 20.0,
+    "offset_x_delta": 9.0,
+    "sample_count": 1
+  }
+}
