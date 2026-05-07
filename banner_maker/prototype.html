@@ -1702,14 +1702,23 @@ function drawAnchorImage(ctx, img, box, preset, presetId) {
     const gap = box.text_gap_px ?? 30;
     const hPad = box.h_padding ?? 0;
     const zoneTop = textBottom + gap;
+
+    // fitMode 분리 (contain/crop) — zone 계산에서도 사용
+    const fm = getEffectiveFitMode(presetId);
+
     // CTA 켜져 있으면 CTA 위까지가 영역, 아니면 하단 마진까지
+    // crop 모드: 좌·우·하단 마진 무시 (CTA 영역만 보호) — 이미지가 캔버스 끝까지 채워짐
+    // contain 모드: 기존대로 좌·우·하단 마진 안쪽으로 한정
     const ctaActive = isCtaActiveForBanner(preset) && preset.ctaConfig?.heightRatio;
     const ctaH = ctaActive ? preset.h * preset.ctaConfig.heightRatio : 0;
+    const bottomMargin = (fm === 'crop') ? 0 : (preset.margins?.bottom ?? 0);
     const zoneBottom = ctaH > 0
       ? preset.h - ctaH
-      : preset.h - (preset.margins?.bottom ?? 0);
-    const zoneLeft = (preset.margins?.left ?? 0) + hPad;
-    const zoneRight = preset.w - (preset.margins?.right ?? 0) - hPad;
+      : preset.h - bottomMargin;
+    const sideMarginL = (fm === 'crop') ? 0 : (preset.margins?.left ?? 0);
+    const sideMarginR = (fm === 'crop') ? 0 : (preset.margins?.right ?? 0);
+    const zoneLeft = sideMarginL + hPad;
+    const zoneRight = preset.w - sideMarginR - hPad;
     const zoneW = zoneRight - zoneLeft;
     const zoneH = zoneBottom - zoneTop;
     if (zoneW <= 0 || zoneH <= 0) return;
@@ -1718,8 +1727,7 @@ function drawAnchorImage(ctx, img, box, preset, presetId) {
     if (!state.contentBoundsCache) state.contentBoundsCache = getContentBounds(img);
     const bounds = state.contentBoundsCache;
 
-    // fitMode 분리 (contain/crop) + calibration 학습값 적용 (모드별 분리 캐시)
-    const fm = getEffectiveFitMode(presetId);
+    // calibration 학습값 적용 (모드별 분리 캐시)
     const cal = state.calibrationCache[presetId + '_' + fm] || state.calibrationCache[presetId] || {};
     const scaleDelta = cal.scale_delta || 0;
     const offsetXDelta = cal.offset_x_delta || 0;
