@@ -2249,12 +2249,20 @@ function drawCTA(ctx, preset) {
 // ===== 통합 Canvas 렌더링 (미리보기 = 출력 동일) =====
 // 원본 사이즈로 Canvas에 그린 후, 미리보기에서는 CSS 축소로 표시.
 // 가이드: 이미지/텍스트/CTA는 마진 안쪽 영역에만 보임 (마진과 겹치는 부분은 클립으로 잘림).
-function renderToCanvas(presetId, preset, callback) {
+function renderToCanvas(presetId, preset, callback, opts = {}) {
+  // [supersampling] 미리보기에서 1:1 표시되는 작은 배너는 internal 해상도를 2배로 그려 폰트·이미지 선명도 확보
+  // (큰 배너는 미리보기 scale<1로 자연 supersampling 효과 있음 → 추가 X)
+  // 다운로드 호출 시에는 opts.supersample === false로 끔 (출력 사이즈가 dimensions 그대로여야 함)
+  const containerMaxW = 820, containerMaxH = 500;
+  const previewScale = Math.min(containerMaxW / preset.w, containerMaxH / preset.h, 1);
+  const supersample = (opts.supersample === false) ? 1 : ((previewScale >= 1) ? 2 : 1);
+
   const canvas = document.createElement("canvas");
   canvas.dataset.previewCanvas = "main"; // 식별자 — 미래에 wrapper 안 캔버스 여러 개일 때 대비
-  canvas.width = preset.w;
-  canvas.height = preset.h;
+  canvas.width = preset.w * supersample;
+  canvas.height = preset.h * supersample;
   const ctx = canvas.getContext("2d");
+  if (supersample !== 1) ctx.scale(supersample, supersample); // 그리기 좌표는 preset 기준 그대로 사용 가능
 
   // 1. 배경색 (전체 캔버스 — 마진 영역 포함)
   ctx.fillStyle = state.bgColor;
@@ -3237,6 +3245,7 @@ function downloadAllBanners() {
 
 function downloadBanner(sizeId) {
   const preset = PRESETS[sizeId];
+  // 다운로드는 supersample=false로 강제 — 출력 PNG 사이즈가 dimensions(가이드 사이즈) 그대로여야 함
   renderToCanvas(sizeId, preset, (canvas) => {
     const link = document.createElement("a");
     link.download = "banner_" + preset.w + "x" + preset.h + "_" + state.bgColor.slice(1) + ".png";
@@ -3250,7 +3259,7 @@ function downloadBanner(sizeId) {
     } else {
       saveCalibration(sizeId);
     }
-  });
+  }, { supersample: false });
 }
 
 init();

@@ -32,8 +32,12 @@
     }
   },
   "min_font": 12,
+  "font_size_strict": true,
   "copy": {
-    "line_gap_px": 4
+    "structure": "서브 1줄 + 메인 1줄",
+    "line_gap_px": 4,
+    "main_line_break_allowed": true,
+    "main_auto_wrap": true
   },
   "source_label": {
     "top": 8,
