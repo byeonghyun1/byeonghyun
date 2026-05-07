@@ -36,10 +36,15 @@ class BannerHandler(http.server.SimpleHTTPRequestHandler):
                     with open(filepath, 'r', encoding='utf-8') as f:
                         existing = json.load(f)
 
-                # slot: 듀얼 이미지용 ("left" / "right"), 없으면 단일 이미지 (기존 호환)
+                # slot: 듀얼 이미지용 ("left" / "right"), 없으면 단일 이미지
+                # fit_mode: "contain" / "crop" — 모드별 분리 저장 (없으면 기존 호환 키)
                 slot = data.get('slot')  # None, "left", "right"
-                samples_key = f'samples_{slot}' if slot else 'samples'
-                average_key = f'average_{slot}' if slot else 'average'
+                fit_mode = data.get('fit_mode')  # None, "contain", "crop"
+                # 키 조합: fit_mode + slot 모두 있으면 둘 다 포함, 둘 다 없으면 기존 키
+                parts = [p for p in [fit_mode, slot] if p]
+                suffix = '_'.join(parts)
+                samples_key = f'samples_{suffix}' if suffix else 'samples'
+                average_key = f'average_{suffix}' if suffix else 'average'
 
                 # 해당 slot의 samples 배열이 없으면 초기화
                 if samples_key not in existing:
@@ -66,7 +71,7 @@ class BannerHandler(http.server.SimpleHTTPRequestHandler):
                 with open(filepath, 'w', encoding='utf-8') as f:
                     json.dump(existing, f, ensure_ascii=False, indent=2)
 
-                self._respond(200, {'ok': True, 'slot': slot, 'sample_count': len(samples), 'average': existing[average_key]})
+                self._respond(200, {'ok': True, 'slot': slot, 'fit_mode': fit_mode, 'sample_count': len(samples), 'average': existing[average_key]})
 
             except json.JSONDecodeError:
                 self._respond(400, {'error': 'JSON 파싱 실패'})

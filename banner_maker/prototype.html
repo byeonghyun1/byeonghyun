@@ -1378,24 +1378,35 @@ function loadCalibrationFromLocalStorage(bannerId) {
   } catch (e) { return null; }
 }
 
+// 배너별 학습 보정값을 캐시에 채움 — fitMode + slot 모든 조합 + 기존 호환 키
+function fillCalibrationCacheFromData(bannerId, data) {
+  if (!data) return;
+  // 새 키: average_{fitMode}_{slot}
+  ['contain', 'crop'].forEach(fm => {
+    state.calibrationCache[bannerId + '_' + fm] = data['average_' + fm] || {};
+    state.calibrationCache[bannerId + '_' + fm + '_L'] = data['average_' + fm + '_left'] || {};
+    state.calibrationCache[bannerId + '_' + fm + '_R'] = data['average_' + fm + '_right'] || {};
+  });
+  // 기존 호환 키 (fitMode 없이 저장된 옛 데이터) — 폴백용
+  state.calibrationCache[bannerId] = data.average || {};
+  state.calibrationCache[bannerId + '_L'] = data.average_left || {};
+  state.calibrationCache[bannerId + '_R'] = data.average_right || {};
+}
+
 // 배너별 학습 보정값 로드 (서버 우선, 실패 시 localStorage 폴백)
 async function loadCalibration(bannerId) {
   try {
     const res = await fetch('config/banners/' + bannerId + '_calibration.json?t=' + Date.now());
     if (!res.ok) throw new Error('서버 응답 없음');
     const data = await res.json();
-    state.calibrationCache[bannerId] = data.average || {};
-    state.calibrationCache[bannerId + '_L'] = data.average_left || {};
-    state.calibrationCache[bannerId + '_R'] = data.average_right || {};
-    return data.average || {};
+    fillCalibrationCacheFromData(bannerId, data);
+    return data;
   } catch (e) {
     // 서버 실패 → localStorage 폴백
     const ls = loadCalibrationFromLocalStorage(bannerId);
     if (ls) {
-      state.calibrationCache[bannerId] = ls.average || {};
-      state.calibrationCache[bannerId + '_L'] = ls.average_left || {};
-      state.calibrationCache[bannerId + '_R'] = ls.average_right || {};
-      return ls.average || {};
+      fillCalibrationCacheFromData(bannerId, ls);
+      return ls;
     }
     return null;
   }
@@ -1407,9 +1418,8 @@ async function saveCalibration(bannerId, slot) {
   // slot 'left' = 보조 이미지(imageUrl2), slot 'right' 또는 없음 = 메인 이미지(imageUrl)
   const imgUrl = slot === 'left' ? state.imageUrl2 : state.imageUrl;
   if (!imgUrl) return; // 해당 이미지 없으면 저장 불필요
-  // crop 모드에서만 학습 (contain은 자동 배치 X → 학습 의미 없음)
-  if (getEffectiveFitMode(bannerId) !== 'crop') return;
 
+  const fitMode = getEffectiveFitMode(bannerId);
   const transformFn = slot === 'left' ? getImageTransform2 : getImageTransform;
   const autoVals = state.cropAutoValues[bannerId] || { autoScale: 1.0, autoOffsetY: 0 };
 
@@ -1420,7 +1430,7 @@ async function saveCalibration(bannerId, slot) {
 
   const sample = {
     date: new Date().toISOString().split('T')[0],
-    fit_mode: getEffectiveFitMode(bannerId),
+    fit_mode: fitMode,
     auto_scale: autoVals.autoScale,
     final_scale: finalScale,
     auto_offset_y: Math.round(autoVals.autoOffsetY),
@@ -1430,10 +1440,13 @@ async function saveCalibration(bannerId, slot) {
     offset_x_delta: Math.round(finalOffsetX)
   };
 
-  const body = { banner_id: bannerId, sample };
+  // 서버에 보낼 body — fit_mode + slot 둘 다 포함 (서버가 키 조합)
+  const body = { banner_id: bannerId, sample, fit_mode: fitMode };
   if (slot) body.slot = slot;
 
-  const cacheKey = slot === 'left' ? bannerId + '_L' : slot === 'right' ? bannerId + '_R' : bannerId;
+  // 캐시 키: bannerId + '_' + fitMode + slot suffix (서버 키 규칙과 동일 매핑)
+  const slotSuffix = slot === 'left' ? '_L' : slot === 'right' ? '_R' : '';
+  const cacheKey = bannerId + '_' + fitMode + slotSuffix;
 
   try {
     const res = await fetch('/api/calibration', {
@@ -1444,7 +1457,7 @@ async function saveCalibration(bannerId, slot) {
     const result = await res.json();
     if (result.ok) {
       state.calibrationCache[cacheKey] = result.average;
-      console.log('[calibration] 학습 저장 완료 (서버):', bannerId, slot || 'single', result.average);
+      console.log('[calibration] 학습 저장 완료 (서버):', bannerId, fitMode, slot || 'single', result.average);
       return;
     }
     throw new Error('서버 응답 ok=false');
@@ -1454,11 +1467,11 @@ async function saveCalibration(bannerId, slot) {
     try {
       const lsKey = CALIBRATION_LS_PREFIX + bannerId;
       const existing = loadCalibrationFromLocalStorage(bannerId) || {};
-      if (slot === 'left')       existing.average_left  = sample;
-      else if (slot === 'right') existing.average_right = sample;
-      else                       existing.average       = sample;
+      // 키 형식: average_{fitMode}_{slot} (slot 없으면 average_{fitMode})
+      const lsAvgKey = 'average_' + [fitMode, slot].filter(Boolean).join('_');
+      existing[lsAvgKey] = sample;
       localStorage.setItem(lsKey, JSON.stringify(existing));
-      console.log('[calibration] 학습 저장 (localStorage 폴백):', bannerId, slot || 'single');
+      console.log('[calibration] 학습 저장 (localStorage 폴백):', bannerId, fitMode, slot || 'single');
     } catch (lsErr) {
       console.warn('[calibration] localStorage 저장 실패:', lsErr.message);
     }
@@ -1728,7 +1741,9 @@ function drawAnchorImage(ctx, img, box, preset, presetId) {
   if (getEffectiveFitMode(presetId) === 'crop') {
     if (!state.contentBoundsCache) state.contentBoundsCache = getContentBounds(img);
     const bounds = state.contentBoundsCache;
-    const cal = state.calibrationCache[presetId] || {};
+    // fitMode별 분리 캐시 우선, 없으면 기존 호환 키 폴백
+    const fm = getEffectiveFitMode(presetId);
+    const cal = state.calibrationCache[presetId + '_' + fm] || state.calibrationCache[presetId] || {};
     const baseH = preset.h * (box.height_ratio || 0.85) - vPad * 2;
     const crop = computeCropTransform(img, bounds, baseH, cal, userScale, vPad);
     state.cropAutoValues[presetId] = { autoScale: crop.cropScale, autoOffsetY: crop.topOffset };
@@ -2196,9 +2211,12 @@ function renderToCanvas(presetId, preset, callback) {
       const boundsKey = isRight ? 'contentBoundsCache2' : 'contentBoundsCache';
       if (!state[boundsKey]) state[boundsKey] = getContentBounds(img);
       const bounds = state[boundsKey];
-      // isRight=true -> 보조(imageUrl2, 좌측 배치) -> _L / isRight=false -> 메인 -> 듀얼이면 _R, 단일이면 기본
-      const calKey = isRight ? presetId + '_L' : (isDualImageModeForBanner(presetId) ? presetId + '_R' : presetId);
-      const cal = state.calibrationCache[calKey] || {};
+      // fitMode + slot 조합 캐시 키 (없으면 기존 호환 키 폴백)
+      const fm = getEffectiveFitMode(presetId);
+      const slotSuffix = isRight ? '_L' : (isDualImageModeForBanner(presetId) ? '_R' : '');
+      const newKey = presetId + '_' + fm + slotSuffix;
+      const oldKey = presetId + slotSuffix;
+      const cal = state.calibrationCache[newKey] || state.calibrationCache[oldKey] || {};
       const availH = preset.h - vPad;
       const crop = computeCropTransform(img, bounds, availH, cal, userScale, vPad);
       state.cropAutoValues[presetId] = { autoScale: crop.cropScale, autoOffsetY: crop.topOffset };
@@ -2351,7 +2369,8 @@ function renderToCanvas(presetId, preset, callback) {
         ctx.drawImage(logoSrc, logoX, logoY, logoDrawnW, logoDrawnH);
       }
 
-      // 출처 표기 이미지 (우측 상단 고정 영역, 영역의 80% 크기 + 중앙 정렬)
+      ctx.restore();
+      // 출처 표기 이미지 — 클립 밖에서 그림 (우측 마진 영역에 위치할 수 있어 contain+auto 모드에서 잘림 방지)
       // unified 모드 + 출처 없고 콜라보만 있을 때는 콜라보 로고가 이 자리에 그려짐
       if (sourceLogoImg && preset.sourceLabelImage) {
         const sli = preset.sourceLabelImage;
@@ -2369,9 +2388,7 @@ function renderToCanvas(presetId, preset, callback) {
         const slSrc = invertOn ? invertImage(sourceLogoImg, Math.round(slW), Math.round(slH)) : sourceLogoImg;
         ctx.drawImage(slSrc, slX, slY, slW, slH);
       }
-
-      ctx.restore();
-      // CTA는 클립 밖에서 그림 — 풀너비(가로 끝까지) 보장 (contain + auto 모드에서 좌우 잘림 방지)
+      // CTA도 클립 밖에서 그림 — 풀너비(가로 끝까지) 보장 (contain + auto 모드에서 좌우 잘림 방지)
       drawCTA(ctx, preset);
       callback(canvas);
     });
