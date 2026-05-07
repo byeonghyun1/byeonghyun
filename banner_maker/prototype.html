@@ -681,6 +681,7 @@ function adaptBanner(json) {
       letterSpacing: json.builder_io.cta.letter_spacing
     } : null,
     mainAutoWrap: json.copy?.main_auto_wrap === true,  // true면 메인 카피 가용폭 초과 시 자동 2줄 분할
+    useVisualGap: json.copy?.use_visual_gap === true,  // true면 vertical_sub_main 분기에서 visual 단위 lineGap 적용
     copyConstraints: json.copy || null,
     textColorRule: json.text_color_rule || null,
     rules: (json.rules || []).map(r =>
@@ -1927,40 +1928,46 @@ function drawText(ctx, preset, presetId, textColor, textX, textAlign, maxTextW, 
         ctx.restore();
       };
 
-      // 카피 배치 — 두 케이스 모두 visual gap = lineGap (글자 실제 메트릭 기반 정확 계산)
-      // ctx.measureText로 actualBoundingBoxAscent/Descent 측정 → 폰트별 메트릭 차이 흡수
-      ctx.save();
-      ctx.font = state.mainFont.weight + " " + fittedMain + "px " + state.mainFont.css;
-      const mainMet = ctx.measureText("가");
-      const mainAscentAct  = mainMet.actualBoundingBoxAscent;
-      const mainDescentAct = mainMet.actualBoundingBoxDescent;
-      ctx.font = state.subFont.weight + " " + fittedSub + "px " + state.subFont.css;
-      const subMet = ctx.measureText("가");
-      const subAscentAct  = subMet.actualBoundingBoxAscent;
-      const subDescentAct = subMet.actualBoundingBoxDescent;
-      ctx.restore();
+      // 카피 배치 — preset.useVisualGap=true면 visual 단위(글자 끝 ↔ 글자 끝), 아니면 박스 단위(기존 동작)
+      if (preset.useVisualGap) {
+        // visual 단위: ctx.measureText의 actualBoundingBoxAscent/Descent로 정확한 메트릭 측정
+        ctx.save();
+        ctx.font = state.mainFont.weight + " " + fittedMain + "px " + state.mainFont.css;
+        const mainMet = ctx.measureText("가");
+        const mainAscentAct  = mainMet.actualBoundingBoxAscent;
+        const mainDescentAct = mainMet.actualBoundingBoxDescent;
+        ctx.font = state.subFont.weight + " " + fittedSub + "px " + state.subFont.css;
+        const subMet = ctx.measureText("가");
+        const subAscentAct  = subMet.actualBoundingBoxAscent;
+        const subDescentAct = subMet.actualBoundingBoxDescent;
+        ctx.restore();
 
-      if (mainTop) {
-        // 메인 위 / 서브 아래
-        drawMainBlock(startY);
-        const mainLastBase = isMultiLine
-          ? startY + baselineInBox(fittedMain, fittedMain) + (mainLines.length - 1) * mainLineHeight
-          : startY + baselineInBox(mainBoxH, fittedMain);
-        const mainVB = mainLastBase + mainDescentAct;
-        // 서브 baseline = mainVB + lineGap + 서브 actualAscent
-        drawSubLine(mainVB + lineGap + subAscentAct);
+        if (mainTop) {
+          drawMainBlock(startY);
+          const mainLastBase = isMultiLine
+            ? startY + baselineInBox(fittedMain, fittedMain) + (mainLines.length - 1) * mainLineHeight
+            : startY + baselineInBox(mainBoxH, fittedMain);
+          const mainVB = mainLastBase + mainDescentAct;
+          drawSubLine(mainVB + lineGap + subAscentAct);
+        } else {
+          const subBase = startY + baselineInBox(subBoxH, fittedSub);
+          drawSubLine(subBase);
+          const subVB = subBase + subDescentAct;
+          const mainBaselineInBox = isMultiLine
+            ? baselineInBox(fittedMain, fittedMain)
+            : baselineInBox(mainBoxH, fittedMain);
+          const mainTopPadVisual = mainBaselineInBox - mainAscentAct;
+          drawMainBlock(subVB + lineGap - mainTopPadVisual);
+        }
       } else {
-        // 서브 위 / 메인 아래
-        const subBase = startY + baselineInBox(subBoxH, fittedSub);
-        drawSubLine(subBase);
-        const subVB = subBase + subDescentAct;
-        // 메인 박스 시작 = subVB + lineGap - 메인 박스 위 visual padding
-        // 메인 visual top = baseline - mainAscentAct, baseline = baselineInBox 기준
-        const mainBaselineInBox = isMultiLine
-          ? baselineInBox(fittedMain, fittedMain)
-          : baselineInBox(mainBoxH, fittedMain);
-        const mainTopPadVisual = mainBaselineInBox - mainAscentAct;
-        drawMainBlock(subVB + lineGap - mainTopPadVisual);
+        // 박스 단위 (기존 동작) — 박스 끝 ↔ 박스 시작 사이 lineGap
+        if (mainTop) {
+          drawMainBlock(startY);
+          drawSubLine(startY + mainBoxH + lineGap + baselineInBox(subBoxH, fittedSub));
+        } else {
+          drawSubLine(startY + baselineInBox(subBoxH, fittedSub));
+          drawMainBlock(startY + subBoxH + lineGap);
+        }
       }
 
     } else if (decision.type === 'horizontal_sub_main') {
