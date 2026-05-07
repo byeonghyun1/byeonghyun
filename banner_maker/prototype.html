@@ -283,15 +283,17 @@ body { font-family: 'Pretendard', -apple-system, sans-serif; background: #F5F5F7
 }
 .scale-slider:focus { outline: none; }
 
-/* ===== 카드별 텍스트 편집 모달 ===== */
+/* ===== 카드별 텍스트 편집 팝오버 ===== */
 .text-edit-overlay {
-  display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.5);
-  z-index: 1000; align-items: center; justify-content: center;
+  display: none; position: fixed; inset: 0; z-index: 1000;
+  pointer-events: none;  /* 배경 영역은 클릭 통과 — 어두운 배경 없음 */
 }
-.text-edit-overlay.open { display: flex; }
+.text-edit-overlay.open { display: block; }
 .text-edit-modal {
-  background: #FFF; border-radius: 12px; width: 480px; max-width: 90vw;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  position: absolute;  /* JS가 left/top 설정 */
+  pointer-events: auto;
+  background: #FFF; border-radius: 12px; width: 360px; max-width: calc(100vw - 16px);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.05);
   display: flex; flex-direction: column;
 }
 .text-edit-header {
@@ -334,10 +336,6 @@ body { font-family: 'Pretendard', -apple-system, sans-serif; background: #F5F5F7
 .text-edit-icon:hover { background: #E5E7EB; }
 .text-edit-icon.has-override {
   background: #DBEAFE; color: #2563EB; border-color: #2563EB;
-}
-.text-edit-icon.has-override::after {
-  content: ''; position: relative; top: -8px; right: -2px;
-  width: 6px; height: 6px; background: #2563EB; border-radius: 50%; display: inline-block;
 }
 </style>
 </head>
@@ -603,9 +601,9 @@ body { font-family: 'Pretendard', -apple-system, sans-serif; background: #F5F5F7
   </div>
 </div>
 
-<!-- 카드별 텍스트 편집 모달 -->
-<div class="text-edit-overlay" id="textEditOverlay" onclick="closeTextEditModal(event)">
-  <div class="text-edit-modal" onclick="event.stopPropagation()">
+<!-- 카드별 텍스트 편집 팝오버 -->
+<div class="text-edit-overlay" id="textEditOverlay">
+  <div class="text-edit-modal">
     <div class="text-edit-header">
       <h3 id="textEditTitle">카드별 텍스트 편집</h3>
       <button class="close-btn" onclick="closeTextEditModal()">&times;</button>
@@ -3073,9 +3071,11 @@ function createLogoCheckbox(presetId, preset, displayScale, canvasHolder) {
   return createPreviewCheckbox(presetId, preset, displayScale, canvasHolder, '로고 적용', state.perBannerOverrides.logoDisabled);
 }
 
-// ===== 카드별 텍스트 편집 버튼 (펜 아이콘) + 모달 =====
-// 펜 아이콘 클릭 시 모달 open. override 있는 카드는 시각적으로 표시.
-let _textEditCtx = null; // { presetId, preset, displayScale, canvasHolder }
+// ===== 카드별 텍스트 편집 팝오버 =====
+// 펜 아이콘 클릭 시 팝오버 open. override 있는 카드는 시각적으로 표시.
+// 입력 중 실시간으로 state.perBannerOverrides.text[presetId] 갱신 + 해당 카드만 redraw.
+// 저장: 입력값 유지. X/취소/ESC: 백업 복원. 기본값 사용: 강제 delete.
+let _textEditCtx = null; // { presetId, preset, displayScale, canvasHolder, anchorEl, backup }
 
 function createTextEditButton(presetId, preset, displayScale, canvasHolder) {
   const btn = document.createElement('button');
@@ -3084,20 +3084,52 @@ function createTextEditButton(presetId, preset, displayScale, canvasHolder) {
   btn.title = '이 카드만 다른 카피 적용';
   btn.innerHTML = '✎';
   if (state.perBannerOverrides.text?.[presetId]) btn.classList.add('has-override');
-  btn.addEventListener('click', () => openTextEditModal(presetId, preset, displayScale, canvasHolder));
+  btn.addEventListener('click', () => openTextEditModal(presetId, preset, displayScale, canvasHolder, btn));
   return btn;
 }
 
-function openTextEditModal(presetId, preset, displayScale, canvasHolder) {
-  _textEditCtx = { presetId, preset, displayScale, canvasHolder };
-  const o = state.perBannerOverrides.text?.[presetId] || {};
-  // 입력 초기값: override 있으면 그것, 없으면 사이드바 전역
+// 팝오버 위치 계산 — anchor(펜 아이콘) 기준 우측 → 좌측 → 화면 안 안전 위치
+// 화면 밖이면 anchor를 scrollIntoView로 끌어와 자동 스크롤
+function positionTextEditModal(anchorEl) {
+  const modal = document.querySelector('.text-edit-modal');
+  if (!modal || !anchorEl) return;
+  const margin = 12;
+  const rect = anchorEl.getBoundingClientRect();
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  const mw = modal.offsetWidth;
+  const mh = modal.offsetHeight;
+
+  let left = rect.right + margin;
+  if (left + mw > vw - margin) left = rect.left - mw - margin;
+  if (left < margin) left = Math.max(margin, Math.min(rect.left, vw - mw - margin));
+
+  let top = rect.top;
+  if (top + mh > vh - margin) top = vh - mh - margin;
+  if (top < margin) top = margin;
+
+  modal.style.left = left + 'px';
+  modal.style.top = top + 'px';
+
+  const anchorVisible = rect.top >= 0 && rect.bottom <= vh;
+  if (!anchorVisible) anchorEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function openTextEditModal(presetId, preset, displayScale, canvasHolder, anchorEl) {
+  // 원본 override 백업 (취소·X·ESC 시 복원용)
+  const prev = state.perBannerOverrides.text?.[presetId];
+  _textEditCtx = {
+    presetId, preset, displayScale, canvasHolder, anchorEl,
+    backup: prev ? { ...prev } : null
+  };
+  const o = prev || {};
   const mainEl = document.getElementById('textEditMain');
   const subEl = document.getElementById('textEditSub');
-  mainEl.value = o.main !== undefined && o.main !== null ? o.main : state.mainText;
-  subEl.value  = o.sub  !== undefined && o.sub  !== null ? o.sub  : state.subText;
+  mainEl.value = (o.main !== undefined && o.main !== null) ? o.main : state.mainText;
+  subEl.value  = (o.sub  !== undefined && o.sub  !== null) ? o.sub  : state.subText;
   document.getElementById('textEditTitle').textContent = `${preset.name} — 카드별 텍스트 편집`;
-  // 글자수 카운터 초기 갱신 + input 이벤트 바인딩
+
+  // 글자수 카운터 + input 이벤트
   const mainMax = preset.copyConstraints?.main_max_chars_kr;
   const subMax = preset.copyConstraints?.sub_max_chars_kr;
   const updateCounter = (el, counterEl, max) => {
@@ -3109,49 +3141,57 @@ function openTextEditModal(presetId, preset, displayScale, canvasHolder) {
   const subCounter = document.getElementById('textEditSubCounter');
   updateCounter(mainEl, mainCounter, mainMax);
   updateCounter(subEl, subCounter, subMax);
-  // 기존 리스너 제거 후 새로 등록 (모달 재오픈 누적 방지)
+
+  // 기존 리스너 제거 후 새로 등록 (재오픈 누적 방지)
   const newMain = mainEl.cloneNode(true);
   const newSub = subEl.cloneNode(true);
   mainEl.parentNode.replaceChild(newMain, mainEl);
   subEl.parentNode.replaceChild(newSub, subEl);
-  newMain.addEventListener('input', () => updateCounter(newMain, mainCounter, mainMax));
-  newSub.addEventListener('input', () => updateCounter(newSub, subCounter, subMax));
+
+  // 실시간 미리보기 — 입력 시 state 임시 적용 + 해당 카드만 redraw
+  const applyLive = () => {
+    const main = newMain.value;
+    const sub = newSub.value;
+    if (!main && !sub) delete state.perBannerOverrides.text[presetId];
+    else state.perBannerOverrides.text[presetId] = { main, sub };
+    if (canvasHolder) redrawSingleCanvas(presetId, preset, displayScale, canvasHolder);
+  };
+  newMain.addEventListener('input', () => { updateCounter(newMain, mainCounter, mainMax); applyLive(); });
+  newSub.addEventListener('input', () => { updateCounter(newSub, subCounter, subMax); applyLive(); });
 
   document.getElementById('textEditOverlay').classList.add('open');
+  requestAnimationFrame(() => positionTextEditModal(anchorEl));
   newMain.focus();
 }
 
-function closeTextEditModal(event) {
-  // overlay 클릭 시만 닫기 (이벤트 버블링으로 들어옴) — 모달 내부 클릭은 stopPropagation
-  if (event && event.target.id !== 'textEditOverlay' && event.currentTarget.id !== 'textEditOverlay') {
-    document.getElementById('textEditOverlay').classList.remove('open');
-    _textEditCtx = null;
-    return;
+// 닫기 + 백업 복원 (X/취소/ESC) — 실시간 변경 폐기
+function closeTextEditModal() {
+  if (_textEditCtx) {
+    const { presetId, preset, displayScale, canvasHolder, backup } = _textEditCtx;
+    if (backup) state.perBannerOverrides.text[presetId] = backup;
+    else delete state.perBannerOverrides.text[presetId];
+    if (canvasHolder) redrawSingleCanvas(presetId, preset, displayScale, canvasHolder);
   }
   document.getElementById('textEditOverlay').classList.remove('open');
   _textEditCtx = null;
-}
-
-function saveTextEdit() {
-  if (!_textEditCtx) return;
-  const { presetId } = _textEditCtx;
-  const main = document.getElementById('textEditMain').value;
-  const sub = document.getElementById('textEditSub').value;
-  // 둘 다 비어있으면 override 제거 (전역 디폴트로 복귀)
-  if (!main && !sub) {
-    delete state.perBannerOverrides.text[presetId];
-  } else {
-    state.perBannerOverrides.text[presetId] = { main, sub };
-  }
-  closeTextEditModal();
   updatePreview();
 }
 
+// 저장 — 실시간 적용된 입력값 그대로 유지
+function saveTextEdit() {
+  if (!_textEditCtx) return;
+  document.getElementById('textEditOverlay').classList.remove('open');
+  _textEditCtx = null;
+  updatePreview();
+}
+
+// 기본값 사용 — override 제거
 function resetTextEdit() {
   if (!_textEditCtx) return;
   const { presetId } = _textEditCtx;
   delete state.perBannerOverrides.text[presetId];
-  closeTextEditModal();
+  document.getElementById('textEditOverlay').classList.remove('open');
+  _textEditCtx = null;
   updatePreview();
 }
 
@@ -3488,7 +3528,18 @@ function downloadBanner(sizeId) {
 }
 
 init();
-window.addEventListener("resize", () => updatePreview());
+window.addEventListener("resize", () => {
+  updatePreview();
+  // 텍스트 편집 팝오버 열려 있으면 위치 재계산
+  if (_textEditCtx?.anchorEl) positionTextEditModal(_textEditCtx.anchorEl);
+});
+
+// ESC 키 — 텍스트 편집 팝오버 열린 상태에서 닫기 (취소 동작 = 백업 복원)
+window.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && document.getElementById('textEditOverlay')?.classList.contains('open')) {
+    closeTextEditModal();
+  }
+});
 </script>
 
 </body>
