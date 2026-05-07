@@ -11,17 +11,19 @@
   "text_ratio": 0.55,
   "img_ratio": 0.45,
   "margins": {
-    "left": 0,
-    "right": 0,
-    "top": 0,
+    "left": 20,
+    "right": 20,
+    "top": 24,
     "bottom": 0
   },
   "fonts": {
     "main": {
       "family": "Paperlogy",
       "weight": "7Bold",
-      "size_px": 0,
-      "letter_spacing": "-2%"
+      "size_px": 24,
+      "letter_spacing": "-2%",
+      "line_height": 1.2,
+      "box_h_px": 29
     },
     "sub": {
       "family": "Paperlogy",
@@ -33,8 +35,8 @@
   "min_font": 12,
   "font_size_strict": true,
   "copy": {
-    "structure": "서브 1줄 + 메인 1줄",
     "sub_supported": false,
+    "main_max_chars_kr": 18,
     "main_line_break_allowed": true,
     "main_auto_wrap": true
   },

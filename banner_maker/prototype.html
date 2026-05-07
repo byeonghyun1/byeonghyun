@@ -2686,7 +2686,9 @@ function getCompositionDecision(presetId, mainText, subText) {
   }
 
   // ③ 일반화: JSON copy.structure가 "서브 1줄 + 메인 1줄"이면 세로 2단 구성
-  if (preset.composition === '서브 1줄 + 메인 1줄') {
+  //          또는 copy.sub_supported === false면 (메인만 표시 배너) 자동으로 single_main
+  //          → 이벤트 리스트 등 서브 미지원 배너에 structure 명시 불필요
+  if (preset.composition === '서브 1줄 + 메인 1줄' || preset.copyConstraints?.sub_supported === false) {
     const mainSize = preset.fonts.main.size;
     const subSize = preset.fonts.sub.size;
     if (!subText) return { type: 'single_main', mainSize, subSize: 0 };
