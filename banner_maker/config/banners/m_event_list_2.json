@@ -51,7 +51,7 @@
     "h_padding": 0,
     "fit": "contain_focal",
     "crop_clip_in_auto": false,
-    "scale_min": 0.6
+    "scale_min": 0.4
   },
   "builder_io": {
     "cta": {
