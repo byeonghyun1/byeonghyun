@@ -161,5 +161,24 @@
     "offset_y_delta": -1.86,
     "offset_x_delta": 2.07,
     "sample_count": 14
+  },
+  "samples_contain": [
+    {
+      "date": "2026-05-07",
+      "fit_mode": "contain",
+      "auto_scale": 0.37784668989547043,
+      "final_scale": 0.919,
+      "auto_offset_y": 0,
+      "final_offset_y": -36,
+      "scale_delta": -0.081,
+      "offset_y_delta": -36,
+      "offset_x_delta": 8
+    }
+  ],
+  "average_contain": {
+    "scale_delta": -0.081,
+    "offset_y_delta": -36.0,
+    "offset_x_delta": 8.0,
+    "sample_count": 1
   }
 }

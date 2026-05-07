@@ -1695,7 +1695,7 @@ function drawAnchorImage(ctx, img, box, preset, presetId) {
   const ox = t.mode === 'manual' ? t.offset.x : 0;
   const oy = t.mode === 'manual' ? t.offset.y : 0;
 
-  // ── below_text anchor: 텍스트 영역 끝 + text_gap_px 아래 영역에 contain + 콘텐츠 visual center 정렬 ──
+  // ── below_text anchor: 텍스트 영역 끝 + text_gap_px 아래 영역에 contain/crop + 콘텐츠 visual center 정렬 ──
   if (box.anchor === 'below_text') {
     const textBottom = getTextBlockBottomY(preset);
     if (textBottom == null) return; // top_center 아닌 배너에서 잘못 사용된 경우 안전 종료
@@ -1718,9 +1718,19 @@ function drawAnchorImage(ctx, img, box, preset, presetId) {
     if (!state.contentBoundsCache) state.contentBoundsCache = getContentBounds(img);
     const bounds = state.contentBoundsCache;
 
-    // contain: 콘텐츠 bounds가 영역 안에 들어가도록 비율 유지 축소
-    const baseScale = Math.min(zoneW / bounds.contentW, zoneH / bounds.contentH);
-    const finalScale = baseScale * userScale;
+    // fitMode 분리 (contain/crop) + calibration 학습값 적용 (모드별 분리 캐시)
+    const fm = getEffectiveFitMode(presetId);
+    const cal = state.calibrationCache[presetId + '_' + fm] || state.calibrationCache[presetId] || {};
+    const scaleDelta = cal.scale_delta || 0;
+    const offsetXDelta = cal.offset_x_delta || 0;
+    const offsetYDelta = cal.offset_y_delta || 0;
+
+    // contain: 콘텐츠가 영역 안에 들어가도록 (Math.min) — 빈 공간 생김
+    // crop:    콘텐츠가 영역을 가득 채우도록 (Math.max) — 영역 밖은 잘림
+    const baseScale = (fm === 'crop')
+      ? Math.max(zoneW / bounds.contentW, zoneH / bounds.contentH)
+      : Math.min(zoneW / bounds.contentW, zoneH / bounds.contentH);
+    const finalScale = baseScale * userScale * (1 + scaleDelta);
     const drawnW = img.width * finalScale;
     const drawnH = img.height * finalScale;
     state.cropAutoValues[presetId] = { autoScale: finalScale, autoOffsetY: 0 };
@@ -1731,10 +1741,20 @@ function drawAnchorImage(ctx, img, box, preset, presetId) {
     const contentCenterY = (bounds.top + bounds.bottom) / 2;
     const zoneCenterX = (zoneLeft + zoneRight) / 2;
     const zoneCenterY = (zoneTop + zoneBottom) / 2;
-    const drawX = zoneCenterX - contentCenterX * finalScale + ox;
-    const drawY = zoneCenterY - contentCenterY * finalScale + oy;
+    const drawX = zoneCenterX - contentCenterX * finalScale + ox + offsetXDelta;
+    const drawY = zoneCenterY - contentCenterY * finalScale + oy + offsetYDelta;
 
-    ctx.drawImage(img, drawX, drawY, drawnW, drawnH);
+    if (fm === 'crop') {
+      // crop: 영역 밖으로 나가는 픽셀 잘라내기
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(zoneLeft, zoneTop, zoneW, zoneH);
+      ctx.clip();
+      ctx.drawImage(img, drawX, drawY, drawnW, drawnH);
+      ctx.restore();
+    } else {
+      ctx.drawImage(img, drawX, drawY, drawnW, drawnH);
+    }
     return;
   }
 

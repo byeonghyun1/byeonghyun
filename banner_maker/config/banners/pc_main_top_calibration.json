@@ -271,5 +271,24 @@
     "offset_y_delta": 6.46,
     "offset_x_delta": -31.21,
     "sample_count": 24
+  },
+  "samples_contain": [
+    {
+      "date": "2026-05-07",
+      "fit_mode": "contain",
+      "auto_scale": 1,
+      "final_scale": 1,
+      "auto_offset_y": 0,
+      "final_offset_y": -2,
+      "scale_delta": 0,
+      "offset_y_delta": -2,
+      "offset_x_delta": -142
+    }
+  ],
+  "average_contain": {
+    "scale_delta": 0.0,
+    "offset_y_delta": -2.0,
+    "offset_x_delta": -142.0,
+    "sample_count": 1
   }
 }
