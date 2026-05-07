@@ -2082,7 +2082,9 @@ function drawText(ctx, preset, presetId, textColor, textX, textAlign, maxTextW, 
             baselineY = topMargin + logoOffsetForText + (mainBoxH + fittedMain * 0.7) / 2;
           }
         } else {
-          baselineY = cy + fittedMain * 0.38;
+          // left_align/center: 멀티라인 시 블록 전체가 cy 기준 가운데 정렬되도록
+          const blockH = isMultiLine ? mainLineHeight * mainLines.length : fittedMain;
+          baselineY = cy - blockH / 2 + fittedMain * 0.8;
         }
 
         if (giL || giR) {
@@ -2550,8 +2552,10 @@ function renderToCanvas(presetId, preset, callback, opts = {}) {
 
       } else if (mainImgCount >= 1 && images[0]) {
         const img = images[0];
-        if (state.imageIsTransparent) {
-          const box = preset.imageBox || { width_ratio: preset.imgRatio, height_ratio: 0.85, anchor: "right_center", v_padding: 8 };
+        const box = preset.imageBox || { width_ratio: preset.imgRatio, height_ratio: 0.85, anchor: "right_center", v_padding: 8 };
+        // right_zone_center anchor는 비투명 이미지여도 drawAnchorImage로 처리 (영역 안 가운데 배치)
+        const useAnchorFlow = state.imageIsTransparent || box.anchor === 'right_zone_center';
+        if (useAnchorFlow) {
           if (box.anchor === 'center_grouped') {
             // center_grouped -> drawText에서 텍스트와 함께 배치 (grouped)
             gi.single = computeGroupedImgData(img, false);
