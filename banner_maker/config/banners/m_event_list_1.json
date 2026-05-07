@@ -11,17 +11,19 @@
   "text_ratio": 0.55,
   "img_ratio": 0.45,
   "margins": {
-    "left": 0,
-    "right": 0,
-    "top": 0,
+    "left": 32,
+    "right": 32,
+    "top": 28,
     "bottom": 0
   },
   "fonts": {
     "main": {
       "family": "Paperlogy",
       "weight": "7Bold",
-      "size_px": 0,
-      "letter_spacing": "-2%"
+      "size_px": 32,
+      "letter_spacing": "-2%",
+      "line_height": 1.2,
+      "box_h_px": 38
     },
     "sub": {
       "family": "Paperlogy",
@@ -31,12 +33,28 @@
     }
   },
   "min_font": 12,
+  "font_size_strict": true,
+  "copy": {
+    "structure": "서브 1줄 + 메인 1줄"
+  },
+  "layout_pattern": {
+    "default_template": "top_center",
+    "text_area": "상단 중앙 고정",
+    "visual_area": "텍스트 아래"
+  },
+  "image_box": {
+    "anchor": "below_text",
+    "text_gap_px": 20,
+    "h_padding": 0,
+    "fit": "contain_focal"
+  },
   "color_rules": {
     "page_bg": "#FFFFFF",
     "required": "주변 배경과 구분되는 BG Color 사용"
   },
   "rules": [],
   "tbd": [
-    "마진·폰트 사이즈·layout_pattern·image_box·copy 등 가이드 수치 보강 필요"
+    "서브 카피 미지원 — fonts.sub은 placeholder. 빌더 UI에서 서브 입력 무시 처리 필요",
+    "main_max_chars_kr 등 카피 글자수 제한 가이드"
   ]
 }
