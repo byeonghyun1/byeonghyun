@@ -392,11 +392,7 @@ body { font-family: 'Pretendard', -apple-system, sans-serif; background: #F5F5F7
         <div class="char-count"><span id="subCount">0</span></div>
       </div>
       <div id="totalCharCount" style="display:none;font-size:12px;color:#888;text-align:right;margin-top:-4px;">합계 <span id="totalCount">0</span>/<span id="totalMax">35</span></div>
-      <!-- 카피 배치 (structure_variants가 2개 이상인 배너에서만 노출) -->
-      <div id="structureSelector" style="display:none;margin-top:12px;">
-        <label style="font-size:13px;font-weight:500;color:#555;display:block;margin-bottom:6px;">카피 배치</label>
-        <div id="structureOptions" style="display:flex;gap:8px;"></div>
-      </div>
+      <!-- 카피 배치 토글은 미리보기 카드 컨트롤 행으로 이동 (배너별 독립 설정) -->
     </div>
 
     <!-- 3. 폰트 선택 -->
@@ -810,14 +806,15 @@ let state = {
   // 배너별 override 통합 — 현재 세션 동안 유지 (새로고침 시 초기화)
   // ctaDisabled / logoDisabled: 미리보기 카드 체크박스로 해제된 배너 ID Set
   // fitMode: 카드별 contain/crop override 객체 ({ presetId: 'crop' } 등)
+  // structure: 카드별 카피 배치 variant id 객체 ({ presetId: 'main_top_sub_bottom' } 등)
   // 새 "배너별 설정"이 생기면 여기에 추가만 하면 됨 (확장성)
   perBannerOverrides: {
     ctaDisabled: new Set(),
     logoDisabled: new Set(),
-    fitMode: {}
+    fitMode: {},
+    structure: {}
   },
-  // 카피 배치 변형 (배너의 structure_variants 중 사용자가 선택한 id). null이면 첫 번째 사용.
-  structureChoice: null,
+  // 카피 배치는 perBannerOverrides.structure에 배너별로 저장 (전역 단일 값 폐기)
   // 이미지 맞춤 모드: 'contain' (전체 표시) / 'crop' (콘텐츠 바운딩 박스 기준 크롭)
   // 좌측 패널에서 일괄 설정 (기본값). 카드별 override는 perBannerOverrides.fitMode에 기록
   imageFitMode: 'contain',
@@ -1269,6 +1266,15 @@ function getEffectiveFitMode(presetId) {
   return state.perBannerOverrides.fitMode[presetId] || state.imageFitMode;
 }
 
+// 특정 배너의 effective 카피 배치 variant id — 카드별 override 우선, 없으면 첫 번째 variant
+function getEffectiveStructure(preset) {
+  if (!preset) return null;
+  const override = state.perBannerOverrides.structure[preset.id];
+  const variants = preset.structureVariants || [];
+  if (override && variants.find(v => v.id === override)) return override;
+  return variants[0]?.id || null;
+}
+
 // 특정 배너에서 CTA가 활성 상태인지 (지원 + 토글 ON + 체크박스 해제 안 됨)
 function isCtaActiveForBanner(preset) {
   return state.ctaEnabled
@@ -1297,48 +1303,10 @@ function toggleCta() {
   updatePreview();
 }
 
-// 선택된 배너에 structure_variants가 2개 이상이면 카피 배치 토글 노출
-function updateStructureSelector() {
-  const selector = document.getElementById("structureSelector");
-  const options = document.getElementById("structureOptions");
-  // 단일 배너 선택 시에만 노출 (복수 선택은 처리 복잡)
-  if (state.selectedSizes.length !== 1) {
-    selector.style.display = "none";
-    return;
-  }
-  const preset = PRESETS[state.selectedSizes[0]];
-  const variants = preset?.structureVariants;
-  if (!variants || variants.length < 2) {
-    selector.style.display = "none";
-    return;
-  }
-  // 현재 선택값이 이 배너 variants에 없으면 첫 번째로 보정
-  if (!variants.find(v => v.id === state.structureChoice)) {
-    state.structureChoice = variants[0].id;
-  }
-  options.innerHTML = "";
-  variants.forEach(v => {
-    const card = document.createElement("div");
-    const selected = v.id === state.structureChoice;
-    card.style.cssText = "flex:1;padding:10px 12px;border:1px solid " + (selected ? "#2563EB" : "#E5E7EB") +
-                        ";border-radius:8px;cursor:pointer;background:" + (selected ? "#EFF6FF" : "#FFF") +
-                        ";font-size:12px;line-height:1.4;color:#333;";
-    const label = v.id === "main_top_sub_bottom" ? "메인 위 / 서브 아래" :
-                  v.id === "sub_top_main_bottom" ? "서브 위 / 메인 아래" :
-                  v.id === "sub_left_main_right" ? "서브(좌) → 메인(우)" :
-                  v.id === "main_left_sub_right" ? "메인(좌) → 서브(우)" : v.id;
-    card.innerHTML = '<div style="font-weight:600;margin-bottom:2px;">' + label + '</div><div style="color:#888;font-size:11px;">' + (v.description || '') + '</div>';
-    card.onclick = function() { selectStructure(v.id); };
-    options.appendChild(card);
-  });
-  selector.style.display = "block";
-}
-
-function selectStructure(id) {
-  state.structureChoice = id;
-  updateStructureSelector();
-  updatePreview();
-}
+// 카피 배치 — 사이드바 UI 제거됨. 미리보기 카드별 토글로 대체.
+// updateStructureSelector / selectStructure는 호출처 호환을 위해 빈 함수로 유지 (안전망)
+function updateStructureSelector() { /* deprecated — 카드 토글로 이전 */ }
+function selectStructure() { /* deprecated */ }
 
 // ===== 이미지 맞춤 모드 (contain / crop) =====
 function setImageFitMode(mode) {
@@ -1930,7 +1898,7 @@ function drawText(ctx, preset, presetId, textColor, textX, textAlign, maxTextW, 
       const startY = isTopLayout ? (topMargin + logoOffsetForText) : cy - blockH / 2;
 
       const baselineInBox = (boxH, fontSize) => (boxH + fontSize * 0.7) / 2;
-      const mainTop = state.structureChoice === 'main_top_sub_bottom';
+      const mainTop = getEffectiveStructure(preset) === 'main_top_sub_bottom';
 
       const drawSubLine = (y) => {
         if (!effectiveSubText) return;
@@ -1959,32 +1927,44 @@ function drawText(ctx, preset, presetId, textColor, textX, textAlign, maxTextW, 
         ctx.restore();
       };
 
-      // 카피 배치 — 두 케이스 모두 visual gap = lineGap (글자 시각 끝 기준)
-      // 박스 위/아래 여백이 비대칭이라 박스 단위 거리는 카피 배치별로 어긋남 → 시각 단위로 통일
+      // 카피 배치 — 두 케이스 모두 visual gap = lineGap (글자 실제 메트릭 기반 정확 계산)
+      // ctx.measureText로 actualBoundingBoxAscent/Descent 측정 → 폰트별 메트릭 차이 흡수
+      ctx.save();
+      ctx.font = state.mainFont.weight + " " + fittedMain + "px " + state.mainFont.css;
+      const mainMet = ctx.measureText("가");
+      const mainAscentAct  = mainMet.actualBoundingBoxAscent;
+      const mainDescentAct = mainMet.actualBoundingBoxDescent;
+      ctx.font = state.subFont.weight + " " + fittedSub + "px " + state.subFont.css;
+      const subMet = ctx.measureText("가");
+      const subAscentAct  = subMet.actualBoundingBoxAscent;
+      const subDescentAct = subMet.actualBoundingBoxDescent;
+      ctx.restore();
+
       if (mainTop) {
         // 메인 위 / 서브 아래
         drawMainBlock(startY);
-        // 메인 마지막 줄 baseline → visual bottom (baseline + descent ≈ fittedMain*0.15)
         const mainLastBase = isMultiLine
           ? startY + baselineInBox(fittedMain, fittedMain) + (mainLines.length - 1) * mainLineHeight
           : startY + baselineInBox(mainBoxH, fittedMain);
-        const mainVB = mainLastBase + fittedMain * 0.15;
-        // 서브 baseline = mainVB + lineGap + 서브 ascent (baseline 위로 글자 높이)
-        drawSubLine(mainVB + lineGap + fittedSub * 0.7);
+        const mainVB = mainLastBase + mainDescentAct;
+        // 서브 baseline = mainVB + lineGap + 서브 actualAscent
+        drawSubLine(mainVB + lineGap + subAscentAct);
       } else {
         // 서브 위 / 메인 아래
         const subBase = startY + baselineInBox(subBoxH, fittedSub);
         drawSubLine(subBase);
-        const subVB = subBase + fittedSub * 0.15;
-        // 메인 박스 시작 = subVB + lineGap - 메인 박스 위 여백 (글자 visual top이 subVB+lineGap에 오도록)
-        const mainTopPad = isMultiLine
-          ? fittedMain * 0.15  // 2줄: baselineInBox(fittedMain, fittedMain) 사용 시 위 여백
-          : (mainBoxH - fittedMain * 0.7) / 2;  // 1줄
-        drawMainBlock(subVB + lineGap - mainTopPad);
+        const subVB = subBase + subDescentAct;
+        // 메인 박스 시작 = subVB + lineGap - 메인 박스 위 visual padding
+        // 메인 visual top = baseline - mainAscentAct, baseline = baselineInBox 기준
+        const mainBaselineInBox = isMultiLine
+          ? baselineInBox(fittedMain, fittedMain)
+          : baselineInBox(mainBoxH, fittedMain);
+        const mainTopPadVisual = mainBaselineInBox - mainAscentAct;
+        drawMainBlock(subVB + lineGap - mainTopPadVisual);
       }
 
     } else if (decision.type === 'horizontal_sub_main') {
-      const swapped = state.structureChoice === 'main_left_sub_right';
+      const swapped = getEffectiveStructure(preset) === 'main_left_sub_right';
       const leftText  = swapped ? state.mainText : effectiveSubText;
       const rightText = swapped ? effectiveSubText  : state.mainText;
       const leftSize  = swapped ? decision.mainSize : decision.subSize;
@@ -2808,6 +2788,72 @@ function createLogoCheckbox(presetId, preset, displayScale, canvasHolder) {
   return createPreviewCheckbox(presetId, preset, displayScale, canvasHolder, '로고 적용', state.perBannerOverrides.logoDisabled);
 }
 
+// 카피 배치 SVG 아이콘 생성 — variant id에 따라 메인/서브 박스 위치 시각화
+// vertical 레이아웃: 위/아래로 배치, horizontal: 좌/우로 배치
+function makeStructureIconSvg(variantId, isVertical) {
+  // 박스 사이즈: 메인은 큰 박스, 서브는 작은 박스
+  const w = 28, h = 18; // 아이콘 영역
+  const big = isVertical ? { w: 18, h: 5 } : { w: 8, h: 10 };
+  const small = isVertical ? { w: 12, h: 4 } : { w: 5, h: 10 };
+  const cx = w / 2, cy = h / 2;
+  let mainPos, subPos;
+  if (isVertical) {
+    if (variantId === 'main_top_sub_bottom') {
+      mainPos = { x: cx - big.w/2, y: 3 };
+      subPos = { x: cx - small.w/2, y: h - small.h - 3 };
+    } else { // sub_top_main_bottom
+      subPos = { x: cx - small.w/2, y: 3 };
+      mainPos = { x: cx - big.w/2, y: h - big.h - 3 };
+    }
+  } else {
+    if (variantId === 'main_left_sub_right') {
+      mainPos = { x: 4, y: cy - big.h/2 };
+      subPos = { x: w - small.w - 4, y: cy - small.h/2 };
+    } else { // sub_left_main_right
+      subPos = { x: 4, y: cy - small.h/2 };
+      mainPos = { x: w - big.w - 4, y: cy - big.h/2 };
+    }
+  }
+  return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" fill="none">
+    <rect x="${mainPos.x}" y="${mainPos.y}" width="${big.w}" height="${big.h}" rx="2" fill="currentColor"/>
+    <rect x="${subPos.x}" y="${subPos.y}" width="${small.w}" height="${small.h}" rx="2" fill="currentColor" opacity="0.5"/>
+  </svg>`;
+}
+
+// 카드별 카피 배치 토글 (structure_variants 2개 이상인 배너에서만 노출)
+function createStructureToggle(presetId, preset, displayScale, canvasHolder) {
+  const variants = preset.structureVariants || [];
+  if (variants.length < 2) return null;
+  const isVertical = preset.layout === 'vertical' || (variants[0].id || '').includes('_top_') || (variants[0].id || '').includes('_bottom');
+  const wrap = document.createElement("div");
+  wrap.style.cssText = "display:flex;gap:4px;align-items:center;";
+  const baseBtn = "padding:3px 6px;border:1px solid #E5E7EB;background:#FFF;color:#999;border-radius:4px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:0;";
+  const activeBtn = "padding:3px 6px;border:1px solid #2563EB;background:#EFF6FF;color:#2563EB;border-radius:4px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:0;";
+  const buttons = variants.map(v => {
+    const btn = document.createElement("button");
+    btn.title = v.description || v.id;
+    btn.innerHTML = makeStructureIconSvg(v.id, isVertical);
+    btn.dataset.variantId = v.id;
+    return btn;
+  });
+  const updateActive = () => {
+    const cur = getEffectiveStructure(preset);
+    buttons.forEach(b => {
+      b.style.cssText = (b.dataset.variantId === cur) ? activeBtn : baseBtn;
+    });
+  };
+  updateActive();
+  buttons.forEach(b => {
+    b.addEventListener('click', () => {
+      state.perBannerOverrides.structure[presetId] = b.dataset.variantId;
+      updateActive();
+      redrawSingleCanvas(presetId, preset, displayScale, canvasHolder);
+    });
+    wrap.appendChild(b);
+  });
+  return wrap;
+}
+
 // 카드별 이미지 맞춤 모드 토글 (contain / crop) — 이미지 업로드 시 노출
 function createFitModeToggle(presetId, preset, displayScale, canvasHolder) {
   const wrap = document.createElement("div");
@@ -2879,12 +2925,17 @@ function renderPreviewItem(container, presetId, preset, scale) {
       const showLogo = canDrawLogoForBanner(preset);
       const showCta = !!(state.ctaEnabled && preset.ctaSupported !== false);
       const showFit = !!state.imageUrl;
-      if (showLogo || showCta || showFit) {
+      const showStructure = (preset.structureVariants || []).length >= 2;
+      if (showLogo || showCta || showFit || showStructure) {
         const ctrlRow = document.createElement("div");
-        ctrlRow.style.cssText = "margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:16px;font-size:12px;color:#555;";
+        ctrlRow.style.cssText = "margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:16px;font-size:12px;color:#555;flex-wrap:wrap;";
         if (showLogo) ctrlRow.appendChild(createLogoCheckbox(presetId, preset, scale, canvasHolder));
         if (showCta)  ctrlRow.appendChild(createCtaCheckbox(presetId, preset, scale, canvasHolder));
         if (showFit)  ctrlRow.appendChild(createFitModeToggle(presetId, preset, scale, canvasHolder));
+        if (showStructure) {
+          const structToggle = createStructureToggle(presetId, preset, scale, canvasHolder);
+          if (structToggle) ctrlRow.appendChild(structToggle);
+        }
         previewItem.insertBefore(ctrlRow, container);
       }
     }

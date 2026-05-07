@@ -68,7 +68,7 @@
   "font_size_strict": true,
   "copy": {
     "structure": "서브 1줄 + 메인 최대 2줄",
-    "line_gap_px": 14,
+    "line_gap_px": 20,
     "main_max_chars_kr": 20,
     "sub_max_chars_kr": 28,
     "main_line_break_allowed": true,
