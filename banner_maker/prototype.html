@@ -2082,12 +2082,14 @@ function drawText(ctx, preset, presetId, textColor, textX, textAlign, maxTextW, 
             baselineY = topMargin + logoOffsetForText + (mainBoxH + fittedMain * 0.7) / 2;
           }
         } else {
-          // left_align/center: 멀티라인 시 블록 시각 높이 = lineHeight × (n-1) + fontSize
-          // (마지막 줄 아래 lineHeight 여백 제외 — 정확한 시각 가운데 정렬)
-          const blockH = isMultiLine
-            ? mainLineHeight * (mainLines.length - 1) + fittedMain
-            : fittedMain;
-          baselineY = cy - blockH / 2 + fittedMain * 0.8;
+          if (isMultiLine) {
+            // 멀티라인: 블록 시각 높이 = lineHeight × (n-1) + fontSize, 시각 중심 = cy
+            const blockH = mainLineHeight * (mainLines.length - 1) + fittedMain;
+            baselineY = cy - blockH / 2 + fittedMain * 0.8;
+          } else {
+            // 단일라인: 이전 동작 유지 (메인 커튼·메인 탑 등 회귀 방지)
+            baselineY = cy + fittedMain * 0.38;
+          }
         }
 
         if (giL || giR) {
