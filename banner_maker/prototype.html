@@ -2082,8 +2082,11 @@ function drawText(ctx, preset, presetId, textColor, textX, textAlign, maxTextW, 
             baselineY = topMargin + logoOffsetForText + (mainBoxH + fittedMain * 0.7) / 2;
           }
         } else {
-          // left_align/center: 멀티라인 시 블록 전체가 cy 기준 가운데 정렬되도록
-          const blockH = isMultiLine ? mainLineHeight * mainLines.length : fittedMain;
+          // left_align/center: 멀티라인 시 블록 시각 높이 = lineHeight × (n-1) + fontSize
+          // (마지막 줄 아래 lineHeight 여백 제외 — 정확한 시각 가운데 정렬)
+          const blockH = isMultiLine
+            ? mainLineHeight * (mainLines.length - 1) + fittedMain
+            : fittedMain;
           baselineY = cy - blockH / 2 + fittedMain * 0.8;
         }
 
