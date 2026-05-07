@@ -1887,6 +1887,31 @@ function drawAnchorImage(ctx, img, box, preset, presetId) {
   const { userScale, ox, oy } = getEffectiveTransform(t);
   const vPad = box.v_padding || 0;
 
+  // ── right_zone_center anchor: 캔버스 우측 끝부터 width_ratio 폭의 영역 안에 가운데 배치 ──
+  // (m_event_list_5 등 좌측 텍스트 + 우측 고정폭 이미지 영역 배너)
+  // 학습값(scaleDelta·offsetXDelta·offsetYDelta) 자동 적용
+  if (box.anchor === 'right_zone_center') {
+    const zoneW = preset.w * (box.width_ratio ?? 0.3);
+    const zoneH = preset.h * (box.height_ratio ?? 1);
+    const zoneRight = preset.w;
+    const zoneLeft = zoneRight - zoneW;
+    const zoneTop = (preset.h - zoneH) / 2;
+    const { fm, scaleDelta, offsetXDelta, offsetYDelta } = getCalibrationBoost(presetId);
+    // contain: Math.min — 영역 안에 들어감, crop: Math.max — 영역 가득 채움
+    const baseScale = (fm === 'crop')
+      ? Math.max(zoneW / img.width, zoneH / img.height)
+      : Math.min(zoneW / img.width, zoneH / img.height);
+    const finalScale = baseScale * userScale * (1 + scaleDelta);
+    const dw = img.width * finalScale;
+    const dh = img.height * finalScale;
+    state.imageAutoValues[presetId] = { autoScale: finalScale, autoOffsetY: 0 };
+    // 영역 안 가운데 정렬 + 학습 offset 적용
+    const drawX = zoneLeft + (zoneW - dw) / 2 + ox + offsetXDelta;
+    const drawY = zoneTop + (zoneH - dh) / 2 + oy + offsetYDelta;
+    ctx.drawImage(img, drawX, drawY, dw, dh);
+    return;
+  }
+
   // ── below_text anchor: 텍스트 영역 끝 + text_gap_px 아래 영역에 contain/crop + 콘텐츠 visual center 정렬 ──
   if (box.anchor === 'below_text') {
     const textBottom = getTextBlockBottomY(preset);
