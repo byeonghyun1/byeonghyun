@@ -52,6 +52,12 @@
     "h_padding": 0,
     "fit": "contain_focal"
   },
+  "builder_io": {
+    "cta": {
+      "supported": false,
+      "reason": "이벤트 리스트 배너는 짧은 카피 노출 영역으로 별도 CTA 버튼 비권장"
+    }
+  },
   "color_rules": {
     "page_bg": "#FFFFFF",
     "required": "주변 배경과 구분되는 BG Color 사용"

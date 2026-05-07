@@ -1,0 +1,43 @@
+{
+  "banner_id": "m_event_list_1",
+  "samples": [],
+  "average": {},
+  "samples_crop": [
+    {
+      "date": "2026-05-07",
+      "fit_mode": "crop",
+      "auto_scale": 0.20069686411149826,
+      "final_scale": 0.8,
+      "auto_offset_y": 0,
+      "final_offset_y": 10,
+      "scale_delta": -0.2,
+      "offset_y_delta": 10,
+      "offset_x_delta": 8
+    }
+  ],
+  "average_crop": {
+    "scale_delta": -0.2,
+    "offset_y_delta": 10.0,
+    "offset_x_delta": 8.0,
+    "sample_count": 1
+  },
+  "samples_contain": [
+    {
+      "date": "2026-05-07",
+      "fit_mode": "contain",
+      "auto_scale": 0.1234272997032641,
+      "final_scale": 0.885,
+      "auto_offset_y": 0,
+      "final_offset_y": -8,
+      "scale_delta": -0.115,
+      "offset_y_delta": -8,
+      "offset_x_delta": 6
+    }
+  ],
+  "average_contain": {
+    "scale_delta": -0.115,
+    "offset_y_delta": -8.0,
+    "offset_x_delta": 6.0,
+    "sample_count": 1
+  }
+}
