@@ -2196,11 +2196,12 @@ function drawText(ctx, preset, presetId, textColor, textX, textAlign, maxTextW, 
 // ===== CTA 렌더링 (renderToCanvas에서 분리) =====
 function drawCTA(ctx, preset) {
   if (isCtaActiveForBanner(preset)) {
-    // 배너 JSON의 builder_io.cta 설정 우선, 없으면 폴백(기본 17% / sub*0.7)
+    // 배너 JSON의 builder_io.cta 설정 우선, 없으면 폴백(JAMS 표준 9%)
+    // 예외 배너는 JSON의 builder_io.cta.height_ratio에 명시 (예: 0.10)
     const cfg = preset.ctaConfig || {};
     const ctaBarH = cfg.heightRatio
       ? preset.h * cfg.heightRatio
-      : Math.max(preset.h * 0.17, 30);
+      : preset.h * 0.09;
     const ctaFS = cfg.textHeightRatio
       ? ctaBarH * cfg.textHeightRatio
       : Math.min(preset.fonts.sub.size * 0.7, 24);
