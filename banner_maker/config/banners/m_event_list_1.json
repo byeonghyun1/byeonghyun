@@ -1,8 +1,10 @@
 {
   "id": "m_event_list_1",
   "name": "이벤트 리스트 1 배너",
-  "last_updated": "2026-05-07",
+  "last_updated": "2026-05-08",
   "location": "모바일 > 이벤트 리스트 1번",
+  "_extends": "event_list",
+
   "dimensions": {
     "width": 288,
     "height": 206
@@ -32,13 +34,8 @@
       "letter_spacing": "-2%"
     }
   },
-  "min_font": 12,
-  "font_size_strict": true,
   "copy": {
-    "sub_supported": false,
-    "main_max_chars_kr": 16,
-    "main_line_break_allowed": true,
-    "main_auto_wrap": true
+    "main_max_chars_kr": 16
   },
   "layout_pattern": {
     "default_template": "top_center",
@@ -50,22 +47,6 @@
     "text_gap_px": 20,
     "h_padding": 0,
     "fit": "contain_focal",
-    "crop_clip_in_auto": false,
     "scale_min": 0.64
-  },
-  "builder_io": {
-    "cta": {
-      "supported": false,
-      "reason": "이벤트 리스트 배너는 짧은 카피 노출 영역으로 별도 CTA 버튼 비권장"
-    }
-  },
-  "color_rules": {
-    "page_bg": "#FFFFFF",
-    "required": "주변 배경과 구분되는 BG Color 사용"
-  },
-  "rules": [],
-  "tbd": [
-    "서브 카피 미지원 — fonts.sub은 placeholder. 빌더 UI에서 서브 입력 무시 처리 필요",
-    "main_max_chars_kr 등 카피 글자수 제한 가이드"
-  ]
+  }
 }

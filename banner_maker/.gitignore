@@ -1,0 +1,21 @@
+# 학습 데이터 (사용자별 누적 데이터, 버전 관리에서 제외)
+config/banners/*_calibration.json
+
+# 옛 백업 파일
+*.bak
+
+# Mac 시스템 파일
+.DS_Store
+
+# 에디터 임시 파일
+*~
+*.swp
+*.swo
+
+# Python 캐시
+__pycache__/
+*.pyc
+
+# 출력 폴더 (생성된 파일들)
+output/
+logs/

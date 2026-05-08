@@ -13,12 +13,53 @@
       "scale_delta": -0.222,
       "offset_y_delta": 20,
       "offset_x_delta": 9
+    },
+    {
+      "date": "2026-05-07",
+      "fit_mode": "crop",
+      "auto_scale": 0.3144529616724739,
+      "final_scale": 1,
+      "auto_offset_y": 0,
+      "final_offset_y": 0,
+      "scale_delta": -0.222,
+      "offset_y_delta": 20,
+      "offset_x_delta": 9
+    },
+    {
+      "date": "2026-05-08",
+      "fit_mode": "crop",
+      "auto_scale": 1.3711628907563025,
+      "final_scale": 0.904,
+      "auto_offset_y": 0,
+      "final_offset_y": 1,
+      "scale_delta": -0.2967,
+      "offset_y_delta": 21,
+      "offset_x_delta": 9
     }
   ],
   "average_crop": {
-    "scale_delta": -0.222,
-    "offset_y_delta": 20.0,
+    "scale_delta": -0.2469,
+    "offset_y_delta": 20.33,
     "offset_x_delta": 9.0,
+    "sample_count": 3
+  },
+  "samples_contain": [
+    {
+      "date": "2026-05-08",
+      "fit_mode": "contain",
+      "auto_scale": 0.21629937629937634,
+      "final_scale": 1.1560000000000001,
+      "auto_offset_y": 0,
+      "final_offset_y": 19,
+      "scale_delta": 0.156,
+      "offset_y_delta": 19,
+      "offset_x_delta": 2
+    }
+  ],
+  "average_contain": {
+    "scale_delta": 0.156,
+    "offset_y_delta": 19.0,
+    "offset_x_delta": 2.0,
     "sample_count": 1
   }
 }

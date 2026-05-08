@@ -350,7 +350,7 @@ body { font-family: 'Pretendard', -apple-system, sans-serif; background: #F5F5F7
 <div class="app">
   <!-- 왼쪽: 입력 패널 -->
   <div class="panel-left">
-    <h1>Banner Maker <span>Prototype v0.3</span></h1>
+    <h1>Banner Maker <span>Prototype v0.1</span></h1>
 
     <!-- 1. 이미지 업로드 -->
     <div>
@@ -795,6 +795,32 @@ function validateBannerJson(json) {
   }
 }
 
+// [#18+#25] 객체 깊은 병합 — 시리즈 base와 개별 JSON 병합 시 사용
+// override의 값이 객체면 재귀 병합, 그 외(원시값·배열)는 override가 우선 (덮어씀)
+// _NOTE 같은 메타 키는 병합 결과에서 제외
+function deepMergePreset(base, override) {
+  if (!base || typeof base !== 'object') return override;
+  if (!override || typeof override !== 'object') return base;
+  const result = {};
+  // base 키들 먼저 복사
+  for (const k of Object.keys(base)) {
+    if (k.startsWith('_')) continue;  // _NOTE 등 메타 키 제외
+    result[k] = base[k];
+  }
+  // override 키들로 덮어쓰기 (객체면 재귀)
+  for (const k of Object.keys(override)) {
+    if (k === '_extends' || k.startsWith('_')) continue;  // _extends 등 메타 제외
+    const ov = override[k];
+    if (ov && typeof ov === 'object' && !Array.isArray(ov)
+        && result[k] && typeof result[k] === 'object' && !Array.isArray(result[k])) {
+      result[k] = deepMergePreset(result[k], ov);
+    } else {
+      result[k] = ov;
+    }
+  }
+  return result;
+}
+
 // config/banners/_index.json 읽고, ui_visible에 있는 배너만 모두 fetch
 async function loadPresets() {
   const cacheBust = '?t=' + Date.now();
@@ -811,13 +837,21 @@ async function loadPresets() {
     }
   });
 
+  // [#18+#25] 시리즈 base 가져오기 (개별 JSON에 _extends 명시 시 적용)
+  const seriesMap = index._series || {};
+
   const ids = visibleBanners;
   const loaded = await Promise.all(ids.map(async id => {
     const r = await fetch(`./config/banners/${id}.json` + cacheBust);
     if (!r.ok) throw new Error(`배너 ${id} 로드 실패 (config/banners/${id}.json 존재 확인)`);
     return await r.json();
   }));
-  loaded.forEach(json => {
+  loaded.forEach(rawJson => {
+    // [#18+#25] _extends 처리 — 시리즈 base와 deep merge (개별 우선)
+    let json = rawJson;
+    if (rawJson._extends && seriesMap[rawJson._extends]) {
+      json = deepMergePreset(seriesMap[rawJson._extends], rawJson);
+    }
     validateBannerJson(json); // [#17] 필수 키 검증
     PRESETS[json.id] = adaptBanner(json);
   });
@@ -1858,6 +1892,28 @@ function applyCalToTransform({ baseScale, userScale = 1, baseX = 0, baseY = 0, o
   };
 }
 
+// ===== image_box 옵션 헬퍼 (#26) =====
+// preset.imageBox?.[key] ?? defaultVal 패턴이 여러 곳에서 반복되어 통합
+// 사용: const scaleMin = getImageBoxOpt(preset, 'scale_min', SCALE_MIN);
+function getImageBoxOpt(preset, key, defaultVal) {
+  return preset?.imageBox?.[key] ?? defaultVal;
+}
+
+// ===== composition_type 결정 (#21) =====
+// 새 분기 활성화 조건은 이 함수만 수정하면 됨 (getCompositionDecision OR 누적 방지)
+// 반환: 'main_only' | 'sub_main' | null (해당 분기 비활성)
+// JSON 우선순위:
+//   1. copy.composition_type 명시 (권장)
+//   2. copy.sub_supported === false → 'main_only' (옛 호환)
+//   3. composition === '서브 1줄 + 메인 1줄' → 'sub_main' (옛 호환)
+function resolveCompositionType(preset) {
+  const ct = preset.copyConstraints?.composition_type;
+  if (ct) return ct;
+  if (preset.copyConstraints?.sub_supported === false) return 'main_only';
+  if (preset.composition === '서브 1줄 + 메인 1줄') return 'sub_main';
+  return null;
+}
+
 // ===== Calibration 학습값 헬퍼 — 모든 fitMode 분기에서 호출 필수 =====
 // ⚠️ 새 배너·새 렌더 분기를 추가할 때 이 헬퍼를 반드시 호출해야 학습값이 자동 반영됨.
 // 사용 패턴:
@@ -1881,16 +1937,28 @@ function getCalibrationBoost(presetId, slotSuffix = '') {
   };
 }
 
+// ===== anchor 종류 결정 (#20) =====
+// 새 anchor 추가 시 이 함수에 매핑 추가하면 drawAnchorImage 분기 자동 활성화
+// 반환: 'zone_center' | 'below_text' | 'default'
+function getAnchorKind(anchor) {
+  if (!anchor) return 'default';
+  if (anchor.endsWith('_zone_center')) return 'zone_center';
+  if (anchor === 'below_text') return 'below_text';
+  return 'default';
+}
+
 // ===== anchor 기반 이미지 배치 (투명 이미지, right_center/left_center 등) =====
 function drawAnchorImage(ctx, img, box, preset, presetId) {
   const t = getImageTransform(presetId);
   const { userScale, ox, oy } = getEffectiveTransform(t);
   const vPad = box.v_padding || 0;
+  const anchorKind = getAnchorKind(box.anchor);
 
-  // ── right_zone_center anchor: 캔버스 우측 끝부터 width_ratio 폭의 영역 안에 가운데 배치 ──
+  // ── *_zone_center anchor 계열: 영역 안 가운데 배치 (right_zone_center 등) ──
   // (m_event_list_5 등 좌측 텍스트 + 우측 고정폭 이미지 영역 배너)
+  // 새 zone anchor 추가 시 endsWith('_zone_center') 패턴으로 자동 인식
   // 학습값(scaleDelta·offsetXDelta·offsetYDelta) 자동 적용
-  if (box.anchor === 'right_zone_center') {
+  if (anchorKind === 'zone_center') {
     const zoneW = preset.w * (box.width_ratio ?? 0.3);
     const zoneH = preset.h * (box.height_ratio ?? 1);
     const zoneRight = preset.w;
@@ -1913,7 +1981,7 @@ function drawAnchorImage(ctx, img, box, preset, presetId) {
   }
 
   // ── below_text anchor: 텍스트 영역 끝 + text_gap_px 아래 영역에 contain/crop + 콘텐츠 visual center 정렬 ──
-  if (box.anchor === 'below_text') {
+  if (anchorKind === 'below_text') {
     const textBottom = getTextBlockBottomY(preset);
     if (textBottom == null) return; // top_center 아닌 배너에서 잘못 사용된 경우 안전 종료
     const gap = box.text_gap_px ?? 30;
@@ -2088,6 +2156,8 @@ function drawText(ctx, preset, presetId, textColor, textX, textAlign, maxTextW, 
             baselineY = cy - blockH / 2 + fittedMain * 0.8;
           } else {
             // 단일라인: 이전 동작 유지 (메인 커튼·메인 탑 등 회귀 방지)
+            // 0.38: ascent/descent 비율 기반 baseline 위치 보정값
+            //   글자 시각 중심을 cy에 맞추기 위해 baseline을 cy 아래로 fontSize × 0.38만큼 내림
             baselineY = cy + fittedMain * 0.38;
           }
         }
@@ -2558,8 +2628,8 @@ function renderToCanvas(presetId, preset, callback, opts = {}) {
       } else if (mainImgCount >= 1 && images[0]) {
         const img = images[0];
         const box = preset.imageBox || { width_ratio: preset.imgRatio, height_ratio: 0.85, anchor: "right_center", v_padding: 8 };
-        // right_zone_center anchor는 비투명 이미지여도 drawAnchorImage로 처리 (영역 안 가운데 배치)
-        const useAnchorFlow = state.imageIsTransparent || box.anchor === 'right_zone_center';
+        // *_zone_center anchor는 비투명 이미지여도 drawAnchorImage로 처리 (영역 안 가운데 배치)
+        const useAnchorFlow = state.imageIsTransparent || (box.anchor && box.anchor.endsWith('_zone_center'));
         if (useAnchorFlow) {
           if (box.anchor === 'center_grouped') {
             // center_grouped -> drawText에서 텍스트와 함께 배치 (grouped)
@@ -2719,13 +2789,15 @@ function getCompositionDecision(presetId, mainText, subText) {
     return { type: rules.default_type, mainSize: rules.sizes[tier].mainSize, subSize: rules.sizes[tier].subSize };
   }
 
-  // ③ 일반화: JSON copy.structure가 "서브 1줄 + 메인 1줄"이면 세로 2단 구성
-  //          또는 copy.sub_supported === false면 (메인만 표시 배너) 자동으로 single_main
-  //          → 이벤트 리스트 등 서브 미지원 배너에 structure 명시 불필요
-  if (preset.composition === '서브 1줄 + 메인 1줄' || preset.copyConstraints?.sub_supported === false) {
+  // ③ 일반화 — composition_type 명시 우선, 옛 호환 키(composition, sub_supported)도 인식
+  // 새 type 추가 시 resolveCompositionType만 수정하면 됨 (분기 폭증 방지)
+  const ct = resolveCompositionType(preset);
+  if (ct) {
     const mainSize = preset.fonts.main.size;
     const subSize = preset.fonts.sub.size;
-    if (!subText) return { type: 'single_main', mainSize, subSize: 0 };
+    if (ct === 'main_only' || !subText) {
+      return { type: 'single_main', mainSize, subSize: 0 };
+    }
     return { type: 'vertical_sub_main', mainSize, subSize };
   }
 
@@ -3073,8 +3145,8 @@ const SLIDER_LABELS = { left: '좌측', right: '우측', single: '' };
 function createScaleSlider(presetId, preset, displayScale, canvasHolder, label, transformFn) {
   const t = transformFn(presetId);
   // 배너별 scale 범위 (image_box.scale_min/scale_max 명시 시 우선, 없으면 전역 default)
-  const scaleMin = preset.imageBox?.scale_min ?? SCALE_MIN;
-  const scaleMax = preset.imageBox?.scale_max ?? SCALE_MAX;
+  const scaleMin = getImageBoxOpt(preset, 'scale_min', SCALE_MIN);
+  const scaleMax = getImageBoxOpt(preset, 'scale_max', SCALE_MAX);
   const row = document.createElement("div");
   row.style.cssText = "margin-top:10px;display:flex;align-items:center;gap:10px;justify-content:center;font-size:11px;color:#888;";
   const labelHtml = label ? `<span style="min-width:28px;color:#555;">${label}</span>` : '';
@@ -3168,6 +3240,39 @@ function positionTextEditModal(anchorEl) {
   if (!anchorVisible) anchorEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
+// 모달 입력 필드 setup — input/textarea 공통 (#24)
+// 옵션: el, counterEl, initialValue, maxChars, label, placeholder, disabled, disabledMessage, lineBreakAllowed, onInput
+// 반환: 새 element (cloneNode + 이벤트 등록 완료)
+function setupModalField(opts) {
+  const { el, counterEl, initialValue, maxChars, label, placeholder, disabled, disabledMessage, lineBreakAllowed, onInput } = opts;
+  // 1) 초기 상태
+  el.value = disabled ? '' : (initialValue || '');
+  el.disabled = !!disabled;
+  el.placeholder = disabled ? (disabledMessage || '') : (placeholder || '');
+  // 2) label 텍스트
+  const labelEl = document.querySelector(`label[for="${el.id}"]`);
+  if (labelEl && label) labelEl.textContent = label;
+  // 3) 글자수 카운터
+  const updateCounter = (target) => {
+    const len = stripEmphasis(target.value).length;
+    counterEl.textContent = maxChars ? `${len}/${maxChars}` : `${len}`;
+    counterEl.classList.toggle('over', maxChars != null && len > maxChars);
+  };
+  updateCounter(el);
+  // 4) cloneNode (이전 리스너 제거) + input 이벤트 등록
+  const newEl = el.cloneNode(true);
+  el.parentNode.replaceChild(newEl, el);
+  newEl.addEventListener('input', () => {
+    // 줄바꿈 차단 (lineBreakAllowed=false면 \n 자동 제거)
+    if (!lineBreakAllowed && newEl.value.includes('\n')) {
+      newEl.value = newEl.value.replace(/\n/g, '');
+    }
+    updateCounter(newEl);
+    if (onInput) onInput(newEl);
+  });
+  return newEl;
+}
+
 function openTextEditModal(presetId, preset, displayScale, canvasHolder, anchorEl) {
   // 원본 override 백업 (취소·X·ESC 시 복원용)
   const prev = state.perBannerOverrides.text?.[presetId];
@@ -3176,70 +3281,51 @@ function openTextEditModal(presetId, preset, displayScale, canvasHolder, anchorE
     backup: prev ? { ...prev } : null
   };
   const o = prev || {};
-  const mainEl = document.getElementById('textEditMain');
-  const subEl = document.getElementById('textEditSub');
-  mainEl.value = (o.main !== undefined && o.main !== null) ? o.main : state.mainText;
-  subEl.value  = (o.sub  !== undefined && o.sub  !== null) ? o.sub  : state.subText;
   document.getElementById('textEditTitle').textContent = `${preset.name} — 카드별 텍스트 편집`;
 
-  // 줄바꿈 허용 여부 — copy.main_line_break_allowed === true일 때만 허용
-  // (미명시 또는 false → 차단. 메인탑·커튼 등 한 줄 고정 배너에서 줄바꿈 입력 자동 제거)
-  const mainLineBreakAllowed = preset.copyConstraints?.main_line_break_allowed === true;
-  const mainLabel = document.querySelector('label[for="textEditMain"]');
-  if (mainLabel) {
-    mainLabel.textContent = mainLineBreakAllowed ? '메인 카피 (Enter로 줄바꿈)' : '메인 카피';
-  }
-
-  // 서브 카피 미지원 배너 — 서브 input 비활성화 + label·placeholder 안내
-  const subSupported = preset.copyConstraints?.sub_supported !== false;
-  const subLabel = document.querySelector('label[for="textEditSub"]');
-  if (!subSupported) {
-    subEl.disabled = true;
-    subEl.value = '';
-    subEl.placeholder = '이 배너는 서브 카피를 지원하지 않습니다';
-    if (subLabel) subLabel.textContent = '서브 카피 (미지원)';
-  } else {
-    subEl.disabled = false;
-    subEl.placeholder = '이 카드만 적용할 서브 카피';
-    if (subLabel) subLabel.textContent = '서브 카피';
-  }
-
-  // 글자수 카운터 + input 이벤트
-  const mainMax = preset.copyConstraints?.main_max_chars_kr;
-  const subMax = preset.copyConstraints?.sub_max_chars_kr;
-  const updateCounter = (el, counterEl, max) => {
-    const len = stripEmphasis(el.value).length;
-    counterEl.textContent = max ? `${len}/${max}` : `${len}`;
-    counterEl.classList.toggle('over', max != null && len > max);
-  };
+  const mainEl = document.getElementById('textEditMain');
+  const subEl = document.getElementById('textEditSub');
   const mainCounter = document.getElementById('textEditMainCounter');
   const subCounter = document.getElementById('textEditSubCounter');
-  updateCounter(mainEl, mainCounter, mainMax);
-  updateCounter(subEl, subCounter, subMax);
 
-  // 기존 리스너 제거 후 새로 등록 (재오픈 누적 방지)
-  const newMain = mainEl.cloneNode(true);
-  const newSub = subEl.cloneNode(true);
-  mainEl.parentNode.replaceChild(newMain, mainEl);
-  subEl.parentNode.replaceChild(newSub, subEl);
+  const mainLineBreakAllowed = preset.copyConstraints?.main_line_break_allowed === true;
+  const subSupported = preset.copyConstraints?.sub_supported !== false;
 
-  // 실시간 미리보기 — 입력 시 state 임시 적용 + 해당 카드만 redraw
+  // 실시간 미리보기 핸들러 (메인/서브 둘 다 사용)
+  let newMain, newSub;
   const applyLive = () => {
+    if (!newMain || !newSub) return;
     const main = newMain.value;
     const sub = newSub.value;
     if (!main && !sub) delete state.perBannerOverrides.text[presetId];
     else state.perBannerOverrides.text[presetId] = { main, sub };
     if (canvasHolder) redrawSingleCanvas(presetId, preset, displayScale, canvasHolder);
   };
-  newMain.addEventListener('input', () => {
-    // 한 줄 고정 배너: \n 자동 제거 (Enter 입력·붙여넣기 모두 커버)
-    if (!mainLineBreakAllowed && newMain.value.includes('\n')) {
-      newMain.value = newMain.value.replace(/\n/g, '');
-    }
-    updateCounter(newMain, mainCounter, mainMax);
-    applyLive();
+
+  newMain = setupModalField({
+    el: mainEl,
+    counterEl: mainCounter,
+    initialValue: (o.main !== undefined && o.main !== null) ? o.main : state.mainText,
+    maxChars: preset.copyConstraints?.main_max_chars_kr,
+    label: mainLineBreakAllowed ? '메인 카피 (Enter로 줄바꿈)' : '메인 카피',
+    placeholder: '이 카드만 적용할 메인 카피',
+    disabled: false,
+    lineBreakAllowed: mainLineBreakAllowed,
+    onInput: applyLive
   });
-  newSub.addEventListener('input', () => { updateCounter(newSub, subCounter, subMax); applyLive(); });
+
+  newSub = setupModalField({
+    el: subEl,
+    counterEl: subCounter,
+    initialValue: (o.sub !== undefined && o.sub !== null) ? o.sub : state.subText,
+    maxChars: preset.copyConstraints?.sub_max_chars_kr,
+    label: subSupported ? '서브 카피' : '서브 카피 (미지원)',
+    placeholder: '이 카드만 적용할 서브 카피',
+    disabled: !subSupported,
+    disabledMessage: '이 배너는 서브 카피를 지원하지 않습니다',
+    lineBreakAllowed: true,  // 서브는 input이라 \n 못 들어옴 — 안전 default
+    onInput: applyLive
+  });
 
   document.getElementById('textEditOverlay').classList.add('open');
   requestAnimationFrame(() => positionTextEditModal(anchorEl));

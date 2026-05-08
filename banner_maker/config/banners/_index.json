@@ -38,5 +38,30 @@
     "m_sub_banner": "가이드 규정 추가 후 노출 예정",
     "m_app_splash": "가이드 규정 추가 후 노출 예정",
     "email_target": "HTML 이메일 — 빌더 미지원 (외부 검수 흐름)"
+  },
+  "_series": {
+    "_NOTE": "배너 JSON에 \"_extends\": \"<series_name>\" 명시 시 이 base 정책이 deep merge로 자동 상속됨. 개별 JSON이 같은 키 명시하면 우선",
+    "event_list": {
+      "min_font": 12,
+      "font_size_strict": true,
+      "copy": {
+        "sub_supported": false,
+        "main_line_break_allowed": true,
+        "main_auto_wrap": true
+      },
+      "image_box": {
+        "crop_clip_in_auto": false
+      },
+      "builder_io": {
+        "cta": {
+          "supported": false,
+          "reason": "이벤트 리스트 배너는 짧은 카피 노출 영역으로 별도 CTA 버튼 비권장"
+        }
+      },
+      "color_rules": {
+        "page_bg": "#FFFFFF",
+        "required": "주변 배경과 구분되는 BG Color 사용"
+      }
+    }
   }
 }

@@ -8,16 +8,16 @@
 
 ---
 
-## 진행 현황 (2026-05-07 기준)
+## 진행 현황 (2026-05-08 기준)
 
 | 카테고리 | 항목 |
 |---|---|
 | 🔴 high (실제 잠재 버그) | #1 ✅, #2 ✅, #3 ✅ |
-| 🟡 mid (확장성 저해) | #4 ✅, #5 ✅, #6 ⏳보류, #7 ✅, #8 ✅, #16 ⏳보류, #17 ✅ |
-| 🟢 lower (중복·잔재·명명) | #9 ✅, #10 ✅(부분), #11 ✅, #12 ✅, #13 ✅, #14 ⏳보류, #15 ✅ |
+| 🟡 mid (확장성 저해) | #4 ✅, #5 ✅, #6 ⏳보류, #7 ✅, #8 ✅, #16 ⏳보류, #17 ✅, #18 ✅, #19 ✅, #20 ✅(부분), #21 ✅, #22 ⏳보류 |
+| 🟢 lower (중복·잔재·명명) | #9 ✅, #10 ✅(부분), #11 ✅, #12 ✅, #13 ✅, #14 ⏳보류, #15 ✅, #23 ✅, #24 ✅, #25 ✅, #26 ✅ |
 
-**처리 완료**: 14건 (#1, #2, #3, #4, #5, #7, #8, #9, #10부분, #11, #12, #13, #15, #17)
-**보류**: 3건 (#6, #14, #16) — 이유: 회귀 위험 vs 효과 균형 / 마이그레이션 시점 미정 / 큰 문제 아님
+**처리 완료**: 21건 (#1~#5, #7~#13, #15, #17, #18, #19, #20부분, #21, #23~#26)
+**보류**: 5건 (#6, #14, #16, #22, #10/#20부분 — 효과 vs 회귀 위험 균형)
 
 ---
 
@@ -102,3 +102,62 @@
 - 2026-05-07: high #1, #2 처리 완료
 - 2026-05-07: lower #9, #11, #12, #13, #15 처리 완료
 - 2026-05-07: mid #4, #5, #7, #8, #17 처리 완료 + lower #10 부분 처리 (헬퍼 추가)
+- 2026-05-08: 자체점검 #18~#26 등록 (이벤트 리스트 시리즈·신규 anchor·모달 작업 결과)
+- 2026-05-08: lower #23 (매직 넘버 주석), mid #19 (zone anchor 패턴), lower #26 (getImageBoxOpt 헬퍼) 처리
+- 2026-05-08: mid #21 (resolveCompositionType), lower #24 (setupModalField 추출) 처리
+- 2026-05-08: mid #18+#25 시리즈 base 도입 (_index.json _series, deepMergePreset, m_event_list_1~5 _extends 적용)
+- 2026-05-08: mid #20 부분 처리 (getAnchorKind 디스패치 헬퍼)
+- 2026-05-08: mid #22 보류 (image_box 그룹화 — 회귀 위험 vs 효과 균형)
+
+---
+
+## 🟡 mid (오늘 추가)
+
+### #18+#25. 이벤트 리스트 시리즈 정책 키 5곳 중복 / m_event_list_x 파일 거의 동일 ✅ DONE (2026-05-08)
+- **처리**:
+  - `_index.json`에 `_series.event_list` 추가 (시리즈 공통 정책)
+  - `prototype.html`: `deepMergePreset` 헬퍼 + `loadPresets`에서 `_extends` 처리
+  - m_event_list_1~5.json: 시리즈 공통 키 제거, `"_extends": "event_list"` 한 줄로 상속
+- **효과**: 시리즈 정책 변경 시 _index.json 한 곳만 수정. 신규 이벤트 리스트 배너 추가 시 70줄 → 20줄 정도
+
+### #19. right_zone_center 분기 2곳 하드코딩 ✅ DONE (2026-05-08)
+- **처리**: `endsWith('_zone_center')` 패턴 매칭으로 일반화 (drawAnchorImage + renderToCanvas useAnchorFlow)
+- **효과**: 새 zone anchor (예: left_zone_center) 추가 시 코드 변경 없이 자동 인식
+
+### #20. drawAnchorImage anchor별 if-분기 누적 ✅ DONE 부분 (2026-05-08)
+- **처리**: `getAnchorKind(anchor)` 디스패치 헬퍼 추가 — 새 anchor 추가 시 이 함수만 수정
+- **미처리**: 분기 본문은 그대로 (함수 추출은 회귀 위험 커서 미실행)
+- **권고**: 4번째 anchor 추가 시 본문도 추출 (drawZoneCenterAnchor·drawBelowTextAnchor·drawGenericAnchor)
+
+### #21. getCompositionDecision 활성화 조건 OR 누적 ✅ DONE (2026-05-08)
+- **처리**: `resolveCompositionType(preset)` 헬퍼 추가
+  - 우선순위: `composition_type` 명시 → `sub_supported: false` → 옛 composition 문자열
+  - 새 type 추가 시 헬퍼만 수정
+- **효과**: 새 분기 활성화 조건 추가 시 if 문 OR 폭증 방지
+
+### #22. image_box 객체 책임 비대 ⏳ 보류 (2026-05-08)
+- **이유**: JSON 구조 변경이 모든 배너 영향 → 회귀 위험 큼 vs 효과 점진
+- **부분 효과**: #26 `getImageBoxOpt` 헬퍼로 일부 일관성 확보
+- **권고**: 키가 12개 이상 누적될 때 그룹화 검토
+
+---
+
+## 🟢 lower (오늘 추가)
+
+### #23. drawText single_main else 매직 넘버 0.38 ✅ DONE (2026-05-08)
+- **처리**: 주석 추가 — "ascent/descent 비율 기반 baseline 위치 보정값"으로 의미 설명
+- **권고**: 향후 ctx.measureText로 정확 측정 또는 상수화 고려
+
+### #24. 모달 입력 메인/서브 분리 처리 ✅ DONE (2026-05-08)
+- **처리**: `setupModalField()` 함수 추출 — 옵션 객체로 메인/서브 통합 처리
+  - initialValue, maxChars, label, placeholder, disabled, disabledMessage, lineBreakAllowed, onInput
+- **효과**: 모달 신규 입력 추가 시 옵션만 추가. 코드 중복 제거
+
+### #25. m_event_list_x.json 5개 파일 구조 거의 동일 ✅ DONE (2026-05-08)
+- **처리**: #18과 통합 — `_extends: "event_list"` 패턴 적용
+- 5개 파일이 차이점만 명시 (dimensions·margins·fonts·max_chars 등)
+
+### #26. preset.imageBox?.X ?? DEFAULT 패턴 반복 ✅ DONE (2026-05-08)
+- **처리**: `getImageBoxOpt(preset, key, defaultVal)` 헬퍼 추가
+- **적용**: `createScaleSlider` 내 `scale_min`/`scale_max` 호출
+- **권고**: 점진적으로 다른 호출부도 헬퍼 사용
