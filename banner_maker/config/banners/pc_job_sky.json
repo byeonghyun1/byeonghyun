@@ -15,8 +15,8 @@
   "text_ratio": 0.45,
   "img_ratio": 0.55,
   "margins": {
-    "left": 44,
-    "right": 44,
+    "left": 32,
+    "right": 32,
     "top": 52,
     "bottom": 62
   },
