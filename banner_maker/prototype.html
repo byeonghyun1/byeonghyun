@@ -2926,6 +2926,25 @@ function splitPreservingMarkup(text) {
   return tokens;
 }
 
+// 자동 줄바꿈 후 강조 짝({...}) 짝이 줄에 걸친 경우 양쪽 줄에 가짜 짝을 채움
+// 예: ["...{수박 미식", "연구원}..."] → ["...{수박 미식}", "{연구원}..."]
+// 각 줄에서 parseEmphasis가 정상적으로 강조 컬러 적용 가능하게 함
+function fixEmphasisAcrossLines(lines) {
+  let openCarry = false;
+  return lines.map(line => {
+    if (openCarry) line = '{' + line;
+    const lastOpen = line.lastIndexOf('{');
+    const lastClose = line.lastIndexOf('}');
+    if (lastOpen > lastClose) {
+      line = line + '}';
+      openCarry = true;
+    } else {
+      openCarry = false;
+    }
+    return line;
+  });
+}
+
 // 단어 단위 자동 줄바꿈 (CSS의 word-break: keep-all + overflow-wrap: break-word 효과)
 // - 공백으로 어절 분리 → 어절 단위로 줄에 채우다가 가용폭 초과 직전 줄바꿈
 // - 한 어절이 자체로 가용폭 초과 시 글자 단위로 자름 ({} 마크업 블록은 한 단위로 보호)
@@ -2959,7 +2978,7 @@ function wrapTextByWord(ctx, text, maxWidth, spacing) {
     }
   }
   if (curLine) lines.push(curLine);
-  return lines.join('\n');
+  return fixEmphasisAcrossLines(lines).join('\n');
 }
 
 // 자동 줄바꿈 적용 여부 — 배너 JSON의 main_auto_wrap 단일 검사로 통일
