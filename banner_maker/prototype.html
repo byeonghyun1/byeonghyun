@@ -38,6 +38,26 @@ body { font-family: 'Pretendard', -apple-system, sans-serif; background: #F5F5F7
   margin-bottom: 10px; text-transform: uppercase;
 }
 
+/* 사이드바 카드 그룹 (메인 7개 섹션) */
+.section-card {
+  background: #FAFAFB; border: 1px solid #F0F1F3;
+  border-radius: 12px; padding: 16px; margin-bottom: 5px;
+}
+.section-card:last-of-type { margin-bottom: 0; }
+
+/* 카드 헤더 (번호 배지 + 헤더 텍스트) */
+.section-header {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 14px; font-weight: 600; color: #1A1A1A;
+  margin-bottom: 12px;
+}
+.section-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: #2563EB; color: #FFF;
+  font-size: 10px; font-weight: 600; flex-shrink: 0;
+}
+
 /* 이미지 업로드 */
 .upload-area {
   border: 2px dashed #D1D5DB; border-radius: 12px;
@@ -356,8 +376,8 @@ body { font-family: 'Pretendard', -apple-system, sans-serif; background: #F5F5F7
     <h1>Banner Maker <span>Prototype v0.1</span></h1>
 
     <!-- 1. 이미지 업로드 -->
-    <div>
-      <div class="section-title">1. 키비주얼 이미지</div>
+    <div class="section-card">
+      <div class="section-header"><span class="section-badge">1</span>키비주얼 이미지</div>
       <div class="upload-area" id="uploadArea" onclick="handleUploadClick(event)">
         <div class="upload-icon">+</div>
         <div class="upload-text"><strong>클릭 또는 드래그</strong>하여 이미지를 업로드하세요</div>
@@ -443,8 +463,8 @@ body { font-family: 'Pretendard', -apple-system, sans-serif; background: #F5F5F7
     </div>
 
     <!-- 2. 텍스트 입력 -->
-    <div>
-      <div class="section-title">2. 텍스트 입력</div>
+    <div class="section-card">
+      <div class="section-header"><span class="section-badge">2</span>텍스트 입력</div>
       <div class="input-group">
         <label>메인 카피</label>
         <input type="text" id="mainText" placeholder="예: 지금 바로 알바몬에 광고하세요">
@@ -459,9 +479,60 @@ body { font-family: 'Pretendard', -apple-system, sans-serif; background: #F5F5F7
       <!-- 카피 배치 토글은 미리보기 카드 컨트롤 행으로 이동 (배너별 독립 설정) -->
     </div>
 
-    <!-- 3. 폰트 선택 -->
-    <div>
-      <div class="section-title">3. 폰트 변경</div>
+    <!-- 3. 텍스트 컬러 -->
+    <div class="section-card">
+      <div class="section-header"><span class="section-badge">3</span>텍스트 컬러</div>
+      <!-- 기본 텍스트 컬러 -->
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="font-size:13px;font-weight:500;color:#555;">기본 컬러</span>
+        <div style="margin-left:auto;display:flex;gap:4px;">
+          <button id="txtColorAuto" onclick="setTextColorMode('auto')" style="padding:4px 10px;border:1px solid #2563EB;background:#2563EB;color:#FFF;border-radius:6px;cursor:pointer;font-size:11px;">자동</button>
+          <button id="txtColorBlack" onclick="setTextColorMode('black')" style="padding:4px 10px;border:1px solid #E5E7EB;background:#FFF;color:#666;border-radius:6px;cursor:pointer;font-size:11px;">Black</button>
+          <button id="txtColorWhite" onclick="setTextColorMode('white')" style="padding:4px 10px;border:1px solid #E5E7EB;background:#FFF;color:#666;border-radius:6px;cursor:pointer;font-size:11px;">White</button>
+        </div>
+      </div>
+      <div id="txtColorHint" style="font-size:11px;color:#888;margin-top:4px;">자동: 배경 밝기 기반 자동 판단</div>
+      <!-- 강조 컬러 -->
+      <div style="margin-top:14px;display:flex;align-items:center;gap:8px;">
+        <span style="font-size:13px;font-weight:500;color:#555;">강조 컬러</span>
+        <div class="color-input-wrap" style="margin-left:auto;flex:unset;">
+          <input type="color" id="emphColorPicker" value="#FF3B30">
+          <input type="text" id="emphColorText" value="#FF3B30" style="width:80px;">
+        </div>
+      </div>
+      <div style="font-size:11px;color:#888;margin-top:4px;line-height:1.5;">
+        카피 입력 시 <strong style="color:#555;">{강조할 단어}</strong> 로 감싸면 해당 부분만 강조 컬러가 적용됩니다<br>
+        예: 퇴근 길 <strong style="color:#555;">{치킨}</strong> 드세요 → "치킨"만 강조
+      </div>
+    </div>
+
+    <!-- 4. 배경색 -->
+    <div class="section-card">
+      <div class="section-header"><span class="section-badge">4</span>배경 컬러</div>
+      <div class="color-row">
+        <div class="color-input-wrap">
+          <input type="color" id="bgColorPicker" value="#000000">
+          <input type="text" id="bgColorText" value="#000000">
+        </div>
+      </div>
+      <div class="color-help">HEX 컬러값을 직접 입력하거나 컬러 피커를 사용하세요</div>
+    </div>
+
+    <!-- 5. 사이즈 선택 (복수 선택) — config/banners/*.json에서 동적 로드 -->
+    <div class="section-card">
+      <div class="section-header"><span class="section-badge">5</span>배너 사이즈</div>
+      <div class="size-grid" id="sizeGrid">
+        <div style="grid-column:1/-1;padding:20px;text-align:center;color:#888;font-size:13px;">
+          배너 데이터 로딩 중...
+        </div>
+      </div>
+      <div style="color:#FF6363;font-size:12px;margin-top:8px;">* 이벤트리스트 배너는 서브카피를 지원하지 않습니다.</div>
+      <div class="size-select-hint">여러 사이즈를 동시에 선택하여 비교할 수 있습니다</div>
+    </div>
+
+    <!-- 6. 폰트 선택 -->
+    <div class="section-card">
+      <div class="section-header"><span class="section-badge">6</span>폰트 변경</div>
       <div class="font-toggle-row">
         <div class="toggle-switch" id="fontToggle" onclick="toggleFont()"></div>
         <div class="font-toggle-label">폰트 변경</div>
@@ -488,60 +559,9 @@ body { font-family: 'Pretendard', -apple-system, sans-serif; background: #F5F5F7
       </div>
     </div>
 
-    <!-- 4. 사이즈 선택 (복수 선택) — config/banners/*.json에서 동적 로드 -->
-    <div>
-      <div class="section-title">4. 배너 사이즈</div>
-      <div class="size-grid" id="sizeGrid">
-        <div style="grid-column:1/-1;padding:20px;text-align:center;color:#888;font-size:13px;">
-          배너 데이터 로딩 중...
-        </div>
-      </div>
-      <div style="color:#FF6363;font-size:12px;margin-top:8px;">* 이벤트리스트 배너는 서브카피를 지원하지 않습니다.</div>
-      <div class="size-select-hint">여러 사이즈를 동시에 선택하여 비교할 수 있습니다</div>
-    </div>
-
-    <!-- 5. 배경색 -->
-    <div>
-      <div class="section-title">5. 배경 컬러</div>
-      <div class="color-row">
-        <div class="color-input-wrap">
-          <input type="color" id="bgColorPicker" value="#000000">
-          <input type="text" id="bgColorText" value="#000000">
-        </div>
-      </div>
-      <div class="color-help">HEX 컬러값을 직접 입력하거나 컬러 피커를 사용하세요</div>
-    </div>
-
-    <!-- 6. 텍스트 컬러 -->
-    <div>
-      <div class="section-title">6. 텍스트 컬러</div>
-      <!-- 기본 텍스트 컬러 -->
-      <div style="display:flex;align-items:center;gap:8px;">
-        <span style="font-size:13px;font-weight:500;color:#555;">기본 컬러</span>
-        <div style="margin-left:auto;display:flex;gap:4px;">
-          <button id="txtColorAuto" onclick="setTextColorMode('auto')" style="padding:4px 10px;border:1px solid #2563EB;background:#2563EB;color:#FFF;border-radius:6px;cursor:pointer;font-size:11px;">자동</button>
-          <button id="txtColorBlack" onclick="setTextColorMode('black')" style="padding:4px 10px;border:1px solid #E5E7EB;background:#FFF;color:#666;border-radius:6px;cursor:pointer;font-size:11px;">Black</button>
-          <button id="txtColorWhite" onclick="setTextColorMode('white')" style="padding:4px 10px;border:1px solid #E5E7EB;background:#FFF;color:#666;border-radius:6px;cursor:pointer;font-size:11px;">White</button>
-        </div>
-      </div>
-      <div id="txtColorHint" style="font-size:11px;color:#888;margin-top:4px;">자동: 배경 밝기 기반 자동 판단</div>
-      <!-- 강조 컬러 -->
-      <div style="margin-top:14px;display:flex;align-items:center;gap:8px;">
-        <span style="font-size:13px;font-weight:500;color:#555;">강조 컬러</span>
-        <div class="color-input-wrap" style="margin-left:auto;flex:unset;">
-          <input type="color" id="emphColorPicker" value="#FF3B30">
-          <input type="text" id="emphColorText" value="#FF3B30" style="width:80px;">
-        </div>
-      </div>
-      <div style="font-size:11px;color:#888;margin-top:4px;line-height:1.5;">
-        카피 입력 시 <strong style="color:#555;">{강조할 단어}</strong> 로 감싸면 해당 부분만 강조 컬러가 적용됩니다<br>
-        예: 퇴근 길 <strong style="color:#555;">{치킨}</strong> 드세요 → "치킨"만 강조
-      </div>
-    </div>
-
     <!-- 7. CTA 버튼 -->
-    <div>
-      <div class="section-title">7. CTA 버튼</div>
+    <div class="section-card">
+      <div class="section-header"><span class="section-badge">7</span>CTA 버튼</div>
       <div class="cta-toggle-row">
         <div class="toggle-switch" id="ctaToggle" onclick="toggleCta()"></div>
         <div class="cta-toggle-label">CTA 버튼 사용</div>
