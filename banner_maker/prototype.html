@@ -333,16 +333,19 @@ body { font-family: 'Pretendard', -apple-system, sans-serif; background: #F5F5F7
 }
 .text-edit-footer .btn-cancel { background: #FFF; border-color: #E5E7EB; color: #555; }
 .text-edit-footer .btn-save { background: #2563EB; color: #FFF; }
-/* 미리보기 카드 펜 아이콘 (텍스트 편집 버튼) */
-.text-edit-icon {
+/* 미리보기 카드 액션 아이콘 공통 (펜·다운로드 등) */
+.card-icon-btn {
   display: inline-flex; align-items: center; justify-content: center;
   width: 28px; height: 28px; border-radius: 6px; cursor: pointer;
   background: #F3F4F6; color: #555; font-size: 14px; border: 1px solid #E5E7EB;
 }
-.text-edit-icon:hover { background: #E5E7EB; }
+.card-icon-btn:hover { background: #E5E7EB; }
+/* 펜 아이콘 (텍스트 편집) — override 있으면 파란 강조 */
 .text-edit-icon.has-override {
   background: #DBEAFE; color: #2563EB; border-color: #2563EB;
 }
+/* 다운로드 아이콘 — ⬇ 글리프 baseline 위쪽 쏠림 보정 */
+.download-icon { font-size: 16px; line-height: 1; padding-top: 3px; }
 </style>
 </head>
 <body>
@@ -3205,11 +3208,22 @@ let _textEditCtx = null; // { presetId, preset, displayScale, canvasHolder, anch
 function createTextEditButton(presetId, preset, displayScale, canvasHolder) {
   const btn = document.createElement('button');
   btn.type = 'button';
-  btn.className = 'text-edit-icon';
+  btn.className = 'card-icon-btn text-edit-icon';
   btn.title = '이 카드만 다른 카피 적용';
   btn.innerHTML = '✎';
   if (state.perBannerOverrides.text?.[presetId]) btn.classList.add('has-override');
   btn.addEventListener('click', () => openTextEditModal(presetId, preset, displayScale, canvasHolder, btn));
+  return btn;
+}
+
+// 카드별 PNG 다운로드 버튼 — 일괄 다운로드와 동일 동작 (downloadBanner 재사용)
+function createDownloadButton(presetId) {
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'card-icon-btn download-icon';
+  btn.title = '이 배너만 PNG 다운로드';
+  btn.innerHTML = '⬇';
+  btn.addEventListener('click', () => downloadBanner(presetId));
   return btn;
 }
 
@@ -3501,9 +3515,10 @@ function renderPreviewItem(container, presetId, preset, scale) {
       const showCta = !!(state.ctaEnabled && preset.ctaSupported !== false);
       const showFit = !!state.imageUrl;
       const showStructure = (preset.structureVariants || []).length >= 2;
-      // 텍스트 편집 펜 아이콘은 항상 노출 (이 카드만 별도 카피 적용)
+      // 텍스트 편집 펜 아이콘 + 다운로드 버튼은 항상 노출
       const showTextEdit = true;
-      if (showLogo || showCta || showFit || showStructure || showTextEdit) {
+      const showDownload = true;
+      if (showLogo || showCta || showFit || showStructure || showTextEdit || showDownload) {
         const ctrlRow = document.createElement("div");
         ctrlRow.style.cssText = "margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:16px;font-size:12px;color:#555;flex-wrap:wrap;";
         if (showLogo) ctrlRow.appendChild(createLogoCheckbox(presetId, preset, scale, canvasHolder));
@@ -3514,6 +3529,7 @@ function renderPreviewItem(container, presetId, preset, scale) {
           if (structToggle) ctrlRow.appendChild(structToggle);
         }
         if (showTextEdit) ctrlRow.appendChild(createTextEditButton(presetId, preset, scale, canvasHolder));
+        if (showDownload) ctrlRow.appendChild(createDownloadButton(presetId));
         previewItem.insertBefore(ctrlRow, container);
       }
     }
