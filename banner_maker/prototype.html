@@ -174,6 +174,17 @@ body { font-family: 'Pretendard', -apple-system, sans-serif; background: #F5F5F7
 .cta-options.active { display: flex; }
 .cta-color-row { display: flex; align-items: center; gap: 10px; }
 .cta-color-row label { font-size: 13px; font-weight: 500; color: #555; white-space: nowrap; }
+/* CTA 텍스트 컬러 빠른 선택 (검정/흰 원 스와치) */
+.quick-color-dots { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
+.quick-dot {
+  width: 14px; height: 14px; border-radius: 50%;
+  cursor: pointer; padding: 0;
+  border: 1px solid transparent;
+  transition: transform 0.1s;
+}
+.quick-dot:hover { transform: scale(1.2); }
+.quick-dot.bk { background: #000000; }
+.quick-dot.wh { background: #FFFFFF; border-color: #D1D5DB; }
 /* CTA 프리뷰 */
 .cta-preview-chip {
   display: inline-flex; align-items: center; justify-content: center;
@@ -592,6 +603,10 @@ body { font-family: 'Pretendard', -apple-system, sans-serif; background: #F5F5F7
           <div class="color-input-wrap">
             <input type="color" id="ctaTextColorPicker" value="#FFFFFF">
             <input type="text" id="ctaTextColorText" value="#FFFFFF">
+          </div>
+          <div class="quick-color-dots">
+            <button type="button" class="quick-dot bk" onclick="setQuickCtaTextColor('#000000')" title="검정"></button>
+            <button type="button" class="quick-dot wh" onclick="setQuickCtaTextColor('#FFFFFF')" title="흰색"></button>
           </div>
         </div>
         <div>
@@ -1170,6 +1185,15 @@ async function init() {
   document.getElementById("ctaColorText").addEventListener("change", e => { if (/^#[0-9A-Fa-f]{6}$/.test(e.target.value)) { state.ctaColor = e.target.value; document.getElementById("ctaColorPicker").value = e.target.value; updateCtaChip(); updatePreview(); }});
   document.getElementById("ctaTextColorPicker").addEventListener("input", e => { state.ctaTextColor = e.target.value; document.getElementById("ctaTextColorText").value = e.target.value; updateCtaChip(); updatePreview(); });
   document.getElementById("ctaTextColorText").addEventListener("change", e => { if (/^#[0-9A-Fa-f]{6}$/.test(e.target.value)) { state.ctaTextColor = e.target.value; document.getElementById("ctaTextColorPicker").value = e.target.value; updateCtaChip(); updatePreview(); }});
+
+// CTA 텍스트 컬러 빠른 선택 — 검정/흰 원 스와치 클릭 시 호출
+function setQuickCtaTextColor(hex) {
+  state.ctaTextColor = hex;
+  document.getElementById("ctaTextColorPicker").value = hex;
+  document.getElementById("ctaTextColorText").value = hex;
+  updateCtaChip();
+  updatePreview();
+}
 
   // 이미지 업로드 영역 이벤트 세팅 (메인 + 듀얼 좌측 + 로고 + 출처 로고)
   setupUploadArea('main');
