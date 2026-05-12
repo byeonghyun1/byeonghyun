@@ -1186,15 +1186,6 @@ async function init() {
   document.getElementById("ctaTextColorPicker").addEventListener("input", e => { state.ctaTextColor = e.target.value; document.getElementById("ctaTextColorText").value = e.target.value; updateCtaChip(); updatePreview(); });
   document.getElementById("ctaTextColorText").addEventListener("change", e => { if (/^#[0-9A-Fa-f]{6}$/.test(e.target.value)) { state.ctaTextColor = e.target.value; document.getElementById("ctaTextColorPicker").value = e.target.value; updateCtaChip(); updatePreview(); }});
 
-// CTA 텍스트 컬러 빠른 선택 — 검정/흰 원 스와치 클릭 시 호출
-function setQuickCtaTextColor(hex) {
-  state.ctaTextColor = hex;
-  document.getElementById("ctaTextColorPicker").value = hex;
-  document.getElementById("ctaTextColorText").value = hex;
-  updateCtaChip();
-  updatePreview();
-}
-
   // 이미지 업로드 영역 이벤트 세팅 (메인 + 듀얼 좌측 + 로고 + 출처 로고)
   setupUploadArea('main');
   setupUploadArea('sub');
@@ -1205,6 +1196,15 @@ function setQuickCtaTextColor(hex) {
   updateLogoUI();
 
   updateGuide();
+  updatePreview();
+}
+
+// CTA 텍스트 컬러 빠른 선택 — 검정/흰 원 스와치 클릭 시 호출 (글로벌 스코프 — onclick 핸들러 호출용)
+function setQuickCtaTextColor(hex) {
+  state.ctaTextColor = hex;
+  document.getElementById("ctaTextColorPicker").value = hex;
+  document.getElementById("ctaTextColorText").value = hex;
+  updateCtaChip();
   updatePreview();
 }
 
