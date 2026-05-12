@@ -1182,9 +1182,13 @@ async function init() {
     updatePreview();
   });
   document.getElementById("ctaColorPicker").addEventListener("input", e => { state.ctaColor = e.target.value; document.getElementById("ctaColorText").value = e.target.value; updateCtaChip(); updatePreview(); });
-  document.getElementById("ctaColorText").addEventListener("change", e => { if (/^#[0-9A-Fa-f]{6}$/.test(e.target.value)) { state.ctaColor = e.target.value; document.getElementById("ctaColorPicker").value = e.target.value; updateCtaChip(); updatePreview(); }});
+  const ctaColorTextInput = document.getElementById("ctaColorText");
+  ctaColorTextInput.addEventListener("input", e => { if (!e.target.value.startsWith('#')) e.target.value = '#' + e.target.value.replace(/#/g, ''); });
+  ctaColorTextInput.addEventListener("change", e => { if (/^#[0-9A-Fa-f]{6}$/.test(e.target.value)) { state.ctaColor = e.target.value; document.getElementById("ctaColorPicker").value = e.target.value; updateCtaChip(); updatePreview(); } else { e.target.value = state.ctaColor; }});
   document.getElementById("ctaTextColorPicker").addEventListener("input", e => { state.ctaTextColor = e.target.value; document.getElementById("ctaTextColorText").value = e.target.value; updateCtaChip(); updatePreview(); });
-  document.getElementById("ctaTextColorText").addEventListener("change", e => { if (/^#[0-9A-Fa-f]{6}$/.test(e.target.value)) { state.ctaTextColor = e.target.value; document.getElementById("ctaTextColorPicker").value = e.target.value; updateCtaChip(); updatePreview(); }});
+  const ctaTextColorTextInput = document.getElementById("ctaTextColorText");
+  ctaTextColorTextInput.addEventListener("input", e => { if (!e.target.value.startsWith('#')) e.target.value = '#' + e.target.value.replace(/#/g, ''); });
+  ctaTextColorTextInput.addEventListener("change", e => { if (/^#[0-9A-Fa-f]{6}$/.test(e.target.value)) { state.ctaTextColor = e.target.value; document.getElementById("ctaTextColorPicker").value = e.target.value; updateCtaChip(); updatePreview(); } else { e.target.value = state.ctaTextColor; }});
 
   // 이미지 업로드 영역 이벤트 세팅 (메인 + 듀얼 좌측 + 로고 + 출처 로고)
   setupUploadArea('main');
