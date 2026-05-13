@@ -87,12 +87,23 @@
       "scale_delta": -0.5183,
       "offset_y_delta": 7,
       "offset_x_delta": 2
+    },
+    {
+      "date": "2026-05-12",
+      "fit_mode": "crop",
+      "auto_scale": 0.09012940251572327,
+      "final_scale": 1,
+      "auto_offset_y": 0,
+      "final_offset_y": 0,
+      "scale_delta": -0.5183,
+      "offset_y_delta": 3,
+      "offset_x_delta": 5
     }
   ],
   "average_crop": {
     "scale_delta": -0.5183,
-    "offset_y_delta": 2.83,
+    "offset_y_delta": 2.86,
     "offset_x_delta": 5.0,
-    "sample_count": 6
+    "sample_count": 7
   }
 }

@@ -164,12 +164,34 @@
       "scale_delta": -0.3182,
       "offset_y_delta": 11,
       "offset_x_delta": -4
+    },
+    {
+      "date": "2026-05-12",
+      "fit_mode": "crop",
+      "auto_scale": 0.21339622641509434,
+      "final_scale": 1,
+      "auto_offset_y": 0,
+      "final_offset_y": 0,
+      "scale_delta": -0.1648,
+      "offset_y_delta": 11,
+      "offset_x_delta": 2
+    },
+    {
+      "date": "2026-05-12",
+      "fit_mode": "crop",
+      "auto_scale": 0.21339622641509434,
+      "final_scale": 1,
+      "auto_offset_y": 0,
+      "final_offset_y": 0,
+      "scale_delta": -0.1648,
+      "offset_y_delta": 11,
+      "offset_x_delta": 2
     }
   ],
   "average_crop": {
     "scale_delta": -0.1648,
-    "offset_y_delta": 11.4,
-    "offset_x_delta": 1.9,
-    "sample_count": 10
+    "offset_y_delta": 11.33,
+    "offset_x_delta": 1.92,
+    "sample_count": 12
   }
 }
